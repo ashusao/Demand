@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import os
 import datetime
+import sys
 from configparser import ConfigParser
 from sklearn.utils import shuffle
 
@@ -107,6 +108,7 @@ class Data:
             Y_test.extend(y_test.tolist())
 
             print(series_idx, sep=' ', end=' ')
+            sys.stdout.flush()
 
         # shuffle and save the data
         X_train = np.array(X_train)
@@ -123,6 +125,7 @@ class Data:
         np.save(os.path.join(save_dir, 'Y_test_lag_' + str(n_lag_days) + '_day.npy'), Y_test)
 
         print('Finished Generating : ', str(n_lag_days))
+        sys.stdout.flush()
 
 
 
