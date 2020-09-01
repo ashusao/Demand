@@ -9,14 +9,14 @@ import pickle
 
 if __name__ == '__main__':
 
-    '''data_obj = Data()
+    data_obj = Data()
     df = data_obj.load_data()
 
     n_horizon = [1,4,7]
     for n_days in n_horizon:
-        data_obj.generate_and_save_aggregated_train_test(df, n_lag_days=n_days, n_lead_days=1)'''
+        data_obj.generate_and_save_aggregated_train_test(df, n_lag_days=n_days, n_lead_days=1)
 
-    config = ConfigParser()
+    '''config = ConfigParser()
     config.read('config.ini')
 
     npy_path = config['data']['npy_path']
@@ -33,7 +33,7 @@ if __name__ == '__main__':
     print(balanced_accuracy_score(Y_test.ravel(), predictions.ravel()))
     print(f1_score(Y_test.ravel(), predictions.ravel()))
 
-    pickle.dump(neigh, open(os.path.join(model_path, 'knn_complte_lag_1.pkl'), 'wb'))
+    pickle.dump(neigh, open(os.path.join(model_path, 'knn_complte_lag_1.pkl'), 'wb'))'''
 
 
 
