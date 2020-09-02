@@ -12,7 +12,8 @@ if __name__ == '__main__':
     data_obj = Data()
     df = data_obj.load_data()
 
-    n_horizon = [1,4,7]
+
+    n_horizon = [4,7]
     for n_days in n_horizon:
         data_obj.generate_and_save_aggregated_train_test(df, n_lag_days=n_days, n_lead_days=1)
 
