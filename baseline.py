@@ -16,7 +16,7 @@ class Baseline:
         self._config = ConfigParser()
         self._config.read('config.ini')
 
-    def nearest_neighbour(self, n_lag_days=1, n_lead_days=!, k=1, metric='matching', algo='ball_tree'):
+    def nearest_neighbour(self, n_lag_days=1, n_lead_days=1, k=1, metric='matching', algo='ball_tree'):
 
         model_path = self._config['model']['path']
         result_path = self._config['result']['path']
