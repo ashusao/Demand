@@ -135,10 +135,10 @@ class Data:
     def load_npy(self, input_horizon):
 
         npy_path = self._config['data']['npy_path']
-        X_train = np.load(os.path.join(npy_path, 'X_train_lag_' + str(n_lag_days) + '_day.npy'))
-        Y_train = np.load(os.path.join(npy_path, 'Y_train_lag_' + str(n_lag_days) + '_day.npy'))
-        X_test = np.load(os.path.join(npy_path, 'X_test_lag_' + str(n_lag_days) + '_day.npy'))
-        Y_test = np.load(os.path.join(npy_path, 'Y_test_lag_' + str(n_lag_days) + '_day.npy'))
+        X_train = np.load(os.path.join(npy_path, 'X_train_lag_' + str(input_horizon) + '_day.npy'))
+        Y_train = np.load(os.path.join(npy_path, 'Y_train_lag_' + str(input_horizon) + '_day.npy'))
+        X_test = np.load(os.path.join(npy_path, 'X_test_lag_' + str(input_horizon) + '_day.npy'))
+        Y_test = np.load(os.path.join(npy_path, 'Y_test_lag_' + str(input_horizon) + '_day.npy'))
 
         return X_train, Y_train, X_test, Y_test
 
