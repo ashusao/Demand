@@ -6,35 +6,25 @@ from sklearn.metrics import balanced_accuracy_score
 from sklearn.metrics import f1_score
 from configparser import ConfigParser
 import pickle
+from baseline import Baseline
 
 if __name__ == '__main__':
 
-    data_obj = Data()
+    '''data_obj = Data()
     df = data_obj.load_data()
-
-
-    n_horizon = [4,7]
+    
+    n_horizon = [1, 4,7]
     for n_days in n_horizon:
-        data_obj.generate_and_save_aggregated_train_test(df, n_lag_days=n_days, n_lead_days=1)
+        data_obj.generate_and_save_aggregated_train_test(df, n_lag_days=n_days, n_lead_days=1)'''
 
-    '''config = ConfigParser()
-    config.read('config.ini')
+    n_horizon = [1, 4, 7]
 
-    npy_path = config['data']['npy_path']
-    model_path = config['model']['path']
+    baseline_approach = Baseline()
 
-    X_train = np.load(os.path.join(npy_path, 'X_train_lag_1_day.npy'))
-    Y_train = np.load(os.path.join(npy_path, 'Y_train_lag_1_day.npy'))
-    X_test = np.load(os.path.join(npy_path, 'X_test_lag_1_day.npy'))
-    Y_test = np.load(os.path.join(npy_path, 'Y_test_lag_1_day.npy'))
+    for lag in n_horizon:
+        baseline_approach.nearest_neighbour(n_lag_days=lag)
 
-    neigh = KNeighborsClassifier(n_neighbors=1, metric='matching', algorithm='ball_tree', n_jobs=-1)
-    neigh.fit(X_train, Y_train)
-    predictions = neigh.predict(X_test)
-    print(balanced_accuracy_score(Y_test.ravel(), predictions.ravel()))
-    print(f1_score(Y_test.ravel(), predictions.ravel()))
 
-    pickle.dump(neigh, open(os.path.join(model_path, 'knn_complte_lag_1.pkl'), 'wb'))'''
 
 
 

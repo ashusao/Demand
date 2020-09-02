@@ -44,7 +44,7 @@ class Data:
         return new_df
 
     # @refrence: https://machinelearningmastery.com/how-to-develop-machine-learning-models-for-multivariate-multi-step-air-pollution-time-series-forecasting/
-    def split_train_test(self, series, n_lag=96, n_lead=96, train_step_size=96, test_step_size=96):
+    def split_train_test(self, series, n_lag=96, n_lead=96, train_step_size=96, test_step_size=96, randomize=True):
         '''
         :param n_lead: forecast length
         :param series: pandas series containing Time series data
@@ -79,10 +79,14 @@ class Data:
                 if i%test_step_size == 0:
                     X_test.append(series.tolist()[start_ix:i])
                     Y_test.append(series.tolist()[i:(end_ix + 1)])
-        #return X_train, Y_train, X_test, Y_test
+        # shuffle
+        if randomize:
+            X_train, Y_train = shuffle(X_train, Y_train, random_state=0)
+            X_test, Y_test = shuffle(X_test, Y_test, random_state=0)
+
         return np.array(X_train), np.array(Y_train), np.array(X_test), np.array(Y_test)
 
-    def generate_and_save_aggregated_train_test(self, df, n_lag_days=1, n_lead_days=1, train_step_size=1, test_step_size=1):
+    def generate_and_save_aggregated_train_test(self, df, n_lag_days=1, n_lead_days=1, train_step_size=1, test_step_size=1, randomize=True):
 
         '''
         Generates the train and test data by aggregating the data of all the series and save the data as npy file
@@ -116,8 +120,9 @@ class Data:
         X_test = np.array(X_test)
         Y_test = np.array(Y_test)
 
-        X_train, Y_train = shuffle(X_train, Y_train, random_state=0)
-        X_test, Y_test = shuffle(X_test, Y_test, random_state=0)
+        if randomize:
+            X_train, Y_train = shuffle(X_train, Y_train, random_state=0)
+            X_test, Y_test = shuffle(X_test, Y_test, random_state=0)
 
         np.save(os.path.join(save_dir, 'X_train_lag_' + str(n_lag_days) + '_day.npy'), X_train)
         np.save(os.path.join(save_dir, 'Y_train_lag_' + str(n_lag_days) + '_day.npy'), Y_train)
