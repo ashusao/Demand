@@ -158,6 +158,7 @@ class Data:
         :param df: Dataframe containing all time series
         :param series_idx: index of series for which
         :param aggregate: if true function will aggregate the series and then return the train/test split
+        :param randomize: if True shuffles the data
         :return: Train/Test split of data as numpy array
         '''
 
