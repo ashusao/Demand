@@ -5,17 +5,20 @@ import datetime
 import sys
 from configparser import ConfigParser
 from sklearn.utils import shuffle
+from sklearn.preprocessing import OneHotEncoder
 
 class Data:
 
     def __init__(self):
         self._config = ConfigParser()
         self._config.read('config.ini')
+        self.cat = [[0],[1]]
+        self.enc = OneHotEncoder()
+        self.enc.fit(self.cat)
 
     '''
     Reads the data from path mentioned in config.
-    :parameter
-    
+      
     :returns
     dataframe containing the data
     '''
@@ -91,7 +94,7 @@ class Data:
 
         '''
         Generates the train and test data by aggregating the data of all the series and save the data as npy file
-        :param df: datafrme containging all the series
+        :param df: datafrme containing all the series
         :param randomize: if true shuffle the data
         :return:
         '''
@@ -156,7 +159,7 @@ class Data:
 
         '''
         :param df: Dataframe containing all time series
-        :param series_idx: index of series for which
+        :param series_idx: index of series to split
         :param aggregate: if true function will aggregate the series and then return the train/test split
         :param randomize: if True shuffles the data
         :return: Train/Test split of data as numpy array
@@ -199,6 +202,80 @@ class Data:
                              '_day_test_step_' + str(test_step) + '.npy'))
 
         return X_train, Y_train, X_test, Y_test
+
+    def load_one_hot_train(self, X_train, Y_train, X_test, Y_test, train=True):
+        '''
+
+        :param X_train: shape (batch_size, input_horizon)
+        :param Y_train: shape (batch_size, output_horizon)
+        :return:
+            X_train_one_hot: shape (batch_size, input_horizon, one_hot_size)
+            Y_train_one_hot: shape (batch_size, output_horizon, one_hot_size)
+        '''
+        input_horizon = int(self._config['data']['input_horizon'])
+        output_horizon = int(self._config['data']['output_horizon'])
+        train_step = self._config['data']['train_window_size']
+        test_step = self._config['data']['test_window_size']
+        one_hot_path = self._config['data']['npy_one_hot']
+
+        X_train_one_hot_path = 'X_train_lag_' + str(input_horizon) + '_day_lead_' + str(output_horizon) + '_day_train step_' + str(train_step) + '_day_test step_' + str(test_step) + '.npy'
+        Y_train_one_hot_path = 'Y_train_lag_' + str(input_horizon) + '_day_lead_' + str(output_horizon) + '_day_train step_' + str(train_step) + '_day_test step_' + str(test_step) + '.npy'
+        X_test_one_hot_path = 'X_test_lag_' + str(input_horizon) + '_day_lead_' + str(output_horizon) + '_day_train step_' + str(train_step) + '_day_test step_' + str(test_step) + '.npy'
+        Y_test_one_hot_path = 'Y_test_lag_' + str(input_horizon) + '_day_lead_' + str(output_horizon) + '_day_train step_' + str(train_step) + '_day_test step_' + str(test_step) + '.npy'
+
+        if train:
+            if not os.path.isfile(os.path.join(one_hot_path, X_train_one_hot_path)):
+                np.save(os.path.join(one_hot_path, X_train_one_hot_path), self.one_hot_transform(X_train))
+            X_train_one_hot = np.load(os.path.join(one_hot_path, X_train_one_hot_path))
+
+            if not os.path.isfile(os.path.join(one_hot_path, Y_train_one_hot_path)):
+                np.save(os.path.join(one_hot_path, Y_train_one_hot_path), self.one_hot_transform(Y_train))
+            Y_train_one_hot = np.load(os.path.join(one_hot_path, Y_train_one_hot_path))
+
+            return X_train_one_hot, Y_train_one_hot
+
+        else:
+            if not os.path.isfile(os.path.join(one_hot_path, X_test_one_hot_path)):
+                np.save(os.path.join(one_hot_path, X_test_one_hot_path), self.one_hot_transform(X_test))
+            X_test_one_hot = np.load(os.path.join(one_hot_path, X_test_one_hot_path))
+
+            if not os.path.isfile(os.path.join(one_hot_path, Y_test_one_hot_path)):
+                np.save(os.path.join(one_hot_path, Y_test_one_hot_path), self.one_hot_transform(Y_test))
+            Y_test_one_hot = np.load(os.path.join(one_hot_path, Y_test_one_hot_path))
+
+            return X_test_one_hot, Y_test_one_hot
+
+
+    def one_hot_transform(self, batch):
+        '''
+        Function takes an input sequence and transforms it to one hot encoded sequence data
+
+        :param batch: 2d - input sequence of shape(batch_size,seq_len)
+        :return: 3d - one hot encoded output of shape(batch_size, seq_len, one_hot_size)
+        '''
+        enc_res = list()
+        for seq in batch:
+            for x in seq:
+                # transform each input in 2d since sklearn transform excepts input of 2d shape
+                tmp = self.enc.transform(x.reshape(1,-1)).toarray()
+                # flatten the transformed data
+                tmp = tmp.flatten()
+                enc_res.append(tmp)
+
+        return np.array(enc_res).reshape(batch.shape[0], batch.shape[1], -1)
+
+    def one_hot_inv_transform(self, batch):
+        '''
+        Function takes an one hot encoded sequence and transforms it to decoded data
+
+        :param batch: 3d - one hot encoded output of shape(batch_size, seq_len, one_hot_size)
+        :return: 2d - decoded sequence of shape(batch_size,seq_len)
+        '''
+        dec_res = list()
+        for seq in batch:
+            dec_res.append(self.enc.inverse_transform(seq))
+
+        return np.array(dec_res).reshape(batch.shape[0], -1)
 
 
 

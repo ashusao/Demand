@@ -7,6 +7,9 @@ from sklearn.metrics import f1_score
 from configparser import ConfigParser
 import pickle
 from baseline import Baseline
+from train import train
+from train import evaluate
+from train import log_result
 
 if __name__ == '__main__':
 
@@ -17,7 +20,7 @@ if __name__ == '__main__':
     df = data_obj.read_tsv()
     baseline_approach = Baseline()
 
-    acc_ = list()
+    '''acc_ = list()
     f1_ = list()
     cm_ = list()
 
@@ -59,7 +62,25 @@ if __name__ == '__main__':
 
     print('A: ' + str(np.mean(acc_)) + ' F1: ' + str(np.mean(f1_)))
 
-    baseline_approach.log_result(data_type=data_type, n_train=n_train, n_test=n_test, accuracy=np.mean(acc_), f1=np.mean(f1_))
+    baseline_approach.log_result(data_type=data_type, n_train=n_train, n_test=n_test, accuracy=np.mean(acc_), f1=np.mean(f1_))'''
+
+    X_train, Y_train, X_test, Y_test = data_obj.split_train_test(df, 0, aggregate=True)
+    X_test_one_hot, Y_test_one_hot = data_obj.load_one_hot_train(X_train, Y_train, X_test, Y_test, train=False)
+
+    print(X_test.shape, Y_test.shape)
+
+    #train(config, X_train, Y_train, X_test, Y_test)
+
+    f1, bal_acc = evaluate(config, X_test_one_hot, Y_test_one_hot, Y_test)
+
+    log_result(config, 'seq2seq', X_train.shape[0], X_test.shape[0], bal_acc, f1)
+
+
+
+
+
+
+
 
 
 
