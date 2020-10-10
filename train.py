@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
-from torch.utils.tensorboard import SummaryWriter
+#from torch.utils.tensorboard import SummaryWriter
 from se2seq import Encoder
 from se2seq import Decoder
 from se2seq import Seq2Seq
@@ -47,8 +47,8 @@ def train(config, X_train, Y_train, X_test, Y_test):
     optimizer = optim.Adam(model.parameters(), lr=lr)
     criterion = nn.CrossEntropyLoss()
 
-    writer = SummaryWriter('runs/seq2seq')
-    step = 0
+    #writer = SummaryWriter('runs/seq2seq')
+    #step = 0
 
     n_batches = int(X_train.shape[0] / batch_size)
 
