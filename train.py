@@ -16,12 +16,7 @@ import os
 import csv
 from utils import show_plot
 
-def train(config, X_train, Y_train, X_test, Y_test):
-    data_obj = Data()
-
-    target = Y_train
-    X_train = data_obj.one_hot_transform(X_train)
-    Y_train = data_obj.one_hot_transform(Y_train)
+def train(config, X_train, Y_train, target):
 
     target = torch.from_numpy(target).long()
     X_train = torch.from_numpy(X_train).float()
