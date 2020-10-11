@@ -35,8 +35,8 @@ def train(config, X_train, Y_train, target):
     input_horizon = int(config['data']['input_horizon'])
     f_name = 'seq2seq_' + str(input_horizon) + '.pth.tar'
 
-    #device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
-    device = torch.cuda.get_device_name(1)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    #device = torch.cuda.get_device_name(1)
 
     encoder = Encoder(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers).to(device)
     decoder = Decoder(input_size=input_size, hidden_size=hidden_size,
@@ -106,8 +106,8 @@ def evaluate(config, X_test, Y_test, target):
     lr = float(config['train']['lr'])
     batch_size = int(config['train']['batch_size'])
 
-    #device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    device = torch.cuda.get_device_name(1)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    #device = torch.cuda.get_device_name(1)
 
     encoder = Encoder(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers).to(device)
     decoder = Decoder(input_size=input_size, hidden_size=hidden_size,
