@@ -14,7 +14,7 @@ from sklearn.metrics import balanced_accuracy_score
 import numpy as np
 import os
 import csv
-from utils import show_plot
+from utils import save_loss
 
 def train(config, X_train, Y_train, target):
 
@@ -80,13 +80,14 @@ def train(config, X_train, Y_train, target):
             optimizer.step()
 
             losses.append(loss.item())
+
+    loss_file = 'seq2seq_' + str(input_horizon) + '.pkl'
+    save_loss(config, losses, loss_file)
     print('Finished training')
-    show_plot(losses)
 
 
 def evaluate(config, X_test, Y_test, target):
     '''
-
     :param config:
     :param X_test: one hot transform X_test
     :param Y_test: one hot transform Y_test
