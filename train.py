@@ -79,7 +79,7 @@ def train(config, X_train, Y_train, target):
             loss.backward()
             optimizer.step()
 
-            losses.append(loss)
+            losses.append(loss.item())
     print('Finished training')
     show_plot(losses)
 
