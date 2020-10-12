@@ -5,9 +5,6 @@ import torch.nn.functional as F
 import random
 from data import Data
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-
 class Encoder(nn.Module):
 
     def __init__(self, input_size, hidden_size, num_layers=1):
@@ -75,18 +72,19 @@ class Decoder(nn.Module):
 
 class Seq2Seq(nn.Module):
 
-    def __init__(self, encoder, decoder):
+    def __init__(self, encoder, decoder, device):
         super(Seq2Seq, self).__init__()
         self.encoder = encoder
         self.decoder = decoder
         self.data_obj = Data()
+        self.device = device
 
     def forward(self, source, target, teacher_force_ratio=0.6):
         batch_size = source.shape[0]
         target_len = target.shape[1]
         output_size = target.shape[2]
 
-        outputs = torch.zeros(batch_size, target_len, output_size).to(device)
+        outputs = torch.zeros(batch_size, target_len, output_size).to(self.device)
         hidden = self.encoder.init_hidden(batch_size)
 
         encoder_out, hidden = self.encoder(source, hidden)

@@ -42,7 +42,7 @@ def train(config, X_train, Y_train, target):
     decoder = Decoder(input_size=input_size, hidden_size=hidden_size,
                       num_layers=num_layers, output_size=output_size).to(device)
 
-    model = Seq2Seq(encoder, decoder).to(device)
+    model = Seq2Seq(encoder, decoder, device).to(device)
     optimizer = optim.Adam(model.parameters(), lr=lr)
     criterion = nn.CrossEntropyLoss()
 
@@ -53,6 +53,7 @@ def train(config, X_train, Y_train, target):
 
     losses = []
     loss = 0
+
     for epoch in range(num_epochs):
 
         print('Epoch : ' + str(epoch) + '/' + str(num_epochs))
@@ -115,7 +116,7 @@ def evaluate(config, X_test, Y_test, target):
     decoder = Decoder(input_size=input_size, hidden_size=hidden_size,
                       num_layers=num_layers, output_size=output_size).to(device)
 
-    model = Seq2Seq(encoder, decoder).to(device)
+    model = Seq2Seq(encoder, decoder, device).to(device)
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
     input_horizon = int(config['data']['input_horizon'])
