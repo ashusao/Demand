@@ -16,11 +16,13 @@ import os
 import csv
 from utils import save_loss
 
+device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+
 def train(config, X_train, Y_train, target):
 
-    target = torch.from_numpy(target).long()
-    X_train = torch.from_numpy(X_train).float()
-    Y_train = torch.from_numpy(Y_train).float()
+    target = torch.from_numpy(target).long().to(device)
+    X_train = torch.from_numpy(X_train).float().to(device)
+    Y_train = torch.from_numpy(Y_train).float().to(device)
 
     input_size = X_train.shape[2]
     output_size = Y_train.shape[2]
@@ -35,14 +37,11 @@ def train(config, X_train, Y_train, target):
     input_horizon = int(config['data']['input_horizon'])
     f_name = 'seq2seq_' + str(input_horizon) + '.pth.tar'
 
-    device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
-    #device = torch.cuda.get_device_name(1)
-
     encoder = Encoder(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers).to(device)
     decoder = Decoder(input_size=input_size, hidden_size=hidden_size,
                       num_layers=num_layers, output_size=output_size).to(device)
 
-    model = Seq2Seq(encoder, decoder, device).to(device)
+    model = Seq2Seq(encoder, decoder).to(device)
     optimizer = optim.Adam(model.parameters(), lr=lr)
     criterion = nn.CrossEntropyLoss()
 
@@ -97,8 +96,8 @@ def evaluate(config, X_test, Y_test, target):
     :return:
     '''
 
-    Y_test = torch.from_numpy(Y_test).long()
-    X_test = torch.from_numpy(X_test).float()
+    Y_test = torch.from_numpy(Y_test).long().to(device)
+    X_test = torch.from_numpy(X_test).float().to(device)
 
     input_size = X_test.shape[2]
     output_size = X_test.shape[2]
@@ -109,14 +108,11 @@ def evaluate(config, X_test, Y_test, target):
     lr = float(config['train']['lr'])
     batch_size = int(config['train']['batch_size'])
 
-    device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
-    #device = torch.cuda.get_device_name(1)
-
     encoder = Encoder(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers).to(device)
     decoder = Decoder(input_size=input_size, hidden_size=hidden_size,
                       num_layers=num_layers, output_size=output_size).to(device)
 
-    model = Seq2Seq(encoder, decoder, device).to(device)
+    model = Seq2Seq(encoder, decoder).to(device)
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
     input_horizon = int(config['data']['input_horizon'])
