@@ -112,8 +112,8 @@ class Seq2Seq(nn.Module):
                 outputs[:, t] = out
 
                 topv, topi = out.topk(1)
-                decoder_input = self.data_obj.one_hot_transform(topi.unsqueeze(1).detach())
-                decoder_input = torch.from_numpy(decoder_input).float().squeeze(1) # squeeze the seq_len dim (batch_size, input_size)
+                decoder_input = self.data_obj.one_hot_transform(topi.unsqueeze(1).detach().cpu())
+                decoder_input = torch.from_numpy(decoder_input).float().squeeze(1).to(device) # squeeze the seq_len dim (batch_size, input_size)
 
         return outputs
 
