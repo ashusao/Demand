@@ -147,7 +147,7 @@ def evaluate(config, X_test, Y_test, target):
 
         for t in range(target_len):
             topv, topi = outputs[:, t].topk(1)
-            prediction[:, t] = topi
+            prediction[:, t] = topi.cpu()
 
         pred.append(prediction)
         target_.append(target_label)
