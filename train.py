@@ -75,6 +75,10 @@ def train(config, X_train, Y_train, target):
             print(loss)
 
             loss.backward()
+            # Clip to avoid exploding gradient issues, makes sure grads are
+            # within a healthy range
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1)
+
             optimizer.step()
 
             losses.append(loss.item())
