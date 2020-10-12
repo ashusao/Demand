@@ -132,6 +132,8 @@ def evaluate(config, X_test, Y_test, target):
     pred = list()
     target_ = list()
 
+    print('Evaluaing...')
+
     for b in range(n_batches):
 
         prediction = np.zeros((batch_size, target_len, 1))
