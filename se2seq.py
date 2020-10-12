@@ -80,7 +80,7 @@ class Seq2Seq(nn.Module):
         self.decoder = decoder
         self.data_obj = Data()
 
-    def forward(self, source, target, teacher_force_ratio=0.6):
+    def forward(self, source, target, teacher_force_ratio=0.8):
         batch_size = source.shape[0]
         target_len = target.shape[1]
         output_size = target.shape[2]
