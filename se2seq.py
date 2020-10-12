@@ -86,7 +86,7 @@ class Seq2Seq(nn.Module):
         output_size = target.shape[2]
 
         outputs = torch.zeros(batch_size, target_len, output_size).to(device)
-        hidden = self.encoder.init_hidden(batch_size)
+        hidden = self.encoder.init_hidden(batch_size).to(device)
 
         encoder_out, hidden = self.encoder(source, hidden)
         #print(encoder_out.shape, hidden.shape)
