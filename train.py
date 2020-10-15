@@ -107,11 +107,11 @@ def evaluate(config, X_test, Y_test, target):
     input_size = X_test.shape[2]
     output_size = X_test.shape[2]
     hidden_size = 100
-    num_layers = 1
 
     # Model hyperparameters
     lr = float(config['train']['lr'])
     batch_size = int(config['train']['batch_size'])
+    num_layers = int(config['train']['num_layers'])
 
     encoder = Encoder(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers).to(device)
     decoder = Decoder(input_size=input_size, hidden_size=hidden_size,
@@ -158,7 +158,7 @@ def evaluate(config, X_test, Y_test, target):
     pred = np.array(pred).reshape(-1, target_len)
     target_ = np.array(target_).reshape(-1, target_len)
     print(pred.shape, target_.shape)
-    f1 = f1_score(target_.ravel(), pred.ravel())
+    f1 = f1_score(target_.ravel(), pred.ravel(), average=None)
     bal_acc = balanced_accuracy_score(target_.ravel(), pred.ravel())
     print(f1, bal_acc)
     return f1, bal_acc
@@ -172,12 +172,12 @@ def log_result(config, model, n_train, n_test, bal_acc, f1):
     lr = float(config['train']['lr'])
     num_epochs = int(config['train']['num_epochs'])
 
-    result_row = [model, n_train, n_test, input_horizon, output_horizon, 'Adam', lr, num_epochs, bal_acc, f1]
+    result_row = [model, n_train, n_test, input_horizon, output_horizon, 'Adam', lr, num_epochs, bal_acc, f1[0], f1[1]]
 
-    result_file = os.path.join(result_path, 'DeepL.csv')
+    result_file = os.path.join(result_path, 'DeepL_new.csv')
 
     if not os.path.isfile(result_file):
-        header = ['Model', 'n_train', 'n_test', 'input_horizon', 'output_horizon', 'optim', 'lr', 'epoch', 'bal acc', 'F1']
+        header = ['Model', 'n_train', 'n_test', 'input_horizon', 'output_horizon', 'optim', 'lr', 'epoch', 'bal acc', 'F1_0', 'F1_1']
         with open(result_file, "a+", newline='') as f:
             csv_writer = csv.writer(f, delimiter=',')
             csv_writer.writerow(header)
