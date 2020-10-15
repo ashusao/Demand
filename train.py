@@ -33,6 +33,7 @@ def train(config, X_train, Y_train, target):
     lr = float(config['train']['lr'])
     num_epochs = int(config['train']['num_epochs'])
     batch_size = int(config['train']['batch_size'])
+    num_layers = int(config['train']['num_layers'])
 
     input_horizon = int(config['data']['input_horizon'])
     f_name = 'seq2seq_' + str(input_horizon) + '.pth.tar'
