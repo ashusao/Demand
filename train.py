@@ -17,7 +17,8 @@ import os
 import csv
 from utils import save_loss
 
-device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 
 def train(config, X_train, Y_train, target):
 
@@ -47,7 +48,7 @@ def train(config, X_train, Y_train, target):
         criterion = nn.CrossEntropyLoss()
     elif algo == 'baseline':
         # ouput size = seq length
-        model = DeepBaseline(input_size=input_size, hidden_size=hidden_size, output_size=Y_train.shape[1])
+        model = DeepBaseline(input_size=input_size, hidden_size=hidden_size, output_size=Y_train.shape[1]).to(device)
         criterion = nn.BCELoss()
 
     optimizer = optim.Adam(model.parameters(), lr=lr)
@@ -136,7 +137,7 @@ def evaluate(config, X_test, Y_test, target):
 
         model = Seq2Seq(encoder, decoder).to(device)
     elif algo == 'baseline':
-        model = DeepBaseline(input_size=input_size, hidden_size=hidden_size, output_size=Y_test.shape[1])
+        model = DeepBaseline(input_size=input_size, hidden_size=hidden_size, output_size=Y_test.shape[1]).to(device)
 
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
@@ -177,7 +178,7 @@ def evaluate(config, X_test, Y_test, target):
             prediction = model(input_batch, hidden)
             prediction[prediction >= threshold] = 1
             prediction[prediction < threshold] = 0
-            pred.append(prediction.detach().numpy())
+            pred.append(prediction.detach().cpu().numpy())
 
         target_.append(target_label)
 
