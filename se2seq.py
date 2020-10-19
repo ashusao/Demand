@@ -1,7 +1,5 @@
 import torch
 import torch.nn as nn
-from torch import optim
-import torch.nn.functional as F
 import random
 from data import Data
 
@@ -26,7 +24,7 @@ class Encoder(nn.Module):
         :param input:       input of shape (batch, seq_len, input_size)
         :param hidden:      initial hidden state (num_layers, batch_size, hidden_size)
         :return: output, hidden
-                output gives all hidden state in seq. shape (batch_size, seq_len, hidden_size)
+                output gives all outputs in seq. shape (batch_size, seq_len, output_size)
                 hidden represents context vector. shape (num_layers, batch_size, hidden_size)
         '''
         output, hidden = self.gru(input, hidden)

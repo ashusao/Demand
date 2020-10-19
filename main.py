@@ -20,11 +20,11 @@ if __name__ == '__main__':
     df = data_obj.read_tsv()
     baseline_approach = Baseline()
 
-    '''acc_ = list()
+    acc_ = list()
     f1_ = list()
     cm_ = list()
 
-    algo = config['train']['algo']
+    '''algo = config['train']['algo']
     agg_series = config.getboolean('data', 'complete_data')
     if agg_series:
         data_type = 'Complete'
@@ -60,26 +60,20 @@ if __name__ == '__main__':
             f1_.append(f1)
             cm_.append(cm)
 
-    print('A: ' + str(np.mean(acc_)) + ' F1: ' + str(np.mean(f1_)))
+    print('A: ' + str(np.mean(acc_)) + ' F1: ' + str(np.mean(f1_, axis=0)))
 
-    baseline_approach.log_result(data_type=data_type, n_train=n_train, n_test=n_test, accuracy=np.mean(acc_), f1=np.mean(f1_))'''
+    baseline_approach.log_result(data_type=data_type, n_train=n_train, n_test=n_test, accuracy=np.mean(acc_), f1=np.mean(f1_, axis=0))'''
 
     X_train, Y_train, X_test, Y_test = data_obj.split_train_test(df, 0, aggregate=True)
     print(X_train.shape, Y_train.shape, X_test.shape, Y_test.shape)
 
     X_train_one_hot, Y_train_one_hot = data_obj.load_one_hot_train(X_train, Y_train, X_test, Y_test, train=True)
-    #train(config, X_train_one_hot, Y_train_one_hot, Y_train)
+    train(config, X_train_one_hot, Y_train_one_hot, Y_train)
 
     X_test_one_hot, Y_test_one_hot = data_obj.load_one_hot_train(X_train, Y_train, X_test, Y_test, train=False)
     f1, bal_acc = evaluate(config, X_test_one_hot, Y_test_one_hot, Y_test)
 
-    log_result(config, 'seq2seq', X_train.shape[0], X_test.shape[0], bal_acc, f1)
-
-
-
-
-
-
+    log_result(config, X_train.shape[0], X_test.shape[0], bal_acc, f1)
 
 
 

@@ -48,7 +48,7 @@ class Baseline:
 
         pred = neigh.predict(X_test)
         acc = balanced_accuracy_score(Y_test.ravel(), pred.ravel())
-        f1 = f1_score(Y_test.ravel(), pred.ravel())
+        f1 = f1_score(Y_test.ravel(), pred.ravel(), average=None)
         cm = confusion_matrix(Y_test.ravel(), pred.ravel())
 
         if not loaded and aggregate:
@@ -82,7 +82,7 @@ class Baseline:
 
         pred = clf.predict(X_test)
         acc = balanced_accuracy_score(Y_test.ravel(), pred.ravel())
-        f1 = f1_score(Y_test.ravel(), pred.ravel())
+        f1 = f1_score(Y_test.ravel(), pred.ravel(), average=None)
         cm = confusion_matrix(Y_test.ravel(), pred.ravel())
 
         if not loaded and aggregate:
@@ -95,20 +95,20 @@ class Baseline:
         result_row = [data_type, self._input_horizon, self._output_horizon,
                       self._config['data']['train_window_size'],
                       self._config['data']['test_window_size'],
-                      n_train, n_test, accuracy, f1]
+                      n_train, n_test, accuracy, f1[0], f1[1]]
 
         # save result in csv
         result_path = self._config['result']['path']
         algo = self._config['train']['algo']
 
         if algo == 'knn':
-            result_file = os.path.join(result_path, 'knn.csv')
+            result_file = os.path.join(result_path, 'knn_new.csv')
         elif algo == 'rf':
-            result_file = os.path.join(result_path, 'rf.csv')
+            result_file = os.path.join(result_path, 'rf_new.csv')
 
         if not os.path.isfile(result_file):
             header = ['Data', 'Input_Horizon', 'Output_Horizon', 'train_step_size', 'test_step_size',
-                      'n_train', 'n_test', 'balanced_acurracy', 'f1_score']
+                      'n_train', 'n_test', 'balanced_acurracy', 'f1_0', 'f1_1']
             with open(result_file, "a+", newline='') as f:
                 csv_writer = csv.writer(f, delimiter=',')
                 csv_writer.writerow(header)
