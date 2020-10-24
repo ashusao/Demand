@@ -120,7 +120,7 @@ def evaluate(config, X_test, Y_test, target):
     X_test = torch.from_numpy(X_test).float().to(device)
 
     input_size = X_test.shape[2]
-    output_size = X_test.shape[2]
+    output_size = Y_test.shape[2]
     hidden_size = 100
 
     # Model hyperparameters
