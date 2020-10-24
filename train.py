@@ -26,6 +26,10 @@ def train(config, X_train, Y_train, target):
     X_train = torch.from_numpy(X_train).float().to(device)
     Y_train = torch.from_numpy(Y_train).float().to(device)
 
+    # add 3rd dimesion when not one hot enocded
+    X_train = X_train.unsqueeze(2)
+    Y_train = Y_train.unsqueeze(2)
+
     input_size = X_train.shape[2]
     output_size = Y_train.shape[2]
     hidden_size = 100
@@ -118,6 +122,10 @@ def evaluate(config, X_test, Y_test, target):
 
     Y_test = torch.from_numpy(Y_test).long().to(device)
     X_test = torch.from_numpy(X_test).float().to(device)
+
+    # add 3rd dimension when not one hot encoded
+    X_test = X_test.unsqueeze(2)
+    Y_test = Y_test.unsqueeze(2)
 
     input_size = X_test.shape[2]
     output_size = Y_test.shape[2]
