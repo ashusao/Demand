@@ -113,7 +113,6 @@ class Seq2Seq(nn.Module):
                 outputs[:, t] = out.squeeze(1)
 
                 output = out.clone()
-                print(output)
 
                 output[output >= threshold] = 1
                 output[output < threshold] = 0
