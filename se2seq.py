@@ -82,7 +82,6 @@ class Seq2Seq(nn.Module):
         batch_size = source.shape[0]
         target_len = target.shape[1]
         #output_size = target.shape[2]
-        print(threshold)
 
         #outputs = torch.zeros(batch_size, target_len, output_size).to(device)
         outputs = torch.zeros(batch_size, target_len).to(device)
@@ -114,6 +113,7 @@ class Seq2Seq(nn.Module):
                 outputs[:, t] = out.squeeze(1)
 
                 output = out.clone()
+                print(output)
 
                 output[output >= threshold] = 1
                 output[output < threshold] = 0
