@@ -21,6 +21,7 @@ def save_checkpoint(state, config, filename="my_checkpoint.pth.tar"):
 
 def load_checkpoint(config, filename, model, optimizer):
     print("=> Loading checkpoint")
+    print(filename)
     algo = config['train']['algo']
 
     if algo == 'seq2seq':

@@ -112,7 +112,7 @@ class Seq2Seq(nn.Module):
                 out, hidden = self.decoder(decoder_input, hidden)
                 outputs[:, t] = out.squeeze(1)
 
-                #output = out.clone()
+                output = out.clone()
 
                 out[out >= threshold] = 1
                 out[out < threshold] = 0
