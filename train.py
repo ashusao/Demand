@@ -142,7 +142,7 @@ def evaluate(config, X_test, Y_test):
 
         model = Seq2Seq(encoder, decoder).to(device)
     elif algo == 'baseline':
-        model = DeepBaseline(input_size=input_size, hidden_size=hidden_size, output_size=Y_test.shape[1]).to(device)
+        model = DeepBaseline(input_size=input_size, hidden_size=hidden_size, output_size=target.shape[1]).to(device)
 
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
