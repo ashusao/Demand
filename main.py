@@ -67,13 +67,13 @@ if __name__ == '__main__':
     X_train, Y_train, X_test, Y_test = data_obj.split_train_test(df, 0, aggregate=True)
     print(X_train.shape, Y_train.shape, X_test.shape, Y_test.shape)
 
-    X_train_one_hot, Y_train_one_hot = data_obj.load_one_hot_train(X_train, Y_train, X_test, Y_test, train=True)
+    #X_train_one_hot, Y_train_one_hot = data_obj.load_one_hot_train(X_train, Y_train, X_test, Y_test, train=True)
     #train(config, X_train_one_hot, Y_train_one_hot, Y_train)
-    train(config, X_train, Y_train, Y_train)
+    train(config, X_train, Y_train)
 
-    X_test_one_hot, Y_test_one_hot = data_obj.load_one_hot_train(X_train, Y_train, X_test, Y_test, train=False)
+    #X_test_one_hot, Y_test_one_hot = data_obj.load_one_hot_train(X_train, Y_train, X_test, Y_test, train=False)
     #f1, bal_acc = evaluate(config, X_test_one_hot, Y_test_one_hot, Y_test)
-    f1, bal_acc = evaluate(config, X_test, Y_test, Y_test)
+    f1, bal_acc = evaluate(config, X_test, Y_test)
 
     log_result(config, X_train.shape[0], X_test.shape[0], bal_acc, f1)
 

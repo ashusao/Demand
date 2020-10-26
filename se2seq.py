@@ -64,11 +64,11 @@ class Decoder(nn.Module):
         '''
         # Add an extra dimension for seq_len = 1 because we are sending one input at a time
         output, hidden = self.gru(input.unsqueeze(1), hidden)
-        output = self.linear(output)
+        out = self.linear(output)
 
         # squeeze the seq_len dimension so that output is (batch_size, output_dim)
-        output = output.squeeze(1)
-        return output, hidden
+        out = out.squeeze(1)
+        return torch.sigmoid(out), hidden
 
 class Seq2Seq(nn.Module):
 
@@ -78,18 +78,20 @@ class Seq2Seq(nn.Module):
         self.decoder = decoder
         self.data_obj = Data()
 
-    def forward(self, source, target, teacher_force_ratio=0.8):
+    def forward(self, source, target, threshold, teacher_force_ratio=1.0):
         batch_size = source.shape[0]
         target_len = target.shape[1]
-        output_size = target.shape[2]
+        #output_size = target.shape[2]
 
-        outputs = torch.zeros(batch_size, target_len, output_size).to(device)
+        #outputs = torch.zeros(batch_size, target_len, output_size).to(device)
+        outputs = torch.zeros(batch_size, target_len).to(device)
+
         hidden = self.encoder.init_hidden(batch_size).to(device)
 
         encoder_out, hidden = self.encoder(source, hidden)
         #print(encoder_out.shape, hidden.shape)
 
-        # First input to decoder will be last output of encoder
+        # First input to decoder will be last input of encoder
         decoder_input = source[:, -1, :] # shape(batch_size, input_size)
         #print(decoder_input.shape)
 
@@ -100,18 +102,26 @@ class Seq2Seq(nn.Module):
             for t in range(target_len):
                 # Using precious hidden state which is context from encoder at start
                 out, hidden = self.decoder(decoder_input, hidden)
-                outputs[:, t] = out
+                outputs[:, t] = out.squeeze(1)
 
                 decoder_input = target[:, t]
+                decoder_input = decoder_input.float().unsqueeze(1)
         else:
             # feed output as next input
             for t in range(target_len):
                 out, hidden = self.decoder(decoder_input, hidden)
-                outputs[:, t] = out
+                outputs[:, t] = out.squeeze(1)
 
-                topv, topi = out.topk(1)
-                decoder_input = self.data_obj.one_hot_transform(topi.unsqueeze(1).detach().cpu())
-                decoder_input = torch.from_numpy(decoder_input).float().squeeze(1).to(device) # squeeze the seq_len dim (batch_size, input_size)
+                output = out.clone()
+
+                output[output >= threshold] = 1
+                output[output < threshold] = 0
+                decoder_input = output.float()
+                #print(decoder_input.shape)
+
+                #topv, topi = out.topk(1)
+                #decoder_input = self.data_obj.one_hot_transform(topi.unsqueeze(1).detach().cpu())
+                #decoder_input = torch.from_numpy(decoder_input).float().squeeze(1).to(device) # squeeze the seq_len dim (batch_size, input_size)
 
         return outputs
 

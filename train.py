@@ -20,22 +20,22 @@ from utils import save_loss
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
-def train(config, X_train, Y_train, target):
+def train(config, X_train, Y_train):
 
-    target = torch.from_numpy(target).long().to(device)
+    target = torch.from_numpy(Y_train).float().to(device)
     X_train = torch.from_numpy(X_train).float().to(device)
-    Y_train = torch.from_numpy(Y_train).float().to(device)
 
     # add 3rd dimesion when not one hot enocded
     X_train = X_train.unsqueeze(2)
-    Y_train = Y_train.unsqueeze(2)
+    #Y_train = Y_train.unsqueeze(2)
 
     input_size = X_train.shape[2]
-    output_size = Y_train.shape[2]
+    output_size = 1
     hidden_size = 100
 
     #Model hyperparameters
     lr = float(config['train']['lr'])
+    threshold = float(config['train']['threshold'])
     num_epochs = int(config['train']['num_epochs'])
     batch_size = int(config['train']['batch_size'])
     num_layers = int(config['train']['num_layers'])
@@ -49,12 +49,11 @@ def train(config, X_train, Y_train, target):
         decoder = Decoder(input_size=input_size, hidden_size=hidden_size,
                           num_layers=num_layers, output_size=output_size).to(device)
         model = Seq2Seq(encoder, decoder).to(device)
-        criterion = nn.CrossEntropyLoss()
     elif algo == 'baseline':
         # ouput size = seq length
-        model = DeepBaseline(input_size=input_size, hidden_size=hidden_size, output_size=Y_train.shape[1]).to(device)
-        criterion = nn.BCELoss()
+        model = DeepBaseline(input_size=input_size, hidden_size=hidden_size, output_size=target.shape[1]).to(device)
 
+    criterion = nn.BCELoss()
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
     #writer = SummaryWriter('runs/seq2seq')
@@ -72,25 +71,22 @@ def train(config, X_train, Y_train, target):
 
             b = b*batch_size
             input_batch = X_train[b: b + batch_size, :, :]
-            target_batch = Y_train[b: b + batch_size, :, :]
+            #target_batch = Y_train[b: b + batch_size, :, :]
             target_label = target[b: b + batch_size, :]
 
             if algo == 'seq2seq':
-                outputs = model(input_batch, target_batch)
-                outputs = outputs.reshape(-1, outputs.shape[2])
-                target_label = target_label.reshape(-1)
+                #outputs = model(input_batch, target_batch)
+                #outputs = outputs.reshape(-1, outputs.shape[2])
+                #target_label = target_label.reshape(-1)
+                outputs = model(input_batch, target_label, threshold)
             elif algo == 'baseline':
-                target_label = target_label.float()
                 hidden = model.init_hidden(batch_size).to(device)
                 outputs = model(input_batch, hidden)
 
             #print(target_label.shape, outputs.shape)
 
             optimizer.zero_grad()
-            if algo == 'seq2seq':
-                loss = criterion(outputs, target_label)
-            elif algo == 'baseline':
-                loss = criterion(outputs, target_label)
+            loss = criterion(outputs, target_label)
 
             print(loss)
 
@@ -111,7 +107,7 @@ def train(config, X_train, Y_train, target):
     print('Finished training')
 
 
-def evaluate(config, X_test, Y_test, target):
+def evaluate(config, X_test, Y_test):
     '''
     :param config:
     :param X_test: one hot transform X_test
@@ -120,15 +116,16 @@ def evaluate(config, X_test, Y_test, target):
     :return:
     '''
 
-    Y_test = torch.from_numpy(Y_test).long().to(device)
+    target = torch.from_numpy(Y_test).long().to(device)
     X_test = torch.from_numpy(X_test).float().to(device)
 
     # add 3rd dimension when not one hot encoded
     X_test = X_test.unsqueeze(2)
-    Y_test = Y_test.unsqueeze(2)
+    #Y_test = Y_test.unsqueeze(2)
 
     input_size = X_test.shape[2]
-    output_size = Y_test.shape[2]
+    #output_size = Y_test.shape[2]
+    output_size = 1
     hidden_size = 100
 
     # Model hyperparameters
@@ -168,11 +165,15 @@ def evaluate(config, X_test, Y_test, target):
 
         b = b * batch_size
         input_batch = X_test[b: b + batch_size, :, :]
-        target_batch = Y_test[b: b + batch_size, :, :]
+        #target_batch = Y_test[b: b + batch_size, :, :]
         target_label = target[b: b + batch_size, :]
 
         if algo == 'seq2seq':
-            prediction = np.zeros((batch_size, target_len, 1))
+            prediction = model(input_batch, target_label, threshold, 0.0)
+            prediction[prediction >= threshold] = 1
+            prediction[prediction < threshold] = 0
+            pred.append(prediction.detach().cpu().numpy())
+            '''prediction = np.zeros((batch_size, target_len, 1))
             outputs = model(input_batch, target_batch, 0.0)
             #outputs = outputs.reshape(-1, outputs.shape[2])
             #target_label = target_label.reshape(-1)
@@ -180,7 +181,7 @@ def evaluate(config, X_test, Y_test, target):
             for t in range(target_len):
                 topv, topi = outputs[:, t].topk(1)
                 prediction[:, t] = topi.cpu()
-            pred.append(prediction)
+            pred.append(prediction)'''
         elif algo == 'baseline':
             hidden = model.init_hidden(batch_size).to(device)
             prediction = model(input_batch, hidden)
@@ -188,7 +189,7 @@ def evaluate(config, X_test, Y_test, target):
             prediction[prediction < threshold] = 0
             pred.append(prediction.detach().cpu().numpy())
 
-        target_.append(target_label)
+        target_.append(target_label.detach().cpu().numpy())
 
     #pred = np.array(pred)
     pred = np.array(pred).reshape(-1, target_len)
