@@ -154,7 +154,7 @@ def evaluate(config, X_test, Y_test):
     model.eval()
 
     n_batches = int(X_test.shape[0] / batch_size)
-    target_len = Y_test.shape[1]
+    target_len = target.shape[1]
 
     pred = list()
     target_ = list()
@@ -218,6 +218,7 @@ def log_result(config, n_train, n_test, bal_acc, f1):
     if not os.path.isfile(result_file):
         header = ['Model', 'n_train', 'n_test', 'input_horizon', 'output_horizon', 'optim', 'lr', 'epoch', 'threshold',
                   'bal_acc', 'F1_0', 'F1_1']
+
         with open(result_file, "a+", newline='') as f:
             csv_writer = csv.writer(f, delimiter=',')
             csv_writer.writerow(header)

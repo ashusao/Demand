@@ -93,7 +93,8 @@ class Seq2Seq(nn.Module):
 
         # First input to decoder will be last input of encoder
         decoder_input = source[:, -1, :] # shape(batch_size, input_size)
-        #print(decoder_input.shape)
+        print('---')
+        print(decoder_input.shape)
 
         use_teacher_force = True if random.random() < teacher_force_ratio else False
 
@@ -117,7 +118,7 @@ class Seq2Seq(nn.Module):
                 output[output >= threshold] = 1
                 output[output < threshold] = 0
                 decoder_input = output.float()
-                #print(decoder_input.shape)
+                print(decoder_input.shape)
 
                 #topv, topi = out.topk(1)
                 #decoder_input = self.data_obj.one_hot_transform(topi.unsqueeze(1).detach().cpu())
