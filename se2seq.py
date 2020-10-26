@@ -117,7 +117,7 @@ class Seq2Seq(nn.Module):
                 out[out >= threshold] = 1
                 out[out < threshold] = 0
                 decoder_input = out.float()
-                print(decoder_input)
+                #print(decoder_input)
 
                 #topv, topi = out.topk(1)
                 #decoder_input = self.data_obj.one_hot_transform(topi.unsqueeze(1).detach().cpu())
