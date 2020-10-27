@@ -77,7 +77,7 @@ def train(config, X_train, Y_train):
                 #outputs = model(input_batch, target_batch)
                 #outputs = outputs.reshape(-1, outputs.shape[2])
                 #target_label = target_label.reshape(-1)
-                outputs = model(input_batch, target_label, 0.0)
+                outputs = model(input_batch, target_label, 1.0)
             elif algo == 'baseline':
                 hidden = model.init_hidden(batch_size).to(device)
                 outputs = model(input_batch, hidden)
