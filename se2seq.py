@@ -78,7 +78,7 @@ class Seq2Seq(nn.Module):
         self.decoder = decoder
         self.data_obj = Data()
 
-    def forward(self, source, target, threshold, teacher_force_ratio=1.0):
+    def forward(self, source, target, teacher_force_ratio=0.5):
         batch_size = source.shape[0]
         target_len = target.shape[1]
         #output_size = target.shape[2]
@@ -114,8 +114,8 @@ class Seq2Seq(nn.Module):
 
                 output = out.clone()
 
-                output[output >= threshold] = 1
-                output[output < threshold] = 0
+                #output[output >= threshold] = 1
+                #output[output < threshold] = 0
                 decoder_input = output.float()
                 #print(decoder_input)
 

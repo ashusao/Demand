@@ -35,7 +35,6 @@ def train(config, X_train, Y_train):
 
     #Model hyperparameters
     lr = float(config['train']['lr'])
-    threshold = float(config['train']['threshold'])
     num_epochs = int(config['train']['num_epochs'])
     batch_size = int(config['train']['batch_size'])
     num_layers = int(config['train']['num_layers'])
@@ -78,7 +77,7 @@ def train(config, X_train, Y_train):
                 #outputs = model(input_batch, target_batch)
                 #outputs = outputs.reshape(-1, outputs.shape[2])
                 #target_label = target_label.reshape(-1)
-                outputs = model(input_batch, target_label, threshold)
+                outputs = model(input_batch, target_label)
             elif algo == 'baseline':
                 hidden = model.init_hidden(batch_size).to(device)
                 outputs = model(input_batch, hidden)
@@ -107,7 +106,7 @@ def train(config, X_train, Y_train):
     print('Finished training')
 
 
-def evaluate(config, X_test, Y_test):
+def evaluate(config, X_test, Y_test, n_train):
     '''
     :param config:
     :param X_test: one hot transform X_test
@@ -118,6 +117,8 @@ def evaluate(config, X_test, Y_test):
 
     target = torch.from_numpy(Y_test).long().to(device)
     X_test = torch.from_numpy(X_test).float().to(device)
+
+    n_test = X_test.shape[0]
 
     # add 3rd dimension when not one hot encoded
     X_test = X_test.unsqueeze(2)
@@ -130,7 +131,6 @@ def evaluate(config, X_test, Y_test):
 
     # Model hyperparameters
     lr = float(config['train']['lr'])
-    threshold = float(config['train']['threshold'])
     batch_size = int(config['train']['batch_size'])
     num_layers = int(config['train']['num_layers'])
     algo = config['train']['algo']
@@ -169,9 +169,10 @@ def evaluate(config, X_test, Y_test):
         target_label = target[b: b + batch_size, :]
 
         if algo == 'seq2seq':
-            prediction = model(input_batch, target_label, threshold, 0.0)
-            prediction[prediction >= threshold] = 1
-            prediction[prediction < threshold] = 0
+            # prediction is sigmoid activation
+            prediction = model(input_batch, target_label, 0.0)
+            #prediction[prediction >= threshold] = 1
+            #prediction[prediction < threshold] = 0
             pred.append(prediction.detach().cpu().numpy())
             '''prediction = np.zeros((batch_size, target_len, 1))
             outputs = model(input_batch, target_batch, 0.0)
@@ -183,10 +184,11 @@ def evaluate(config, X_test, Y_test):
                 prediction[:, t] = topi.cpu()
             pred.append(prediction)'''
         elif algo == 'baseline':
+            # prediction is sigmoid activation
             hidden = model.init_hidden(batch_size).to(device)
             prediction = model(input_batch, hidden)
-            prediction[prediction >= threshold] = 1
-            prediction[prediction < threshold] = 0
+            #prediction[prediction >= threshold] = 1
+            #prediction[prediction < threshold] = 0
             pred.append(prediction.detach().cpu().numpy())
 
         target_.append(target_label.detach().cpu().numpy())
@@ -195,13 +197,14 @@ def evaluate(config, X_test, Y_test):
     pred = np.array(pred).reshape(-1, target_len)
     target_ = np.array(target_).reshape(-1, target_len)
     print(pred.shape, target_.shape)
-    f1 = f1_score(target_.ravel(), pred.ravel(), average=None)
+    '''f1 = f1_score(target_.ravel(), pred.ravel(), average=None)
     bal_acc = balanced_accuracy_score(target_.ravel(), pred.ravel())
-    print(f1, bal_acc)
-    return f1, bal_acc
+    print(f1, bal_acc)'''
+
+    log_result(config, n_train, n_test, pred, target_)
 
 
-def log_result(config, n_train, n_test, bal_acc, f1):
+def log_result(config, n_train, n_test, prediction, target):
 
     result_path = config['result']['path']
     input_horizon = int(config['data']['input_horizon'])
@@ -209,9 +212,19 @@ def log_result(config, n_train, n_test, bal_acc, f1):
     lr = float(config['train']['lr'])
     num_epochs = int(config['train']['num_epochs'])
     algo = config['train']['algo']
-    threshold = float(config['train']['threshold'])
 
-    result_row = [algo, n_train, n_test, input_horizon, output_horizon, 'Adam', lr, num_epochs, threshold, bal_acc, f1[0], f1[1]]
+    # define thresholds
+    thresholds = np.arange(0, 1, 0.01)
+    result_rows = list()
+
+    for th in thresholds:
+        pred = np.copy(prediction)
+        pred[pred >= th] = 1
+        pred[pred < th] = 0
+        f1 = f1_score(target.ravel(), pred.ravel(), average=None)
+        bal_acc = balanced_accuracy_score(target.ravel(), pred.ravel())
+        result_row = [algo, n_train, n_test, input_horizon, output_horizon, 'Adam', lr, num_epochs, th, bal_acc, f1[0], f1[1]]
+        result_rows.append(result_row)
 
     result_file = os.path.join(result_path, algo + '.csv')
 
@@ -222,8 +235,8 @@ def log_result(config, n_train, n_test, bal_acc, f1):
         with open(result_file, "a+", newline='') as f:
             csv_writer = csv.writer(f, delimiter=',')
             csv_writer.writerow(header)
-            csv_writer.writerow(result_row)
+            csv_writer.writerows(result_rows)
     else:
         with open(result_file, "a+", newline='') as f:
             csv_writer = csv.writer(f, delimiter=',')
-            csv_writer.writerow(result_row)
+            csv_writer.writerows(result_rows)
