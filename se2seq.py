@@ -68,7 +68,7 @@ class Decoder(nn.Module):
 
         # squeeze the seq_len dimension so that output is (batch_size, output_dim)
         out = out.squeeze(1)
-        return torch.sigmoid(out), hidden
+        return torch.sigmoid(out + 1e-10), hidden
 
 class Seq2Seq(nn.Module):
 
@@ -114,14 +114,7 @@ class Seq2Seq(nn.Module):
 
                 output = out.clone()
 
-                #output[output >= threshold] = 1
-                #output[output < threshold] = 0
                 decoder_input = output.float()
-                #print(decoder_input)
-
-                #topv, topi = out.topk(1)
-                #decoder_input = self.data_obj.one_hot_transform(topi.unsqueeze(1).detach().cpu())
-                #decoder_input = torch.from_numpy(decoder_input).float().squeeze(1).to(device) # squeeze the seq_len dim (batch_size, input_size)
 
         return outputs
 
