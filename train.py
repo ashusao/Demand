@@ -83,8 +83,8 @@ def train(config, X_train, Y_train, X_test, Y_test):
                     target_label = Y_train[b: b + batch_size, :]
                     model.train()
                 else:
-                    input_batch = X_test[b % X_test.shape[0]: (b + batch_size) % X_test.shape[0], :, :]
-                    target_label = Y_test[b % Y_test.shape[0]: (b + batch_size) % Y_test.shape[0], :]
+                    input_batch = X_test[b % X_test.shape[0]: ((b % X_test.shape[0]) + batch_size), :, :]
+                    target_label = Y_test[b % Y_test.shape[0]: ((b % Y_test.shape[0]) + batch_size), :]
                     model.eval()
 
                 optimizer.zero_grad()
