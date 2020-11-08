@@ -6,6 +6,7 @@ import sys
 from configparser import ConfigParser
 from sklearn.utils import shuffle
 from sklearn.preprocessing import OneHotEncoder
+from sklearn import preprocessing
 
 class Data:
 
@@ -56,6 +57,9 @@ class Data:
         new_df = self.encode_time(new_df, 'day')
         new_df = self.encode_time(new_df, 'hour')
         new_df = self.encode_time(new_df, 'minute')
+
+        min_max_scalar = preprocessing.MinMaxScaler()
+        new_df[['day_sin', 'day_cos', 'hour_sin', 'hour_cos', 'minute_sin', 'minute_cos']] = min_max_scalar.fit_transform(new_df[['day_sin', 'day_cos', 'hour_sin', 'hour_cos', 'minute_sin', 'minute_cos']])
 
         return new_df
 
@@ -133,7 +137,7 @@ class Data:
         X_test = list()
         Y_test = list()
 
-        for series_idx in range(df.shape[1]):
+        for series_idx in range(df.shape[1] - 9): # subtract last 9 time feature columns
             x_train, y_train, x_test, y_test = self.split_series_train_test(df.iloc[:, series_idx],
                                                                             df, randomize=randomize)
             X_train.extend(x_train.tolist())

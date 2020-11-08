@@ -51,7 +51,7 @@ def train(config, X_train, Y_train, X_test, Y_test):
 
     if algo == 'seq2seq':
         encoder = Encoder(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers).to(device)
-        decoder = Decoder(input_size=input_size, hidden_size=hidden_size,
+        decoder = Decoder(input_size=1, hidden_size=hidden_size,
                           num_layers=num_layers, output_size=output_size).to(device)
         model = Seq2Seq(encoder, decoder).to(device)
     elif algo == 'baseline':
@@ -144,7 +144,7 @@ def evaluate(config, X_test, Y_test, n_train):
 
     if algo == 'seq2seq':
         encoder = Encoder(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers).to(device)
-        decoder = Decoder(input_size=input_size, hidden_size=hidden_size,
+        decoder = Decoder(input_size=1, hidden_size=hidden_size,
                           num_layers=num_layers, output_size=output_size).to(device)
 
         model = Seq2Seq(encoder, decoder).to(device)
@@ -189,6 +189,7 @@ def evaluate(config, X_test, Y_test, n_train):
     pred = np.array(pred).reshape(-1, target_len)
     target_ = np.array(target_).reshape(-1, target_len)
     print(pred.shape, target_.shape)
+    print(np.unique(target_.ravel()))
 
     log_plot(config, X_test.shape[2], pred, target_)
 

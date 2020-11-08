@@ -68,7 +68,7 @@ class Decoder(nn.Module):
 
         # squeeze the seq_len dimension so that output is (batch_size, output_dim)
         out = out.squeeze(1)
-        return torch.sigmoid(out + 1e-10), hidden
+        return torch.sigmoid(out), hidden
 
 class Seq2Seq(nn.Module):
 
@@ -92,7 +92,10 @@ class Seq2Seq(nn.Module):
         #print(encoder_out.shape, hidden.shape)
 
         # First input to decoder will be last input of encoder
-        decoder_input = source[:, -1, :] # shape(batch_size, input_size)
+        #decoder_input = source[:, -1, :] # shape(batch_size, input_size)
+        # input the state of charger without features
+        decoder_input = source[:, -1, 0]
+        decoder_input = decoder_input.unsqueeze(1)
         #print(decoder_input.shape)
 
         use_teacher_force = True if random.random() < teacher_force_ratio else False
