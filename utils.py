@@ -52,13 +52,13 @@ def save_loss(config, train_loss, test_loss, f_name):
         pickle.dump(test_loss, f)
 
 
-def show_plot(config, precision, recall, ap):
+def show_plot(config, precision, recall, ap, n_features):
 
     result_path = config['result']['path']
     input_horizon = int(config['data']['input_horizon'])
     algo = config['train']['algo']
 
-    file = algo + '_' + str(input_horizon) + '.png'
+    file = algo + '_' + str(input_horizon) + '_' + str(n_features) + '.png'
     result_file = os.path.join(result_path, algo, file)
 
     title = algo + '_' + str(input_horizon) + ' AP=' + str(ap)
@@ -71,5 +71,3 @@ def show_plot(config, precision, recall, ap):
     ax.set_title(title)
     #plt.show()
     fig.savefig(result_file)
-
-

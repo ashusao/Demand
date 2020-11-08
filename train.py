@@ -29,11 +29,11 @@ def train(config, X_train, Y_train, X_test, Y_test):
 
     Y_train = torch.from_numpy(Y_train).float().to(device)
     X_train = torch.from_numpy(X_train).float().to(device)
-    X_train = X_train.unsqueeze(2) # add 3rd dimesion when not one hot enocded
+    #X_train = X_train.unsqueeze(2) # add 3rd dimesion when not one hot enocded
 
     Y_test = torch.from_numpy(Y_test).float().to(device)
     X_test = torch.from_numpy(X_test).float().to(device)
-    X_test = X_test.unsqueeze(2)
+    #X_test = X_test.unsqueeze(2)
 
     input_size = X_train.shape[2] # 1 or additional attributes
     output_size = 1
@@ -128,7 +128,7 @@ def evaluate(config, X_test, Y_test, n_train):
 
     Y_test = torch.from_numpy(Y_test).long().to(device)
     X_test = torch.from_numpy(X_test).float().to(device)
-    X_test = X_test.unsqueeze(2)  # add 3rd dimension when not one hot encoded
+    #X_test = X_test.unsqueeze(2)  # add 3rd dimension when not one hot encoded
 
     n_test = X_test.shape[0]
 
@@ -190,20 +190,23 @@ def evaluate(config, X_test, Y_test, n_train):
     target_ = np.array(target_).reshape(-1, target_len)
     print(pred.shape, target_.shape)
 
-    log_plot(config, pred, target_)
+    log_plot(config, X_test.shape[2], pred, target_)
 
-    log_result(config, n_train, n_test, pred, target_)
+    log_result(config, n_train, n_test, X_test.shape[2], pred, target_)
 
-def log_plot(config, prediction, target):
+    return pred, target_
+
+
+def log_plot(config, n_features, prediction, target):
 
     prec, rec, th = precision_recall_curve(target.ravel(), prediction.ravel())
     ap = average_precision_score(target.ravel(), prediction.ravel())
     print('threshold: ')
     print(th)
-    show_plot(config, prec, rec, ap)
+    show_plot(config, prec, rec, ap, n_features)
 
 
-def log_result(config, n_train, n_test, prediction, target):
+def log_result(config, n_train, n_test, n_features, prediction, target):
 
     result_path = config['result']['path']
     input_horizon = int(config['data']['input_horizon'])
@@ -224,7 +227,7 @@ def log_result(config, n_train, n_test, prediction, target):
         result_row = [algo, n_train, n_test, input_horizon, output_horizon, 'Adam', lr, num_epochs, th, bal_acc, f1[0], f1[1]]
         result_rows.append(result_row)
 
-    result_file = os.path.join(result_path, algo + '.csv')
+    result_file = os.path.join(result_path, algo + '_' + str(n_features) + '.csv')
 
     if not os.path.isfile(result_file):
         header = ['Model', 'n_train', 'n_test', 'input_horizon', 'output_horizon', 'optim', 'lr', 'epoch', 'threshold',

@@ -16,6 +16,11 @@ class Data:
         self.enc = OneHotEncoder()
         self.enc.fit(self.cat)
 
+    def encode_time(self, data, col):
+        data[col + '_sin'] = np.sin(2 * np.pi * data[col] / data[col].max())
+        data[col + '_cos'] = np.cos(2 * np.pi * data[col] / data[col].max())
+        return data
+
     '''
     Reads the data from path mentioned in config.
       
@@ -44,10 +49,29 @@ class Data:
 
         new_df = new_df.loc[self._config['data']['train_start']:self._config['data']['val_stop']]
 
+        # adding time features
+        new_df['day'] = new_df.index.dayofweek
+        new_df['hour'] = new_df.index.hour
+        new_df['minute'] = new_df.index.minute
+        new_df = self.encode_time(new_df, 'day')
+        new_df = self.encode_time(new_df, 'hour')
+        new_df = self.encode_time(new_df, 'minute')
+
         return new_df
 
+    def generate_data(self, series, df, start, stop):
+        d = np.expand_dims(series.to_numpy()[start:stop], axis=1)
+        day_sin = np.expand_dims(df['day_sin'].to_numpy()[start:stop], axis=1)
+        day_cos = np.expand_dims(df['day_cos'].to_numpy()[start:stop], axis=1)
+        hour_sin = np.expand_dims(df['hour_sin'].to_numpy()[start:stop], axis=1)
+        hour_cos = np.expand_dims(df['hour_cos'].to_numpy()[start:stop], axis=1)
+        minute_sin = np.expand_dims(df['minute_sin'].to_numpy()[start:stop], axis=1)
+        minute_cos = np.expand_dims(df['minute_cos'].to_numpy()[start:stop], axis=1)
+        data = np.concatenate([d, day_sin, day_cos, hour_sin, hour_cos, minute_sin, minute_cos], axis=1)
+        return data
+
     # @refrence: https://machinelearningmastery.com/how-to-develop-machine-learning-models-for-multivariate-multi-step-air-pollution-time-series-forecasting/
-    def split_series_train_test(self, series, randomize=True):
+    def split_series_train_test(self, series, df, randomize=True):
         '''
         :param series: pandas series containing Time series data
         :param randomize: if true shuffle the data
@@ -77,10 +101,11 @@ class Data:
             start_ix = i - n_lag
 
             if (i%train_step == 0) and (series.index[end_ix] <= datetime.datetime.strptime(split_time, '%Y-%m-%d %H:%M:%S')):
-                X_train.append(series.tolist()[start_ix:i])
+                X_train.append(self.generate_data(series, df, start_ix, i).tolist())
+                # X_train.append(series.tolist()[start_ix:i])
                 Y_train.append(series.tolist()[i:(end_ix + 1)])
             elif (i%test_step == 0):
-                X_test.append(series.tolist()[start_ix:i])
+                X_test.append(self.generate_data(series, df, start_ix, i).tolist())
                 Y_test.append(series.tolist()[i:(end_ix + 1)])
 
         # shuffle
@@ -109,8 +134,8 @@ class Data:
         Y_test = list()
 
         for series_idx in range(df.shape[1]):
-            x_train, y_train, x_test, y_test = self.split_series_train_test(series=df.iloc[:, series_idx],
-                                                                     randomize=randomize)
+            x_train, y_train, x_test, y_test = self.split_series_train_test(df.iloc[:, series_idx],
+                                                                            df, randomize=randomize)
             X_train.extend(x_train.tolist())
             Y_train.extend(y_train.tolist())
             X_test.extend(x_test.tolist())
@@ -169,7 +194,7 @@ class Data:
         output_horizon = int(self._config['data']['output_horizon'])
 
         if not aggregate:
-            return self.split_series_train_test(df.iloc[:, series_idx], randomize=randomize)
+            return self.split_series_train_test(df.iloc[:, series_idx], df, randomize=randomize)
 
         train_step = self._config['data']['train_window_size']
         test_step = self._config['data']['test_window_size']
