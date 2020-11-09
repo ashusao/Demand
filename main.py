@@ -74,7 +74,7 @@ if __name__ == '__main__':
     #X_test_one_hot, Y_test_one_hot = data_obj.load_one_hot_train(X_train, Y_train, X_test, Y_test, train=False)
     #f1, bal_acc = evaluate(config, X_test_one_hot, Y_test_one_hot, Y_test)
     #f1, bal_acc = evaluate(config, X_test, Y_test, X_train.shape[0])
-    #evaluate(config, X_test, Y_test, X_train.shape[0])
+    evaluate(config, X_test, Y_test, X_train.shape[0])
 
     #log_result(config, X_train.shape[0], X_test.shape[0], bal_acc, f1)
 
