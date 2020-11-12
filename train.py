@@ -25,6 +25,24 @@ from utils import show_plot
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
+def compute_weight_matrix(targets):
+    """
+        :param targets: targets is a 2d target data batch_size x seq_len
+        :return weight: 2d weight matrix containing weight matrix corresponding to each label
+        """
+
+    weights = torch.tensor((), device=device, dtype=torch.float)
+    weights = weights.new_zeros(targets.size())
+    for i in torch.arange(0, targets.shape[0]):
+        t = targets[i]
+        pos = (t == 1).sum()
+        neg = (t == 0).sum()
+        valid = neg + pos
+        weights[i, t == 1] = pos / valid.float()
+        weights[i, t == 0] = neg / valid.float()
+
+    return weights
+
 def train(config, X_train, Y_train, X_test, Y_test):
 
     Y_train = torch.from_numpy(Y_train).float().to(device)
@@ -58,7 +76,7 @@ def train(config, X_train, Y_train, X_test, Y_test):
         # ouput size = seq length
         model = DeepBaseline(input_size=input_size, hidden_size=hidden_size, output_size=Y_train.shape[1]).to(device)
 
-    criterion = nn.BCELoss()
+    criterion = nn.BCELoss(reduction='none')
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
     n_batches_train = int(X_train.shape[0] / batch_size)
@@ -99,6 +117,8 @@ def train(config, X_train, Y_train, X_test, Y_test):
                     #print(target_label.shape, outputs.shape)
 
                     loss = criterion(outputs, target_label)
+                    weights = compute_weight_matrix(target_label)
+                    loss = (loss * weights).mean()
                     print(loss)
 
                     if phase == 'train':
@@ -215,6 +235,7 @@ def log_result(config, n_train, n_test, n_features, prediction, target):
     lr = float(config['train']['lr'])
     num_epochs = int(config['train']['num_epochs'])
     algo = config['train']['algo']
+    comment = config['result']['comment']
 
     thresholds = np.arange(0.1, 0.6, 0.1)
     result_rows = list()
@@ -225,14 +246,14 @@ def log_result(config, n_train, n_test, n_features, prediction, target):
         pred[pred < th] = 0
         f1 = f1_score(target.ravel(), pred.ravel(), average=None)
         bal_acc = balanced_accuracy_score(target.ravel(), pred.ravel())
-        result_row = [algo, n_train, n_test, input_horizon, output_horizon, 'Adam', lr, num_epochs, th, bal_acc, f1[0], f1[1]]
+        result_row = [algo, n_train, n_test, input_horizon, output_horizon, 'Adam', lr, num_epochs, th, bal_acc, f1[0], f1[1], comment]
         result_rows.append(result_row)
 
-    result_file = os.path.join(result_path, algo + '_' + str(n_features) + '.csv')
+    result_file = os.path.join(result_path, algo + '.csv')
 
     if not os.path.isfile(result_file):
         header = ['Model', 'n_train', 'n_test', 'input_horizon', 'output_horizon', 'optim', 'lr', 'epoch', 'threshold',
-                  'bal_acc', 'F1_0', 'F1_1']
+                  'bal_acc', 'F1_0', 'F1_1', 'comment']
 
         with open(result_file, "a+", newline='') as f:
             csv_writer = csv.writer(f, delimiter=',')
