@@ -30,17 +30,25 @@ def compute_weight_matrix(targets):
         :param targets: targets is a 2d target data batch_size x seq_len
         :return weight: 2d weight matrix containing weight matrix corresponding to each label
         """
-
-    weights = torch.tensor((), device=device, dtype=torch.float)
+    weights = torch.tensor((), dtype=torch.float, device=device)
     weights = weights.new_zeros(targets.size())
+    #positive = torch.zeros(1, dtype=torch.float, device=device)
+    #negative = torch.zeros(1, dtype=torch.float, device=device)
     for i in torch.arange(0, targets.shape[0]):
         t = targets[i]
         pos = (t == 1).sum()
         neg = (t == 0).sum()
-        high = pos if pos > neg else neg # calculate the majority class
+        high = pos if pos > neg else neg
         weights[i, t == 1] = (high.float() / pos.float())
         weights[i, t == 0] = (high.float() / neg.float())
 
+    #print(positive, negative)
+
+    '''for i in torch.arange(0, targets.shape[0]):
+        high = positive if positive > negative else negative
+        weights[i, t == 1] = (high.float() / positive.float())
+        weights[i, t == 0] = (high.float() / negative.float())
+'''
     return weights
 
 def train(config, X_train, Y_train, X_test, Y_test):
@@ -76,7 +84,7 @@ def train(config, X_train, Y_train, X_test, Y_test):
         # ouput size = seq length
         model = DeepBaseline(input_size=input_size, hidden_size=hidden_size, output_size=Y_train.shape[1]).to(device)
 
-    criterion = nn.BCELoss(reduction='none')
+    criterion = nn.BCELoss()
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
     n_batches_train = int(X_train.shape[0] / batch_size)
@@ -116,9 +124,10 @@ def train(config, X_train, Y_train, X_test, Y_test):
 
                     #print(target_label.shape, outputs.shape)
 
-                    loss = criterion(outputs, target_label)
                     weights = compute_weight_matrix(target_label)
-                    loss = (loss * weights).mean()
+                    criterion.weight = weights
+
+                    loss = criterion(outputs, target_label)
                     print(loss)
 
                     if phase == 'train':

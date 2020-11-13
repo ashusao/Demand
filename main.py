@@ -69,7 +69,7 @@ if __name__ == '__main__':
 
     #X_train_one_hot, Y_train_one_hot = data_obj.load_one_hot_train(X_train, Y_train, X_test, Y_test, train=True)
     #train(config, X_train_one_hot, Y_train_one_hot, Y_train)
-    #train(config, X_train, Y_train, X_test, Y_test)
+    train(config, X_train, Y_train, X_test, Y_test)
 
     #X_test_one_hot, Y_test_one_hot = data_obj.load_one_hot_train(X_train, Y_train, X_test, Y_test, train=False)
     #f1, bal_acc = evaluate(config, X_test_one_hot, Y_test_one_hot, Y_test)
