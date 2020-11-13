@@ -96,7 +96,7 @@ def train(config, X_train, Y_train, X_test, Y_test):
     n_batches_test = int(X_test.shape[0] / batch_size)
     print(n_batches_train, n_batches_test)
 
-    positive_wt, negative_wt = compute_weights(Y_train)
+    #positive_wt, negative_wt = compute_weights(Y_train)
 
     train_loss = []
     test_loss = []
@@ -114,12 +114,12 @@ def train(config, X_train, Y_train, X_test, Y_test):
                 if phase == 'train':
                     input_batch = X_train[b: b + batch_size, :, :]
                     target_label = Y_train[b: b + batch_size, :]
-                    #positive_wt, negative_wt = compute_weights(target_label)
+                    positive_wt, negative_wt = compute_weights(target_label)
                     model.train()
                 else:
                     input_batch = X_test[b % X_test.shape[0]: ((b % X_test.shape[0]) + batch_size), :, :]
                     target_label = Y_test[b % Y_test.shape[0]: ((b % Y_test.shape[0]) + batch_size), :]
-                    #positive_wt, negative_wt = compute_weights(target_label)
+                    positive_wt, negative_wt = compute_weights(target_label)
                     model.eval()
 
                 optimizer.zero_grad()
