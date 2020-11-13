@@ -37,9 +37,9 @@ def compute_weight_matrix(targets):
         t = targets[i]
         pos = (t == 1).sum()
         neg = (t == 0).sum()
-        valid = neg + pos
-        weights[i, t == 1] = (1.0 / pos.float()) * (valid.float() / 2.0)
-        weights[i, t == 0] = (1.0 / neg.float()) * (valid.float() / 2.0)
+        high = pos if pos > neg else neg # calculate the majority class
+        weights[i, t == 1] = (high.float() / pos.float())
+        weights[i, t == 0] = (high.float() / neg.float())
 
     return weights
 
