@@ -44,9 +44,10 @@ def compute_weight_matrix(targets, positive, negative):
         """
     weights = torch.tensor((), dtype=torch.float, device=device)
     weights = weights.new_zeros(targets.size())
+    high = positive if positive > negative else negative
 
     for i in torch.arange(0, targets.shape[0]):
-        high = positive if positive > negative else negative
+        t = targets[i]
         weights[i, t == 1] = (high.float() / positive.float())
         weights[i, t == 0] = (high.float() / negative.float())
 
