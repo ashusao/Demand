@@ -237,7 +237,7 @@ def log_result(config, n_train, n_test, n_features, prediction, target):
     algo = config['train']['algo']
     comment = config['result']['comment']
 
-    thresholds = np.arange(0.1, 0.6, 0.1)
+    thresholds = np.arange(0.1, 1, 0.1)
     result_rows = list()
 
     for th in thresholds:
