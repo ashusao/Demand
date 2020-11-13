@@ -25,7 +25,7 @@ from utils import show_plot
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
-def compute_positove_negative(targets):
+def compute_weights(targets):
 
     positive = torch.zeros(1, dtype=torch.float, device=device)
     negative = torch.zeros(1, dtype=torch.float, device=device)
@@ -35,21 +35,24 @@ def compute_positove_negative(targets):
         neg = (t == 0).sum()
         positive += pos
         negative += neg
-    return positive, negative
 
-def compute_weight_matrix(targets, positive, negative):
+    high = positive if positive > negative else negative
+    p_w = high.float() / positive.float()
+    n_w = high.float() / negative.float()
+    return p_w, n_w
+
+def compute_weight_matrix(targets, positive_weight, negative_weight):
     """
         :param targets: targets is a 2d target data batch_size x seq_len
         :return weight: 2d weight matrix containing weight matrix corresponding to each label
         """
     weights = torch.tensor((), dtype=torch.float, device=device)
     weights = weights.new_zeros(targets.size())
-    high = positive if positive > negative else negative
 
     for i in torch.arange(0, targets.shape[0]):
         t = targets[i]
-        weights[i, t == 1] = (high.float() / positive.float())
-        weights[i, t == 0] = (high.float() / negative.float())
+        weights[i, t == 1] = positive_weight
+        weights[i, t == 0] = negative_weight
 
     return weights
 
@@ -93,6 +96,8 @@ def train(config, X_train, Y_train, X_test, Y_test):
     n_batches_test = int(X_test.shape[0] / batch_size)
     print(n_batches_train, n_batches_test)
 
+    positive_wt, negative_wt = compute_weights(Y_train)
+
     train_loss = []
     test_loss = []
     phases = ['train', 'test']
@@ -109,12 +114,12 @@ def train(config, X_train, Y_train, X_test, Y_test):
                 if phase == 'train':
                     input_batch = X_train[b: b + batch_size, :, :]
                     target_label = Y_train[b: b + batch_size, :]
-                    positive, negative = compute_positove_negative(target_label)
+                    #positive_wt, negative_wt = compute_weights(target_label)
                     model.train()
                 else:
                     input_batch = X_test[b % X_test.shape[0]: ((b % X_test.shape[0]) + batch_size), :, :]
                     target_label = Y_test[b % Y_test.shape[0]: ((b % Y_test.shape[0]) + batch_size), :]
-                    positive, negative = compute_positove_negative(target_label)
+                    #positive_wt, negative_wt = compute_weights(target_label)
                     model.eval()
 
                 optimizer.zero_grad()
@@ -128,7 +133,7 @@ def train(config, X_train, Y_train, X_test, Y_test):
 
                     #print(target_label.shape, outputs.shape)
 
-                    weights = compute_weight_matrix(target_label, positive, negative)
+                    weights = compute_weight_matrix(target_label, positive_wt, negative_wt)
                     criterion.weight = weights
 
                     loss = criterion(outputs, target_label)
