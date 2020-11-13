@@ -87,7 +87,6 @@ def train(config, X_train, Y_train, X_test, Y_test):
         model = DeepBaseline(input_size=input_size, hidden_size=hidden_size, output_size=Y_train.shape[1]).to(device)
 
     criterion = nn.BCELoss()
-    positive, negative = compute_positove_negative(Y_train)
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
     n_batches_train = int(X_train.shape[0] / batch_size)
@@ -110,10 +109,12 @@ def train(config, X_train, Y_train, X_test, Y_test):
                 if phase == 'train':
                     input_batch = X_train[b: b + batch_size, :, :]
                     target_label = Y_train[b: b + batch_size, :]
+                    positive, negative = compute_positove_negative(Y_train)
                     model.train()
                 else:
                     input_batch = X_test[b % X_test.shape[0]: ((b % X_test.shape[0]) + batch_size), :, :]
                     target_label = Y_test[b % Y_test.shape[0]: ((b % Y_test.shape[0]) + batch_size), :]
+                    positive, negative = compute_positove_negative(Y_test)
                     model.eval()
 
                 optimizer.zero_grad()
