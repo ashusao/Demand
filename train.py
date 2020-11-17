@@ -60,7 +60,7 @@ def train(config, X_train, Y_train, X_test, Y_test):
 
     Y_train = torch.from_numpy(Y_train).float().to(device)
     X_train = torch.from_numpy(X_train).float().to(device)
-    #X_train = X_train.unsqueeze(2) # add 3rd dimesion when not one hot enocded
+    #X_train = X_train.unsqueeze(2) # add 3rd dimesion when not one hot enocded or no additional features
 
     Y_test = torch.from_numpy(Y_test).float().to(device)
     X_test = torch.from_numpy(X_test).float().to(device)
@@ -114,12 +114,12 @@ def train(config, X_train, Y_train, X_test, Y_test):
                 if phase == 'train':
                     input_batch = X_train[b: b + batch_size, :, :]
                     target_label = Y_train[b: b + batch_size, :]
-                    positive_wt, negative_wt = compute_weights(target_label)
+                    #positive_wt, negative_wt = compute_weights(target_label)
                     model.train()
                 else:
                     input_batch = X_test[b % X_test.shape[0]: ((b % X_test.shape[0]) + batch_size), :, :]
                     target_label = Y_test[b % Y_test.shape[0]: ((b % Y_test.shape[0]) + batch_size), :]
-                    positive_wt, negative_wt = compute_weights(target_label)
+                    #positive_wt, negative_wt = compute_weights(target_label)
                     model.eval()
 
                 optimizer.zero_grad()
@@ -133,8 +133,8 @@ def train(config, X_train, Y_train, X_test, Y_test):
 
                     #print(target_label.shape, outputs.shape)
 
-                    weights = compute_weight_matrix(target_label, positive_wt, negative_wt)
-                    criterion.weight = weights
+                    #weights = compute_weight_matrix(target_label, positive_wt, negative_wt)
+                    #criterion.weight = weights
 
                     loss = criterion(outputs, target_label)
                     print(loss)
