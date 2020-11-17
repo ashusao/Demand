@@ -96,7 +96,7 @@ def train(config, X_train, Y_train, X_test, Y_test):
     n_batches_test = int(X_test.shape[0] / batch_size)
     print(n_batches_train, n_batches_test)
 
-    #positive_wt, negative_wt = compute_weights(Y_train)
+    positive_wt, negative_wt = compute_weights(Y_train)
 
     train_loss = []
     test_loss = []
@@ -133,8 +133,8 @@ def train(config, X_train, Y_train, X_test, Y_test):
 
                     #print(target_label.shape, outputs.shape)
 
-                    #weights = compute_weight_matrix(target_label, positive_wt, negative_wt)
-                    #criterion.weight = weights
+                    weights = compute_weight_matrix(target_label, positive_wt, negative_wt)
+                    criterion.weight = weights
 
                     loss = criterion(outputs, target_label)
                     print(loss)
