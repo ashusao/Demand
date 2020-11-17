@@ -166,7 +166,7 @@ def evaluate(config, X_test, Y_test, n_train):
 
     Y_test = torch.from_numpy(Y_test).long().to(device)
     X_test = torch.from_numpy(X_test).float().to(device)
-    #X_test = X_test.unsqueeze(2)  # add 3rd dimension when not one hot encoded
+    #X_test = X_test.unsqueeze(2)  # add 3rd dimension when not one hot encoded and no additional features
 
     n_test = X_test.shape[0]
 
@@ -229,14 +229,12 @@ def evaluate(config, X_test, Y_test, n_train):
     print(pred.shape, target_.shape)
     print(np.unique(target_.ravel()))
 
-    log_plot(config, X_test.shape[2], pred, target_)
-
-    log_result(config, n_train, n_test, X_test.shape[2], pred, target_)
+    log_plot(config, n_train, n_test, X_test.shape[2], pred, target_)
 
     return pred, target_
 
 
-def log_plot(config, n_features, prediction, target):
+def log_plot(config, n_train, n_test, n_features, prediction, target):
 
     prec, rec, th = precision_recall_curve(target.ravel(), prediction.ravel())
     ap = average_precision_score(target.ravel(), prediction.ravel())
@@ -244,8 +242,14 @@ def log_plot(config, n_features, prediction, target):
     print(th)
     show_plot(config, prec, rec, ap, n_features)
 
+    fscore = (2 * prec * rec) / (prec + rec)
+    ix = np.argmax(fscore)
+    print('Best Threshold=%f, F-Score=%.3f' % (th[ix], fscore[ix]))
 
-def log_result(config, n_train, n_test, n_features, prediction, target):
+    log_result(config, n_train, n_test, th[ix], prediction, target)
+
+
+def log_result(config, n_train, n_test, th, prediction, target):
 
     result_path = config['result']['path']
     input_horizon = int(config['data']['input_horizon'])
@@ -255,17 +259,17 @@ def log_result(config, n_train, n_test, n_features, prediction, target):
     algo = config['train']['algo']
     comment = config['result']['comment']
 
-    thresholds = np.arange(0.1, 1, 0.1)
+    #thresholds = np.arange(0.1, 1, 0.1)
     result_rows = list()
 
-    for th in thresholds:
-        pred = np.copy(prediction)
-        pred[pred >= th] = 1
-        pred[pred < th] = 0
-        f1 = f1_score(target.ravel(), pred.ravel(), average=None)
-        bal_acc = balanced_accuracy_score(target.ravel(), pred.ravel())
-        result_row = [algo, n_train, n_test, input_horizon, output_horizon, 'Adam', lr, num_epochs, th, bal_acc, f1[0], f1[1], comment]
-        result_rows.append(result_row)
+    #for th in thresholds:
+    pred = np.copy(prediction)
+    pred[pred >= th] = 1
+    pred[pred < th] = 0
+    f1 = f1_score(target.ravel(), pred.ravel(), average=None)
+    bal_acc = balanced_accuracy_score(target.ravel(), pred.ravel())
+    result_row = [algo, n_train, n_test, input_horizon, output_horizon, 'Adam', lr, num_epochs, th, bal_acc, f1[0], f1[1], comment]
+    result_rows.append(result_row)
 
     result_file = os.path.join(result_path, algo + '.csv')
 

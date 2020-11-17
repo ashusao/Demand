@@ -6,6 +6,7 @@ import sys
 from configparser import ConfigParser
 from sklearn.utils import shuffle
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import MinMaxScaler
 from sklearn import preprocessing
 
 class Data:
@@ -63,7 +64,42 @@ class Data:
 
         return new_df
 
-    def generate_data(self, series, df, start, stop):
+    def read_and_process_features(self):
+
+        data_dir = self._config['data']['path']
+
+        station_df = pd.read_csv(os.path.join(data_dir, 'station_info.csv'), header=None,
+                                 names=['identifier', 'lat', 'lon', 'address', 'anschlusse', 'anschluss',
+                                        'type', 'power', 'current', 'status', 'suitable_for', 'provider',
+                                        'zugang', 'opening_hours', 'cost', 'payment', 'electricity', 'geom'])
+        station_df.drop(['geom', 'address', 'status'], axis=1, inplace=True)
+
+        # Fill NAN
+        station_df.provider.fillna('gewerblich', inplace=True)
+        station_df.payment.fillna('undefiniert', inplace=True)
+
+        feature_df = pd.get_dummies(station_df, prefix=['type', 'suitable', 'zugang', 'cost', 'payment'],
+                                    columns=['type', 'suitable_for', 'zugang', 'cost', 'payment'])
+        feature_df.power = feature_df['power'].map(lambda x: str(x)[:-1])
+        feature_df.current = feature_df['current'].map(lambda x: str(x)[:-1])
+
+        # drop unnecessary columns
+        feature_df.drop(['lat', 'lon', 'provider', 'electricity', 'opening_hours'], axis=1, inplace=True)
+
+        feature_df.power = feature_df.power.astype('int64')
+        feature_df.current = feature_df.current.astype('int64')
+
+        scaler = MinMaxScaler()
+        feature_df[['power', 'current']] = scaler.fit_transform(feature_df[['power', 'current']])
+        return feature_df
+
+    def generate_features(self, series, feature_df):
+        idx = series.name
+        features = feature_df[(feature_df['identifier'] == idx[0]) &
+                              (feature_df['anschluss'] == idx[1])].iloc[0, 3:].values
+        return features
+
+    def generate_data(self, series, df, feature_df, start, stop):
         d = np.expand_dims(series.to_numpy()[start:stop], axis=1)
         day_sin = np.expand_dims(df['day_sin'].to_numpy()[start:stop], axis=1)
         day_cos = np.expand_dims(df['day_cos'].to_numpy()[start:stop], axis=1)
@@ -71,11 +107,16 @@ class Data:
         hour_cos = np.expand_dims(df['hour_cos'].to_numpy()[start:stop], axis=1)
         minute_sin = np.expand_dims(df['minute_sin'].to_numpy()[start:stop], axis=1)
         minute_cos = np.expand_dims(df['minute_cos'].to_numpy()[start:stop], axis=1)
-        data = np.concatenate([d, day_sin, day_cos, hour_sin, hour_cos, minute_sin, minute_cos], axis=1)
+
+        # genertate station specific features
+        features = self.generate_features(series, feature_df)
+        # repeat the feature to input time dimension
+        features = np.tile(features, (d.size, 1))
+        data = np.concatenate([d, day_sin, day_cos, hour_sin, hour_cos, minute_sin, minute_cos, features], axis=1)
         return data
 
     # @refrence: https://machinelearningmastery.com/how-to-develop-machine-learning-models-for-multivariate-multi-step-air-pollution-time-series-forecasting/
-    def split_series_train_test(self, series, df, randomize=True):
+    def split_series_train_test(self, series, df, feature_df, randomize=True):
         '''
         :param series: pandas series containing Time series data
         :param randomize: if true shuffle the data
@@ -105,11 +146,11 @@ class Data:
             start_ix = i - n_lag
 
             if (i%train_step == 0) and (series.index[end_ix] <= datetime.datetime.strptime(split_time, '%Y-%m-%d %H:%M:%S')):
-                X_train.append(self.generate_data(series, df, start_ix, i).tolist())
+                X_train.append(self.generate_data(series, df, feature_df, start_ix, i).tolist())
                 # X_train.append(series.tolist()[start_ix:i])
                 Y_train.append(series.tolist()[i:(end_ix + 1)])
-            elif (i%test_step == 0):
-                X_test.append(self.generate_data(series, df, start_ix, i).tolist())
+            elif i%test_step == 0:
+                X_test.append(self.generate_data(series, df, feature_df, start_ix, i).tolist())
                 Y_test.append(series.tolist()[i:(end_ix + 1)])
 
         # shuffle
@@ -137,9 +178,11 @@ class Data:
         X_test = list()
         Y_test = list()
 
+        feature_df = self.read_and_process_features()
+
         for series_idx in range(df.shape[1] - 9): # subtract last 9 time feature columns
             x_train, y_train, x_test, y_test = self.split_series_train_test(df.iloc[:, series_idx],
-                                                                            df, randomize=randomize)
+                                                                            df, feature_df, randomize=randomize)
             X_train.extend(x_train.tolist())
             Y_train.extend(y_train.tolist())
             X_test.extend(x_test.tolist())
