@@ -78,8 +78,11 @@ class Data:
         station_df.provider.fillna('gewerblich', inplace=True)
         station_df.payment.fillna('undefiniert', inplace=True)
 
-        feature_df = pd.get_dummies(station_df, prefix=['type', 'suitable', 'zugang', 'cost', 'payment'],
-                                    columns=['type', 'suitable_for', 'zugang', 'cost', 'payment'])
+        feature_df = station_df[['identifier', 'anschluss']]
+        dum = pd.get_dummies(station_df,
+                             prefix=['identifier', 'anschluss', 'type', 'suitable', 'zugang', 'cost', 'payment'],
+                             columns=['identifier', 'anschluss', 'type', 'suitable_for', 'zugang', 'cost', 'payment'])
+        feature_df = pd.concat([feature_df, dum], axis=1)
         feature_df.power = feature_df['power'].map(lambda x: str(x)[:-1])
         feature_df.current = feature_df['current'].map(lambda x: str(x)[:-1])
 
@@ -88,15 +91,16 @@ class Data:
 
         feature_df.power = feature_df.power.astype('int64')
         feature_df.current = feature_df.current.astype('int64')
+        feature_df.anschlusse = feature_df.anschlusse.astype('int64')
 
         scaler = MinMaxScaler()
-        feature_df[['power', 'current']] = scaler.fit_transform(feature_df[['power', 'current']])
+        feature_df[['anschlusse', 'power', 'current']] = scaler.fit_transform(feature_df[['anschlusse', 'power', 'current']])
         return feature_df
 
     def generate_features(self, series, feature_df):
         idx = series.name
         features = feature_df[(feature_df['identifier'] == idx[0]) &
-                              (feature_df['anschluss'] == idx[1])].iloc[0, 3:].values
+                              (feature_df['anschluss'] == idx[1])].iloc[0, 2:].values
         return features
 
     def generate_data(self, series, df, feature_df, start, stop):
