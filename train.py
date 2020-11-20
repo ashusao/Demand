@@ -14,6 +14,7 @@ from sklearn.metrics import f1_score
 from sklearn.metrics import balanced_accuracy_score
 from sklearn.metrics import average_precision_score
 from sklearn.metrics import precision_recall_curve
+from loss import FocalLoss
 
 import numpy as np
 import os
@@ -89,7 +90,8 @@ def train(config, X_train, Y_train, X_test, Y_test):
         # ouput size = seq length
         model = DeepBaseline(input_size=input_size, hidden_size=hidden_size, output_size=Y_train.shape[1]).to(device)
 
-    criterion = nn.BCELoss()
+    #criterion = nn.BCELoss()
+    criterion = FocalLoss()
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
     n_batches_train = int(X_train.shape[0] / batch_size)
