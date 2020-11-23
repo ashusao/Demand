@@ -78,7 +78,7 @@ class Seq2Seq(nn.Module):
         self.decoder = decoder
         self.data_obj = Data()
 
-    def forward(self, source, target, teacher_force_ratio=0.5):
+    def forward(self, source, target, features, teacher_force_ratio=0.5):
         batch_size = source.shape[0]
         target_len = target.shape[1]
         #output_size = target.shape[2]
@@ -89,7 +89,10 @@ class Seq2Seq(nn.Module):
         hidden = self.encoder.init_hidden(batch_size).to(device)
 
         encoder_out, hidden = self.encoder(source, hidden)
-        #print(encoder_out.shape, hidden.shape)
+
+        features = features.unsqueeze(0)
+        #print(encoder_out.shape, hidden.shape, fetaures.shape)
+        hidden = torch.cat((hidden, features), 2)
 
         # First input to decoder will be last input of encoder
         #decoder_input = source[:, -1, :] # shape(batch_size, input_size)

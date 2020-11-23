@@ -115,9 +115,9 @@ class Data:
         # genertate station specific features
         features = self.generate_features(series, feature_df)
         # repeat the feature to input time dimension
-        features = np.tile(features, (d.size, 1))
-        data = np.concatenate([d, day_sin, day_cos, hour_sin, hour_cos, minute_sin, minute_cos, features], axis=1)
-        return data
+        #features = np.tile(features, (d.size, 1))
+        data = np.concatenate([d, day_sin, day_cos, hour_sin, hour_cos, minute_sin, minute_cos], axis=1)
+        return data, features
 
     # @refrence: https://machinelearningmastery.com/how-to-develop-machine-learning-models-for-multivariate-multi-step-air-pollution-time-series-forecasting/
     def split_series_train_test(self, series, df, feature_df, randomize=True):
@@ -134,6 +134,9 @@ class Data:
         X_test = list()
         Y_train = list()
         Y_test = list()
+        train_features = list()
+        test_features = list()
+
 
         split_time = self._config['data']['train_stop']
         train_step = int(self._config['data']['train_window_size'])
@@ -150,19 +153,24 @@ class Data:
             start_ix = i - n_lag
 
             if (i%train_step == 0) and (series.index[end_ix] <= datetime.datetime.strptime(split_time, '%Y-%m-%d %H:%M:%S')):
-                X_train.append(self.generate_data(series, df, feature_df, start_ix, i).tolist())
+                data, features = self.generate_data(series, df, feature_df, start_ix, i)
+                X_train.append(data.tolist())
                 # X_train.append(series.tolist()[start_ix:i])
                 Y_train.append(series.tolist()[i:(end_ix + 1)])
+                train_features.append(features.tolist())
             elif i%test_step == 0:
-                X_test.append(self.generate_data(series, df, feature_df, start_ix, i).tolist())
+                data, features = self.generate_data(series, df, feature_df, start_ix, i)
+                X_test.append(data.tolist())
                 Y_test.append(series.tolist()[i:(end_ix + 1)])
+                test_features.append(features.tolist())
 
         # shuffle
         if randomize:
-            X_train, Y_train = shuffle(X_train, Y_train, random_state=0)
-            X_test, Y_test = shuffle(X_test, Y_test, random_state=0)
+            X_train, Y_train, train_features = shuffle(X_train, Y_train, train_features,random_state=0)
+            X_test, Y_test, test_features = shuffle(X_test, Y_test, test_features, random_state=0)
 
-        return np.array(X_train), np.array(Y_train), np.array(X_test), np.array(Y_test)
+
+        return np.array(X_train), np.array(Y_train), np.array(X_test), np.array(Y_test), np.array(train_features), np.array(test_features)
 
     def generate_and_save_aggregated_train_test(self, df, randomize=True):
 
@@ -181,16 +189,20 @@ class Data:
         Y_train = list()
         X_test = list()
         Y_test = list()
+        Train_features = list()
+        Test_features = list()
 
         feature_df = self.read_and_process_features()
 
         for series_idx in range(df.shape[1] - 9): # subtract last 9 time feature columns
-            x_train, y_train, x_test, y_test = self.split_series_train_test(df.iloc[:, series_idx],
+            x_train, y_train, x_test, y_test, train_features, test_features = self.split_series_train_test(df.iloc[:, series_idx],
                                                                             df, feature_df, randomize=randomize)
             X_train.extend(x_train.tolist())
             Y_train.extend(y_train.tolist())
             X_test.extend(x_test.tolist())
             Y_test.extend(y_test.tolist())
+            Train_features.extend(train_features.tolist())
+            Test_features.extend(test_features.tolist())
 
             print(series_idx, sep=' ', end=' ')
             sys.stdout.flush()
@@ -200,10 +212,12 @@ class Data:
         Y_train = np.array(Y_train)
         X_test = np.array(X_test)
         Y_test = np.array(Y_test)
+        Train_features = np.array(Train_features)
+        Test_features = np.array(Test_features)
 
         if randomize:
-            X_train, Y_train = shuffle(X_train, Y_train, random_state=0)
-            X_test, Y_test = shuffle(X_test, Y_test, random_state=0)
+            X_train, Y_train, Train_features = shuffle(X_train, Y_train, Train_features, random_state=0)
+            X_test, Y_test, Test_features = shuffle(X_test, Y_test, Test_features, random_state=0)
 
         train_step = self._config['data']['train_window_size']
         test_step = self._config['data']['test_window_size']
@@ -227,6 +241,16 @@ class Data:
                              '_day_lead_' + str(n_lead_days) +
                              '_day_train_step_' + str(train_step) +
                              '_day_test_step_' + str(test_step) + '.npy'), Y_test)
+
+        np.save(os.path.join(save_dir, 'Train_features_lag_' + str(n_lag_days) +
+                             '_day_lead_' + str(n_lead_days) +
+                             '_day_train_step_' + str(train_step) +
+                             '_day_test_step_' + str(test_step) + '.npy'), Train_features)
+
+        np.save(os.path.join(save_dir, 'Test_features_lag_' + str(n_lag_days) +
+                             '_day_lead_' + str(n_lead_days) +
+                             '_day_train_step_' + str(train_step) +
+                             '_day_test_step_' + str(test_step) + '.npy'), Test_features)
 
         print('Finished Generating : ', str(n_lag_days))
         sys.stdout.flush()
@@ -277,7 +301,17 @@ class Data:
                              '_day_train_step_' + str(train_step) +
                              '_day_test_step_' + str(test_step) + '.npy'))
 
-        return X_train, Y_train, X_test, Y_test
+        Train_features = np.load(os.path.join(npy_path, 'Train_features_lag_' + str(input_horizon) +
+                             '_day_lead_' + str(output_horizon) +
+                             '_day_train_step_' + str(train_step) +
+                             '_day_test_step_' + str(test_step) + '.npy'))
+
+        Test_features = np.load(os.path.join(npy_path, 'Test_features_lag_' + str(input_horizon) +
+                                              '_day_lead_' + str(output_horizon) +
+                                              '_day_train_step_' + str(train_step) +
+                                              '_day_test_step_' + str(test_step) + '.npy'))
+
+        return X_train, Y_train, X_test, Y_test, Train_features, Test_features
 
     def load_one_hot_train(self, X_train, Y_train, X_test, Y_test, train=True):
         '''
