@@ -72,8 +72,8 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
 
     input_size = X_train.shape[2] # 1 or additional attributes
     output_size = 1
-    hidden_size = 1000
-    embed_size = 100
+    hidden_size = 100
+    embed_size = 500
 
     #Model hyperparameters
     lr = float(config['train']['lr'])
@@ -182,8 +182,8 @@ def evaluate(config, X_test, Y_test, Test_features, n_train):
 
     input_size = X_test.shape[2]
     output_size = 1
-    hidden_size = 1000
-    embed_size = 100
+    hidden_size = 100
+    embed_size = 500
 
     # Model hyperparameters
     lr = float(config['train']['lr'])
