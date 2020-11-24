@@ -85,8 +85,8 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
 
     if algo == 'seq2seq':
         encoder = Encoder(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers).to(device)
-        decoder = Decoder(input_size=1, hidden_size=hidden_size + Train_features.shape[1],
-                          num_layers=num_layers, output_size=output_size).to(device)
+        decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size,
+                          feat_size=Train_features.shape[1], num_layers=num_layers).to(device)
         model = Seq2Seq(encoder, decoder).to(device)
     elif algo == 'baseline':
         # ouput size = seq length
@@ -189,8 +189,8 @@ def evaluate(config, X_test, Y_test, Test_features, n_train):
 
     if algo == 'seq2seq':
         encoder = Encoder(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers).to(device)
-        decoder = Decoder(input_size=1, hidden_size=hidden_size + Test_features.shape[1],
-                          num_layers=num_layers, output_size=output_size).to(device)
+        decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size,
+                          feat_size=Test_features.shape[1], num_layers=num_layers).to(device)
 
         model = Seq2Seq(encoder, decoder).to(device)
     elif algo == 'baseline':

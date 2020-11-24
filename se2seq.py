@@ -39,22 +39,24 @@ class Encoder(nn.Module):
 
 class Decoder(nn.Module):
 
-    def __init__(self, input_size, hidden_size, output_size, num_layers=1):
+    def __init__(self, input_size, hidden_size, output_size, feat_size, num_layers=1):
         '''
 
         :param input_size:              number of features in input
         :param hidden_size:             number of features in hidden state
         :param output_size:             number of classes in output vector
         :param num_layers:              number of stacked layers
+        :param feat_size:               size of feature vector
         '''
         super(Decoder, self).__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.gru = nn.GRU(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers, batch_first=True)
-        self.linear = nn.Linear(hidden_size, output_size)
+        self.linear_feat = nn.Linear(feat_size, hidden_size)
+        self.linear_out = nn.Linear(hidden_size + hidden_size, output_size)
 
-    def forward(self, input, hidden):
+    def forward(self, input, hidden, features):
         '''
         :param input:           should be 2D (batch_size, input_size)
         :param hidden:          last hidden state (num_layers, batch_size, hidden_size)
@@ -64,7 +66,12 @@ class Decoder(nn.Module):
         '''
         # Add an extra dimension for seq_len = 1 because we are sending one input at a time
         output, hidden = self.gru(input.unsqueeze(1), hidden)
-        out = self.linear(output)
+
+        features = features.unsqueeze(1)
+        features = self.linear_feat(features)
+        #print(output.shape, features.shape)
+        output = torch.cat((output, features), 2)
+        out = self.linear_out(output)
 
         # squeeze the seq_len dimension so that output is (batch_size, output_dim)
         out = out.squeeze(1)
@@ -90,14 +97,14 @@ class Seq2Seq(nn.Module):
 
         encoder_out, hidden = self.encoder(source, hidden)
 
-        features = features.unsqueeze(0)
-        #print(encoder_out.shape, hidden.shape, fetaures.shape)
-        hidden = torch.cat((hidden, features), 2)
+        # print(encoder_out.shape, hidden.shape, fetaures.shape)
+        #features = features.unsqueeze(0)
+        #hidden = torch.cat((hidden, features), 2)
 
         # First input to decoder will be last input of encoder
         #decoder_input = source[:, -1, :] # shape(batch_size, input_size)
         # input the state of charger without features
-        decoder_input = source[:, -1, 0]
+        decoder_input = source[:, -1, 0]  # [0] : Occupancy
         decoder_input = decoder_input.unsqueeze(1)
         #print(decoder_input.shape)
 
@@ -107,7 +114,7 @@ class Seq2Seq(nn.Module):
             # feed the target as next input
             for t in range(target_len):
                 # Using precious hidden state which is context from encoder at start
-                out, hidden = self.decoder(decoder_input, hidden)
+                out, hidden = self.decoder(decoder_input, hidden, features)
                 outputs[:, t] = out.squeeze(1)
 
                 decoder_input = target[:, t]
@@ -115,7 +122,7 @@ class Seq2Seq(nn.Module):
         else:
             # feed output as next input
             for t in range(target_len):
-                out, hidden = self.decoder(decoder_input, hidden)
+                out, hidden = self.decoder(decoder_input, hidden, features)
                 outputs[:, t] = out.squeeze(1)
 
                 output = out.clone()
