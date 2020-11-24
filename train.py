@@ -5,6 +5,7 @@ import torch.optim as optim
 from se2seq import Encoder
 from se2seq import Decoder
 from se2seq import Seq2Seq
+from se2seq import Embedding
 from deepl_baseline import DeepBaseline
 from utils import load_checkpoint
 from utils import save_checkpoint
@@ -72,6 +73,7 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
     input_size = X_train.shape[2] # 1 or additional attributes
     output_size = 1
     hidden_size = 100
+    embed_size = hidden_size
 
     #Model hyperparameters
     lr = float(config['train']['lr'])
@@ -85,9 +87,10 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
 
     if algo == 'seq2seq':
         encoder = Encoder(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers).to(device)
-        decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size,
-                          feat_size=Train_features.shape[1], num_layers=num_layers).to(device)
-        model = Seq2Seq(encoder, decoder).to(device)
+        decoder = Decoder(input_size=1, hidden_size=hidden_size + embed_size, output_size=output_size,
+                          num_layers=num_layers).to(device)
+        embedding = Embedding(feat_size=Train_features.shape[1], embed_size=embed_size)
+        model = Seq2Seq(encoder, decoder, embedding).to(device)
     elif algo == 'baseline':
         # ouput size = seq length
         model = DeepBaseline(input_size=input_size, hidden_size=hidden_size, output_size=Y_train.shape[1]).to(device)
@@ -180,6 +183,7 @@ def evaluate(config, X_test, Y_test, Test_features, n_train):
     input_size = X_test.shape[2]
     output_size = 1
     hidden_size = 100
+    embed_size = hidden_size
 
     # Model hyperparameters
     lr = float(config['train']['lr'])
@@ -189,10 +193,10 @@ def evaluate(config, X_test, Y_test, Test_features, n_train):
 
     if algo == 'seq2seq':
         encoder = Encoder(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers).to(device)
-        decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size,
-                          feat_size=Test_features.shape[1], num_layers=num_layers).to(device)
-
-        model = Seq2Seq(encoder, decoder).to(device)
+        decoder = Decoder(input_size=1, hidden_size=hidden_size + embed_size, output_size=output_size,
+                          num_layers=num_layers).to(device)
+        embedding = Embedding(feat_size=Test_features.shape[1], embed_size=embed_size)
+        model = Seq2Seq(encoder, decoder, embedding).to(device)
     elif algo == 'baseline':
         model = DeepBaseline(input_size=input_size, hidden_size=hidden_size, output_size=Y_test.shape[1]).to(device)
 

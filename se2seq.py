@@ -39,24 +39,22 @@ class Encoder(nn.Module):
 
 class Decoder(nn.Module):
 
-    def __init__(self, input_size, hidden_size, output_size, feat_size, num_layers=1):
+    def __init__(self, input_size, hidden_size, output_size, num_layers=1):
         '''
 
         :param input_size:              number of features in input
         :param hidden_size:             number of features in hidden state
         :param output_size:             number of classes in output vector
         :param num_layers:              number of stacked layers
-        :param feat_size:               size of feature vector
         '''
         super(Decoder, self).__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.gru = nn.GRU(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers, batch_first=True)
-        self.linear_feat = nn.Linear(feat_size, hidden_size)
-        self.linear_out = nn.Linear(hidden_size + hidden_size, output_size)
+        self.linear = nn.Linear(hidden_size, output_size)
 
-    def forward(self, input, hidden, features):
+    def forward(self, input, hidden):
         '''
         :param input:           should be 2D (batch_size, input_size)
         :param hidden:          last hidden state (num_layers, batch_size, hidden_size)
@@ -67,22 +65,31 @@ class Decoder(nn.Module):
         # Add an extra dimension for seq_len = 1 because we are sending one input at a time
         output, hidden = self.gru(input.unsqueeze(1), hidden)
 
-        features = features.unsqueeze(1)
-        features = self.linear_feat(features)
-        #print(output.shape, features.shape)
-        output = torch.cat((output, features), 2)
-        out = self.linear_out(output)
+        out = self.linear(output)
 
         # squeeze the seq_len dimension so that output is (batch_size, output_dim)
         out = out.squeeze(1)
         return torch.sigmoid(out), hidden
 
+class Embedding(nn.Module):
+
+    def __init__(self, feat_size, embed_size):
+        super(Embedding, self).__init__()
+        self.feat_size = feat_size
+        self.embed_size = embed_size
+        self.linear = nn.Linear(feat_size, embed_size)
+
+    def forward(self, features):
+        return self.linear(features)
+
+
 class Seq2Seq(nn.Module):
 
-    def __init__(self, encoder, decoder):
+    def __init__(self, encoder, decoder, embedding):
         super(Seq2Seq, self).__init__()
         self.encoder = encoder
         self.decoder = decoder
+        self.embedding = embedding
         self.data_obj = Data()
 
     def forward(self, source, target, features, teacher_force_ratio=0.5):
@@ -96,10 +103,11 @@ class Seq2Seq(nn.Module):
         hidden = self.encoder.init_hidden(batch_size).to(device)
 
         encoder_out, hidden = self.encoder(source, hidden)
+        features = self.embedding(features)
 
         # print(encoder_out.shape, hidden.shape, fetaures.shape)
-        #features = features.unsqueeze(0)
-        #hidden = torch.cat((hidden, features), 2)
+        features = features.unsqueeze(0)
+        hidden = torch.cat((hidden, features), 2)
 
         # First input to decoder will be last input of encoder
         #decoder_input = source[:, -1, :] # shape(batch_size, input_size)
@@ -114,7 +122,7 @@ class Seq2Seq(nn.Module):
             # feed the target as next input
             for t in range(target_len):
                 # Using precious hidden state which is context from encoder at start
-                out, hidden = self.decoder(decoder_input, hidden, features)
+                out, hidden = self.decoder(decoder_input, hidden)
                 outputs[:, t] = out.squeeze(1)
 
                 decoder_input = target[:, t]
@@ -122,7 +130,7 @@ class Seq2Seq(nn.Module):
         else:
             # feed output as next input
             for t in range(target_len):
-                out, hidden = self.decoder(decoder_input, hidden, features)
+                out, hidden = self.decoder(decoder_input, hidden)
                 outputs[:, t] = out.squeeze(1)
 
                 output = out.clone()
