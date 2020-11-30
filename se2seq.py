@@ -106,9 +106,10 @@ class Seq2Seq(nn.Module):
         #features = self.embedding(features)
 
         #print(encoder_out.shape, hidden.shape, features.shape)
-        features = features.unsqueeze(0) # add extra dimensino for concatenation
+
+        '''features = features.unsqueeze(0) # add extra dimensino for concatenation
         features = features.repeat(hidden.shape[0], 1, 1) # copy features to each layers
-        hidden = torch.cat((hidden, features), 2)
+        hidden = torch.cat((hidden, features), 2)'''
 
         # First input to decoder will be last input of encoder
         #decoder_input = source[:, -1, :] # shape(batch_size, input_size)
