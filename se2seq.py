@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import random
 from data import Data
 
@@ -71,6 +72,64 @@ class Decoder(nn.Module):
         out = out.squeeze(1)
         return torch.sigmoid(out), hidden
 
+class AttnDecoder(nn.Module):
+
+    def __init__(self, input_size, hidden_size, output_size, input_len, num_layers=1):
+        '''
+
+        :param input_size:              number of features in input
+        :param hidden_size:             number of features in hidden state
+        :param output_size:             number of classes in output vector
+        :param num_layers:              number of stacked layers
+        '''
+        super(AttnDecoder, self).__init__()
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.input_len = input_len
+
+        # combine prev_hidden and input to input len
+        self.attn = nn.Linear(self.hidden_size + self.input_size, self.input_len)
+
+        # concat attention applied and input to hidden size which act as i/p for rnn
+       # self.attn_combine = nn.Linear(self.hidden_size + self.input_size, self.hidden_size)
+        self.gru = nn.GRU(input_size=input_size + hidden_size, hidden_size=hidden_size, num_layers=num_layers, batch_first=True) # for normal decoder
+        #self.gru = nn.GRU(input_size=hidden_size, hidden_size=hidden_size, num_layers=num_layers, batch_first=True) # for Attention decoder
+        self.linear = nn.Linear(hidden_size, output_size)
+
+    def forward(self, input, hidden, encoder_outputs):
+        '''
+        :param input:           should be 2D (batch_size, input_size)
+        :param hidden:          last hidden state (num_layers, batch_size, hidden_size)
+        :param encoder_outputs: encoder outputs (batch_size, input_len, hidden_size)
+        :return:
+                output          decoder output at time t (batch_size, output_size)
+                hidden          last hidden state (num_layers, batch_size, hidden_size)
+        '''
+
+        #print(input.shape)
+        #print(hidden.shape)
+
+        # on increasing number of layers input needs to be repeated layer times before concatenating
+        input_hidden_combined = torch.cat((input, hidden[0]), 1)
+        attn_weights = F.softmax(self.attn(input_hidden_combined), dim=1) # (batch_size, 1, input_len)
+        #print(attn_weights.shape, encoder_outputs.shape)
+        attn_applied = torch.bmm(attn_weights.unsqueeze(1), encoder_outputs) # (batc_size, 1, hidden_size)
+        #print(attn_applied.shape)
+        output = torch.cat((input, attn_applied.squeeze(1)), 1)
+        #output = self.attn_combine(output) # (batch_size, hidden_size)
+        #print(output.shape)
+
+        # Add an extra dimension for seq_len = 1 because we are sending one input at a time
+        output, hidden = self.gru(output.unsqueeze(1), hidden) #for attention decoder
+        #output, hidden = self.gru(input.unsqueeze(1), hidden) # for normal decoder
+
+        out = self.linear(output)
+
+        # squeeze the seq_len dimension so that output is (batch_size, output_dim)
+        out = out.squeeze(1)
+        return torch.sigmoid(out), hidden
+
 class Embedding(nn.Module):
 
     def __init__(self, feat_size, embed_size):
@@ -105,6 +164,7 @@ class Seq2Seq(nn.Module):
         encoder_out, hidden = self.encoder(source, hidden)
         #features = self.embedding(features)
 
+        #print(encoder_out.shape)
         #print(encoder_out.shape, hidden.shape, features.shape)
 
         '''features = features.unsqueeze(0) # add extra dimensino for concatenation
@@ -132,7 +192,7 @@ class Seq2Seq(nn.Module):
         else:
             # feed output as next input
             for t in range(target_len):
-                out, hidden = self.decoder(decoder_input, hidden)
+                out, hidden = self.decoder(decoder_input, hidden, encoder_out)
                 outputs[:, t] = out.squeeze(1)
 
                 output = out.clone()
