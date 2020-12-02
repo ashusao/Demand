@@ -112,7 +112,7 @@ class AttnDecoder(nn.Module):
 
         # on increasing number of layers input needs to be repeated layer times before concatenating
         input_hidden_combined = torch.cat((input, hidden[0]), 1)
-        attn_weights = F.softmax(self.attn(input_hidden_combined), dim=1) # (batch_size, 1, input_len)
+        attn_weights = F.softmax(F.relu(self.attn(input_hidden_combined)), dim=1) # (batch_size, 1, input_len)
         #print(attn_weights.shape, encoder_outputs.shape)
         attn_applied = torch.bmm(attn_weights.unsqueeze(1), encoder_outputs) # (batc_size, 1, hidden_size)
         #print(attn_applied.shape)
