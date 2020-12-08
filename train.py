@@ -6,8 +6,9 @@ from se2seq import Encoder
 from se2seq import Decoder
 from se2seq import Seq2Seq
 from se2seq import Embedding
-from  se2seq import AttnDecoder
+from se2seq import AttnDecoder
 from deepl_baseline import DeepBaseline
+
 from utils import load_checkpoint
 from utils import save_checkpoint
 from data import Data
@@ -26,6 +27,8 @@ from utils import save_loss
 from utils import show_plot
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+torch.manual_seed(0)
+#torch.set_deterministic(True) # type: ignore
 
 
 def compute_weights(targets):
@@ -88,7 +91,8 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
 
     if algo == 'seq2seq':
         encoder = Encoder(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers).to(device)
-        decoder = AttnDecoder(input_size=1, hidden_size=hidden_size, output_size=output_size, input_len=X_train.shape[1], num_layers=num_layers)
+        decoder = AttnDecoder(input_size=1, hidden_size=hidden_size + Train_features.shape[1], output_size=output_size, input_len=X_train.shape[1],
+                                  num_layers=num_layers)
         #decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size, num_layers=num_layers).to(device)
         '''decoder = Decoder(input_size=1, hidden_size=hidden_size + Train_features.shape[1], output_size=output_size,
                           num_layers=num_layers).to(device)'''
@@ -196,7 +200,8 @@ def evaluate(config, X_test, Y_test, Test_features, n_train):
 
     if algo == 'seq2seq':
         encoder = Encoder(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers).to(device)
-        decoder = AttnDecoder(input_size=1, hidden_size=hidden_size, output_size=output_size, input_len=X_test.shape[1], num_layers=num_layers)
+        decoder = AttnDecoder(input_size=1, hidden_size=hidden_size + Test_features.shape[1], output_size=output_size,
+                              input_len=X_test.shape[1], num_layers=num_layers)
         #decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size, num_layers=num_layers).to(device)
         '''decoder = Decoder(input_size=1, hidden_size=hidden_size + Test_features.shape[1], output_size=output_size,
                           num_layers=num_layers).to(device)'''
