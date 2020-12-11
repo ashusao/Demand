@@ -104,7 +104,7 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
 
     criterion = nn.BCELoss()
     #criterion = FocalLoss()
-    optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=3e-3)
+    optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=3e-4)
 
     n_batches_train = int(X_train.shape[0] / batch_size)
     n_batches_test = int(X_test.shape[0] / batch_size)
@@ -210,7 +210,7 @@ def evaluate(config, X_test, Y_test, Test_features, n_train):
     elif algo == 'baseline':
         model = DeepBaseline(input_size=input_size, hidden_size=hidden_size, output_size=Y_test.shape[1]).to(device)
 
-    optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=3e-3)
+    optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=3e-4)
 
     input_horizon = int(config['data']['input_horizon'])
     f_name = algo + '_' + str(input_horizon) + '.pth.tar'
