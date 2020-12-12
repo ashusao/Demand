@@ -20,7 +20,8 @@ class Encoder(nn.Module):
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.num_layers = num_layers
-        self.gru = nn.GRU(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers, dropout=dropout, batch_first=True)
+        self.gru = nn.GRU(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers, batch_first=True)
+        self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, input, hidden):
         '''
@@ -31,6 +32,7 @@ class Encoder(nn.Module):
                 hidden represents context vector. shape (num_layers, batch_size, hidden_size)
         '''
         output, hidden = self.gru(input, hidden)
+        output = self.dropout(output)
         return output, hidden
 
     def init_hidden(self, batch_size):
@@ -54,7 +56,8 @@ class Decoder(nn.Module):
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.num_layers = num_layers
-        self.gru = nn.GRU(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers, dropout=dropout, batch_first=True)
+        self.gru = nn.GRU(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers, batch_first=True)
+        self.dropout = nn.Dropout(p=dropout)
         self.linear = nn.Linear(hidden_size, output_size)
 
     def forward(self, input, hidden):
@@ -67,7 +70,7 @@ class Decoder(nn.Module):
         '''
         # Add an extra dimension for seq_len = 1 because we are sending one input at a time
         output, hidden = self.gru(input.unsqueeze(1), hidden)
-
+        output = self.dropout(output)
         out = self.linear(output)
 
         # squeeze the seq_len dimension so that output is (batch_size, output_dim)
@@ -96,7 +99,8 @@ class AttnDecoder(nn.Module):
 
         # concat attention applied and input to hidden size which act as i/p for rnn
         self.attn_combine = nn.Linear(self.input_size + self.hidden_size, self.input_size)
-        self.gru = nn.GRU(input_size=input_size, hidden_size=hidden_size+feat_size, num_layers=num_layers, dropout=dropout, batch_first=True)  # hidden_size = hidden + feat_size
+        self.gru = nn.GRU(input_size=input_size, hidden_size=hidden_size+feat_size, num_layers=num_layers,  batch_first=True)  # hidden_size = hidden + feat_size
+        self.dropout = nn.Dropout(p=dropout)
         self.linear = nn.Linear(self.hidden_size + self.feat_size, output_size)
 
     def forward(self, input, hidden, encoder_outputs):
@@ -120,6 +124,7 @@ class AttnDecoder(nn.Module):
 
         # Add an extra dimension for seq_len = 1 because we are sending one input at a time
         output, hidden = self.gru(output.unsqueeze(1), hidden)  #for attention decoder
+        output = self.dropout(output)
 
         out = self.linear(output)
 
