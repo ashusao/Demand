@@ -20,7 +20,7 @@ class Encoder(nn.Module):
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.num_layers = num_layers
-        self.gru = nn.GRU(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers, dropout=0.2, batch_first=True)
+        self.gru = nn.GRU(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers, dropout=0.3, batch_first=True)
 
     def forward(self, input, hidden):
         '''
@@ -54,7 +54,7 @@ class Decoder(nn.Module):
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.num_layers = num_layers
-        self.gru = nn.GRU(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers, dropout=0.2, batch_first=True)
+        self.gru = nn.GRU(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers, dropout=0.3, batch_first=True)
         self.linear = nn.Linear(hidden_size, output_size)
 
     def forward(self, input, hidden):
@@ -96,7 +96,7 @@ class AttnDecoder(nn.Module):
 
         # concat attention applied and input to hidden size which act as i/p for rnn
         self.attn_combine = nn.Linear(self.input_size + self.hidden_size, self.input_size)
-        self.gru = nn.GRU(input_size=input_size, hidden_size=hidden_size+feat_size, num_layers=num_layers, dropout=0.2, batch_first=True)  # hidden_size = hidden + feat_size
+        self.gru = nn.GRU(input_size=input_size, hidden_size=hidden_size+feat_size, num_layers=num_layers, dropout=0.3, batch_first=True)  # hidden_size = hidden + feat_size
         self.linear = nn.Linear(self.hidden_size + self.feat_size, output_size)
 
     def forward(self, input, hidden, encoder_outputs):
