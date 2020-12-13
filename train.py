@@ -72,7 +72,7 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
 
     Y_test = torch.from_numpy(Y_test).float().to(device)
     X_test = torch.from_numpy(X_test).float().to(device)
-    #X_test = X_test.unsqueeze(2)
+    X_test = X_test.unsqueeze(2)
 
     input_size = X_train.shape[2] # 1 or additional attributes
     output_size = 1
