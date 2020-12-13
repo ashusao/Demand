@@ -143,7 +143,8 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
 
                 with torch.set_grad_enabled(phase == 'train'):
                     if algo == 'seq2seq':
-                        outputs = model(input_batch, target_label, features, 0.0) # no teacher force
+                        #outputs = model(input_batch, target_label, features, 0.0) # no teacher force
+                        outputs = model(input_batch, target_label, 0.0)  # no teacher force
                     elif algo == 'baseline':
                         hidden = model.init_hidden(batch_size).to(device)
                         outputs = model(input_batch, hidden)
