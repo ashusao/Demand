@@ -239,7 +239,8 @@ def evaluate(config, X_test, Y_test, Test_features, n_train):
 
         if algo == 'seq2seq':
             # prediction is sigmoid activation
-            prediction = model(input_batch, target_label, features, 0.0)
+            #prediction = model(input_batch, target_label, features, 0.0)
+            prediction = model(input_batch, target_label, 0.0)
             pred.append(prediction.detach().cpu().numpy())
         elif algo == 'baseline':
             # prediction is sigmoid activation
