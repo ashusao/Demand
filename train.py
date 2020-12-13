@@ -129,13 +129,13 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
                 if phase == 'train':
                     input_batch = X_train[b: b + batch_size, :, :]
                     target_label = Y_train[b: b + batch_size, :]
-                    features = Train_features[b: b + batch_size, :]
+                    #features = Train_features[b: b + batch_size, :]
                     #positive_wt, negative_wt = compute_weights(target_label)
                     model.train()
                 else:
                     input_batch = X_test[b % X_test.shape[0]: ((b % X_test.shape[0]) + batch_size), :, :]
                     target_label = Y_test[b % Y_test.shape[0]: ((b % Y_test.shape[0]) + batch_size), :]
-                    features = Test_features[b % Test_features.shape[0]: ((b % Test_features.shape[0]) + batch_size), :]
+                    #features = Test_features[b % Test_features.shape[0]: ((b % Test_features.shape[0]) + batch_size), :]
                     #positive_wt, negative_wt = compute_weights(target_label)
                     model.eval()
 
@@ -234,7 +234,7 @@ def evaluate(config, X_test, Y_test, Test_features, n_train):
         b = b * batch_size
         input_batch = X_test[b: b + batch_size, :, :]
         target_label = Y_test[b: b + batch_size, :]
-        features = Test_features[b: b + batch_size, :]
+        #features = Test_features[b: b + batch_size, :]
 
         if algo == 'seq2seq':
             # prediction is sigmoid activation
