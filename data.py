@@ -152,13 +152,15 @@ class Data:
             start_ix = i - n_lag
 
             if (i%train_step == 0) and (series.index[end_ix] <= datetime.datetime.strptime(split_time, '%Y-%m-%d %H:%M:%S')):
-                data, features = self.generate_data(series, df, feature_df, start_ix, i)
+                #data, features = self.generate_data(series, df, feature_df, start_ix, i)
+                data = self.generate_data(series, df, feature_df, start_ix, i)
                 X_train.append(data.tolist())
                 # X_train.append(series.tolist()[start_ix:i])
                 Y_train.append(series.tolist()[i:(end_ix + 1)])
                 #train_features.append(features.tolist())
             elif i%test_step == 0:
-                data, features = self.generate_data(series, df, feature_df, start_ix, i)
+                #data, features = self.generate_data(series, df, feature_df, start_ix, i)
+                data = self.generate_data(series, df, feature_df, start_ix, i)
                 X_test.append(data.tolist())
                 Y_test.append(series.tolist()[i:(end_ix + 1)])
                 #test_features.append(features.tolist())
