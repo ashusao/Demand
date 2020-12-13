@@ -66,7 +66,7 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
 
     Y_train = torch.from_numpy(Y_train).float().to(device)
     X_train = torch.from_numpy(X_train).float().to(device)
-    #X_train = X_train.unsqueeze(2) # add 3rd dimesion when not one hot enocded or no additional features
+    X_train = X_train.unsqueeze(2) # add 3rd dimesion when not one hot enocded or no additional features
     Train_features = torch.from_numpy(Train_features).float().to(device)
     Test_features = torch.from_numpy(Test_features).float().to(device)
 
@@ -184,7 +184,7 @@ def evaluate(config, X_test, Y_test, Test_features, n_train):
     Y_test = torch.from_numpy(Y_test).long().to(device)
     X_test = torch.from_numpy(X_test).float().to(device)
     Test_features = torch.from_numpy(Test_features).float().to(device)
-    #X_test = X_test.unsqueeze(2)  # add 3rd dimension when not one hot encoded and no additional features
+    X_test = X_test.unsqueeze(2)  # add 3rd dimension when not one hot encoded and no additional features
 
     n_test = X_test.shape[0]
 

@@ -114,9 +114,8 @@ class Data:
 
         # genertate station specific features
         features = self.generate_features(series, feature_df)
-        #data = np.concatenate([d, day_sin, day_cos, hour_sin, hour_cos, minute_sin, minute_cos], axis=1)
-        #return data, features
-        return d
+        data = np.concatenate([d, day_sin, day_cos, hour_sin, hour_cos, minute_sin, minute_cos], axis=1)
+        return data, features
 
     # @refrence: https://machinelearningmastery.com/how-to-develop-machine-learning-models-for-multivariate-multi-step-air-pollution-time-series-forecasting/
     def split_series_train_test(self, series, df, feature_df, randomize=True):
@@ -153,15 +152,14 @@ class Data:
 
             if (i%train_step == 0) and (series.index[end_ix] <= datetime.datetime.strptime(split_time, '%Y-%m-%d %H:%M:%S')):
                 #data, features = self.generate_data(series, df, feature_df, start_ix, i)
-                data = self.generate_data(series, df, feature_df, start_ix, i)
-                X_train.append(data.tolist())
-                # X_train.append(series.tolist()[start_ix:i])
+                #X_train.append(data.tolist())
+                X_train.append(series.tolist()[start_ix:i])
                 Y_train.append(series.tolist()[i:(end_ix + 1)])
                 #train_features.append(features.tolist())
             elif i%test_step == 0:
                 #data, features = self.generate_data(series, df, feature_df, start_ix, i)
-                data = self.generate_data(series, df, feature_df, start_ix, i)
-                X_test.append(data.tolist())
+                #X_test.append(data.tolist())
+                X_test.append(series.tolist()[start_ix:i])
                 Y_test.append(series.tolist()[i:(end_ix + 1)])
                 #test_features.append(features.tolist())
 
