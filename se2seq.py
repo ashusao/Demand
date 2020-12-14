@@ -153,7 +153,7 @@ class Seq2Seq(nn.Module):
         #self.embedding = embedding
         self.data_obj = Data()
 
-    def forward(self, source, target, teacher_force_ratio=0.5):
+    def forward(self, source, target, features, teacher_force_ratio=0.5):
         batch_size = source.shape[0]
         target_len = target.shape[1]
         #output_size = target.shape[2]
