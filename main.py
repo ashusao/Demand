@@ -76,8 +76,6 @@ if __name__ == '__main__':
     evaluate(config, X_test, Y_test, Test_features, X_train.shape[0])
     #evaluate(config, X_train, Y_train, Train_features, X_train.shape[0])
 
-    #log_result(config, X_train.shape[0], X_test.shape[0], bal_acc, f1)
-
 
 
 
