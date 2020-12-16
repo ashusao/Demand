@@ -190,8 +190,8 @@ class Seq2Seq(nn.Module):
         else:
             # feed output as next input
             for t in range(target_len):
-                #out, hidden = self.decoder(decoder_input, hidden)
-                out, hidden = self.decoder(decoder_input, hidden, encoder_out)
+                out, hidden = self.decoder(decoder_input, hidden)
+                #out, hidden = self.decoder(decoder_input, hidden, encoder_out)
                 outputs[:, t] = out.squeeze(1)
 
                 output = out.clone()
