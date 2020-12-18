@@ -7,7 +7,7 @@ plt.switch_backend('agg')
 import matplotlib.ticker as ticker
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-torch.manual_seed(0)
+#torch.manual_seed(0)
 #torch.set_deterministic(True)
 
 def save_checkpoint(state, config, filename="my_checkpoint.pth.tar"):

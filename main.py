@@ -18,11 +18,11 @@ if __name__ == '__main__':
     config.read('config.ini')
 
     df = data_obj.read_tsv()
-    baseline_approach = Baseline()
+    '''baseline_approach = Baseline()
 
     acc_ = list()
     f1_ = list()
-    cm_ = list()
+    cm_ = list()'''
 
     '''algo = config['train']['algo']
     agg_series = config.getboolean('data', 'complete_data')
@@ -67,10 +67,10 @@ if __name__ == '__main__':
     #X_train, Y_train, X_test, Y_test, Train_features, Test_features = data_obj.split_train_test(df, 0, aggregate=True)
     Train_features = np.array([1, 2, 3, 4, 5])
     Test_features = np.array([1, 2, 3, 4, 5])
-    X_train, Y_train, X_test, Y_test= data_obj.split_train_test(df, 0, aggregate=True)
+    X_train, Y_train, X_test, Y_test = data_obj.split_train_test(df, 0, aggregate=True)
     print(X_train.shape, Y_train.shape, X_test.shape, Y_test.shape, Train_features.shape, Test_features.shape)
 
-    train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_features)
+    #train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_features)
 
     evaluate(config, X_test, Y_test, Test_features, X_train.shape[0])
     #evaluate(config, X_train, Y_train, Train_features, X_train.shape[0])

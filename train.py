@@ -27,7 +27,7 @@ from utils import save_loss
 from utils import show_plot
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-torch.manual_seed(0)
+#torch.manual_seed(0)
 #torch.set_deterministic(True) # type: ignore
 
 
@@ -64,13 +64,13 @@ def compute_weight_matrix(targets, positive_weight, negative_weight):
 
 def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_features):
 
-    Y_train = torch.from_numpy(Y_train).float().to(device)
+    Y_train = torch.from_numpy(Y_train).long().to(device)
     X_train = torch.from_numpy(X_train).float().to(device)
     X_train = X_train.unsqueeze(2) # add 3rd dimesion when not one hot enocded or no additional features
     Train_features = torch.from_numpy(Train_features).float().to(device)
     Test_features = torch.from_numpy(Test_features).float().to(device)
 
-    Y_test = torch.from_numpy(Y_test).float().to(device)
+    Y_test = torch.from_numpy(Y_test).long().to(device)
     X_test = torch.from_numpy(X_test).float().to(device)
     X_test = X_test.unsqueeze(2)
 
@@ -105,7 +105,8 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
 
     criterion = nn.BCELoss()
     #criterion = FocalLoss()
-    optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=3e-4)
+    #optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=3e-4)
+    optimizer = optim.Adam(model.parameters(), lr=lr)
 
     n_batches_train = int(X_train.shape[0] / batch_size)
     n_batches_test = int(X_test.shape[0] / batch_size)
@@ -143,8 +144,8 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
 
                 with torch.set_grad_enabled(phase == 'train'):
                     if algo == 'seq2seq':
-                        outputs = model(input_batch, target_label, features, 0.0) # no teacher force
-                        #outputs = model(input_batch, target_label, 0.0)  # no teacher force
+                        #outputs = model(input_batch, target_label, features, 0.0) # no teacher force
+                        outputs = model(input_batch, target_label, 0.0)  # no teacher force
                     elif algo == 'baseline':
                         hidden = model.init_hidden(batch_size).to(device)
                         outputs = model(input_batch, hidden)
@@ -213,7 +214,8 @@ def evaluate(config, X_test, Y_test, Test_features, n_train):
     elif algo == 'baseline':
         model = DeepBaseline(input_size=input_size, hidden_size=hidden_size, output_size=Y_test.shape[1]).to(device)
 
-    optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=3e-4)
+    #optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=3e-4)
+    optimizer = optim.Adam(model.parameters(), lr=lr)
 
     input_horizon = int(config['data']['input_horizon'])
     f_name = algo + '_' + str(input_horizon) + '.pth.tar'
@@ -239,8 +241,8 @@ def evaluate(config, X_test, Y_test, Test_features, n_train):
 
         if algo == 'seq2seq':
             # prediction is sigmoid activation
-            prediction = model(input_batch, target_label, features, 0.0)
-            #prediction = model(input_batch, target_label, 0.0)
+            #prediction = model(input_batch, target_label, features, 0.0)
+            prediction = model(input_batch, target_label, 0.0)
             pred.append(prediction.detach().cpu().numpy())
         elif algo == 'baseline':
             # prediction is sigmoid activation
