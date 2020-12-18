@@ -88,7 +88,7 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
     num_layers = int(config['train']['num_layers'])
     algo = config['train']['algo']
     config['model']['decoder']
-    feat = self.config.getboolean('data', 'features')
+    feat = config.getboolean('data', 'features')
 
     input_horizon = int(config['data']['input_horizon'])
     f_name = algo + '_' + str(input_horizon) + '.pth.tar'
