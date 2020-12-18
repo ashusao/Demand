@@ -87,7 +87,7 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
     batch_size = int(config['train']['batch_size'])
     num_layers = int(config['train']['num_layers'])
     algo = config['train']['algo']
-    decode = config['model']['deoder']
+    config['model']['decoder']
     feat = self.config.getboolean('data', 'features')
 
     input_horizon = int(config['data']['input_horizon'])
@@ -216,7 +216,7 @@ def evaluate(config, X_test, Y_test, Test_features, n_train):
     batch_size = int(config['train']['batch_size'])
     num_layers = int(config['train']['num_layers'])
     algo = config['train']['algo']
-    decode = config['model']['deoder']
+    decode = config['model']['decoder']
     feat = config.getboolean('data', 'features')
 
     if algo == 'seq2seq':

@@ -168,7 +168,7 @@ class Seq2Seq(nn.Module):
         #features = self.embedding(features)
 
         feat = self.config.getboolean('data', 'features')
-        decode = self.config['model']['deoder']
+        decode = self.config['model']['decoder']
 
         if feat:
             features = features.unsqueeze(0)  # add extra dimensino for concatenation
