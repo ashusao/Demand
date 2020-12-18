@@ -27,7 +27,7 @@ from utils import save_loss
 from utils import show_plot
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-#torch.manual_seed(0)
+torch.manual_seed(0)
 #torch.set_deterministic(True) # type: ignore
 
 
@@ -64,13 +64,13 @@ def compute_weight_matrix(targets, positive_weight, negative_weight):
 
 def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_features):
 
-    Y_train = torch.from_numpy(Y_train).long().to(device)
+    Y_train = torch.from_numpy(Y_train).float().to(device)
     X_train = torch.from_numpy(X_train).float().to(device)
     X_train = X_train.unsqueeze(2) # add 3rd dimesion when not one hot enocded or no additional features
     Train_features = torch.from_numpy(Train_features).float().to(device)
     Test_features = torch.from_numpy(Test_features).float().to(device)
 
-    Y_test = torch.from_numpy(Y_test).long().to(device)
+    Y_test = torch.from_numpy(Y_test).float().to(device)
     X_test = torch.from_numpy(X_test).float().to(device)
     X_test = X_test.unsqueeze(2)
 
@@ -82,31 +82,39 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
     #Model hyperparameters
     lr = float(config['train']['lr'])
     dropout = float(config['train']['dropout'])
+    wd = float(config['train']['wd'])
     num_epochs = int(config['train']['num_epochs'])
     batch_size = int(config['train']['batch_size'])
     num_layers = int(config['train']['num_layers'])
     algo = config['train']['algo']
+    decode = config['model']['deoder']
+    feat = self.config.getboolean('data', 'features')
 
     input_horizon = int(config['data']['input_horizon'])
     f_name = algo + '_' + str(input_horizon) + '.pth.tar'
 
     if algo == 'seq2seq':
         encoder = Encoder(input_size=input_size, hidden_size=hidden_size, dropout=dropout, num_layers=num_layers).to(device)
-        '''decoder = AttnDecoder(input_size=1, hidden_size=hidden_size, output_size=output_size, input_len=X_train.shape[1],
-                              feat_size=Train_features.shape[1], dropout=dropout, num_layers=num_layers)'''
-        decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size, dropout=dropout, num_layers=num_layers).to(device)
-        '''decoder = Decoder(input_size=1, hidden_size=hidden_size + Train_features.shape[1], output_size=output_size, dropout=dropout,
-                          num_layers=num_layers).to(device)'''
+
+        if decode == 'attention':
+            decoder = AttnDecoder(input_size=1, hidden_size=hidden_size, output_size=output_size, input_len=X_train.shape[1],
+                              feat_size=Train_features.shape[1], dropout=dropout, num_layers=num_layers).to(device)
+
+        if decode == 'decoder':
+            decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size, dropout=dropout, num_layers=num_layers).to(device)
+
+        if decode == 'features':
+            decoder = Decoder(input_size=1, hidden_size=hidden_size + Train_features.shape[1], output_size=output_size, dropout=dropout,
+                              num_layers=num_layers).to(device)
         #embedding = Embedding(feat_size=Train_features.shape[1], embed_size=embed_size)
-        model = Seq2Seq(encoder, decoder).to(device)
+        model = Seq2Seq(encoder, decoder, config).to(device)
     elif algo == 'baseline':
         # ouput size = seq length
         model = DeepBaseline(input_size=input_size, hidden_size=hidden_size, output_size=Y_train.shape[1]).to(device)
 
     criterion = nn.BCELoss()
     #criterion = FocalLoss()
-    #optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=3e-4)
-    optimizer = optim.Adam(model.parameters(), lr=lr)
+    optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=wd)
 
     n_batches_train = int(X_train.shape[0] / batch_size)
     n_batches_test = int(X_test.shape[0] / batch_size)
@@ -130,13 +138,17 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
                 if phase == 'train':
                     input_batch = X_train[b: b + batch_size, :, :]
                     target_label = Y_train[b: b + batch_size, :]
-                    #features = Train_features[b: b + batch_size, :]
+
+                    if feat:
+                        features = Train_features[b: b + batch_size, :]
                     #positive_wt, negative_wt = compute_weights(target_label)
                     model.train()
                 else:
                     input_batch = X_test[b % X_test.shape[0]: ((b % X_test.shape[0]) + batch_size), :, :]
                     target_label = Y_test[b % Y_test.shape[0]: ((b % Y_test.shape[0]) + batch_size), :]
-                    #features = Test_features[b % Test_features.shape[0]: ((b % Test_features.shape[0]) + batch_size), :]
+
+                    if feat:
+                        features = Test_features[b % Test_features.shape[0]: ((b % Test_features.shape[0]) + batch_size), :]
                     #positive_wt, negative_wt = compute_weights(target_label)
                     model.eval()
 
@@ -144,8 +156,10 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
 
                 with torch.set_grad_enabled(phase == 'train'):
                     if algo == 'seq2seq':
-                        #outputs = model(input_batch, target_label, features, 0.0) # no teacher force
-                        outputs = model(input_batch, target_label, 0.0)  # no teacher force
+                        if feat:
+                            outputs = model(input_batch, target_label, features, 0.0) # no teacher force
+                        else:
+                            outputs = model(input_batch, target_label, 0.0)  # no teacher force
                     elif algo == 'baseline':
                         hidden = model.init_hidden(batch_size).to(device)
                         outputs = model(input_batch, hidden)
@@ -198,24 +212,32 @@ def evaluate(config, X_test, Y_test, Test_features, n_train):
     # Model hyperparameters
     lr = float(config['train']['lr'])
     dropout = float(config['train']['dropout'])
+    wd = float(config['train']['wd'])
     batch_size = int(config['train']['batch_size'])
     num_layers = int(config['train']['num_layers'])
     algo = config['train']['algo']
+    decode = config['model']['deoder']
+    feat = config.getboolean('data', 'features')
 
     if algo == 'seq2seq':
         encoder = Encoder(input_size=input_size, hidden_size=hidden_size, dropout=dropout, num_layers=num_layers).to(device)
-        '''decoder = AttnDecoder(input_size=1, hidden_size=hidden_size, output_size=output_size, input_len=X_test.shape[1],
-                              feat_size=Test_features.shape[1], dropout=dropout, num_layers=num_layers)'''
-        decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size, dropout=dropout, num_layers=num_layers).to(device)
-        '''decoder = Decoder(input_size=1, hidden_size=hidden_size + Test_features.shape[1], output_size=output_size, dropout=dropout,
-                          num_layers=num_layers).to(device)'''
-        #embedding = Embedding(feat_size=Test_features.shape[1], embed_size=embed_size)
-        model = Seq2Seq(encoder, decoder).to(device)
+
+        if decode == 'attention':
+            decoder = AttnDecoder(input_size=1, hidden_size=hidden_size, output_size=output_size, input_len=X_test.shape[1],
+                                  feat_size=Test_features.shape[1], dropout=dropout, num_layers=num_layers).to(device)
+
+        if decode == 'decoder':
+            decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size, dropout=dropout, num_layers=num_layers).to(device)
+
+        if decode == 'features':
+            decoder = Decoder(input_size=1, hidden_size=hidden_size + Test_features.shape[1], output_size=output_size, dropout=dropout,
+                              num_layers=num_layers).to(device)
+
+        model = Seq2Seq(encoder, decoder, config).to(device)
     elif algo == 'baseline':
         model = DeepBaseline(input_size=input_size, hidden_size=hidden_size, output_size=Y_test.shape[1]).to(device)
 
-    #optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=3e-4)
-    optimizer = optim.Adam(model.parameters(), lr=lr)
+    optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=wd)
 
     input_horizon = int(config['data']['input_horizon'])
     f_name = algo + '_' + str(input_horizon) + '.pth.tar'
@@ -237,12 +259,16 @@ def evaluate(config, X_test, Y_test, Test_features, n_train):
         b = b * batch_size
         input_batch = X_test[b: b + batch_size, :, :]
         target_label = Y_test[b: b + batch_size, :]
-        #features = Test_features[b: b + batch_size, :]
+
+        if feat:
+            features = Test_features[b: b + batch_size, :]
 
         if algo == 'seq2seq':
             # prediction is sigmoid activation
-            #prediction = model(input_batch, target_label, features, 0.0)
-            prediction = model(input_batch, target_label, 0.0)
+            if feat:
+                prediction = model(input_batch, target_label, features, 0.0)
+            else:
+                prediction = model(input_batch, target_label, 0.0)
             pred.append(prediction.detach().cpu().numpy())
         elif algo == 'baseline':
             # prediction is sigmoid activation

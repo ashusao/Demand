@@ -141,6 +141,7 @@ class Data:
         test_step = int(self._config['data']['test_window_size'])
         n_lag = 96 * int(self._config['data']['input_horizon'])  # *96 when lag value is in days
         n_lead = 96 * int(self._config['data']['output_horizon']) # *96 when lead is in days
+        feat = self._config.getboolean('data', 'features')
 
         for i in range(n_lag, series.size):
             end_ix = i + (n_lead - 1)
@@ -151,27 +152,39 @@ class Data:
             start_ix = i - n_lag
 
             if (i%train_step == 0) and (series.index[end_ix] <= datetime.datetime.strptime(split_time, '%Y-%m-%d %H:%M:%S')):
-                #data, features = self.generate_data(series, df, feature_df, start_ix, i)
-                #X_train.append(data.tolist())
-                X_train.append(series.tolist()[start_ix:i])
+
+                if feat:
+                    data, features = self.generate_data(series, df, feature_df, start_ix, i)
+                    X_train.append(data.tolist())
+                    train_features.append(features.tolist())
+                else:
+                    X_train.append(series.tolist()[start_ix:i])
                 Y_train.append(series.tolist()[i:(end_ix + 1)])
-                #train_features.append(features.tolist())
+
             elif i%test_step == 0:
-                #data, features = self.generate_data(series, df, feature_df, start_ix, i)
-                #X_test.append(data.tolist())
-                X_test.append(series.tolist()[start_ix:i])
+
+                if feat:
+                    data, features = self.generate_data(series, df, feature_df, start_ix, i)
+                    X_test.append(data.tolist())
+                    test_features.append(features.tolist())
+                else:
+                    X_test.append(series.tolist()[start_ix:i])
                 Y_test.append(series.tolist()[i:(end_ix + 1)])
-                #test_features.append(features.tolist())
 
         # shuffle
         if randomize:
-            X_train, Y_train = shuffle(X_train, Y_train, random_state=0)
-            X_test, Y_test = shuffle(X_test, Y_test, random_state=0)
-            #X_train, Y_train, train_features = shuffle(X_train, Y_train, train_features,random_state=0)
-            #X_test, Y_test, test_features = shuffle(X_test, Y_test, test_features, random_state=0)
 
-        return np.array(X_train), np.array(Y_train), np.array(X_test), np.array(Y_test)
-        #return np.array(X_train), np.array(Y_train), np.array(X_test), np.array(Y_test), np.array(train_features), np.array(test_features)
+            if feat:
+                X_train, Y_train, train_features = shuffle(X_train, Y_train, train_features,random_state=0)
+                X_test, Y_test, test_features = shuffle(X_test, Y_test, test_features, random_state=0)
+            else:
+                X_train, Y_train = shuffle(X_train, Y_train, random_state=0)
+                X_test, Y_test = shuffle(X_test, Y_test, random_state=0)
+
+        if feat:
+            return np.array(X_train), np.array(Y_train), np.array(X_test), np.array(Y_test), np.array(train_features), np.array(test_features)
+        else:
+            return np.array(X_train), np.array(Y_train), np.array(X_test), np.array(Y_test)
 
     def generate_and_save_aggregated_train_test(self, df, randomize=True):
 
@@ -185,6 +198,7 @@ class Data:
         save_dir = self._config['data']['npy_path']
         n_lag_days = int(self._config['data']['input_horizon'])
         n_lead_days = int(self._config['data']['output_horizon'])
+        feat = self._config.getboolean('data', 'features')
 
         X_train = list()
         Y_train = list()
@@ -196,16 +210,18 @@ class Data:
         feature_df = self.read_and_process_features()
 
         for series_idx in range(df.shape[1] - 9): # subtract last 9 time feature columns
-            x_train, y_train, x_test, y_test = self.split_series_train_test(df.iloc[:, series_idx],
-                                                                            df, feature_df, randomize=randomize)
-            #x_train, y_train, x_test, y_test, train_features, test_features = self.split_series_train_test(df.iloc[:, series_idx],
-            #                                                                df, feature_df, randomize=randomize)
+            if feat:
+                x_train, y_train, x_test, y_test, train_features, test_features = self.split_series_train_test(df.iloc[:, series_idx],
+                                                                                df, feature_df, randomize=randomize)
+                Train_features.extend(train_features.tolist())
+                Test_features.extend(test_features.tolist())
+            else:
+                x_train, y_train, x_test, y_test = self.split_series_train_test(df.iloc[:, series_idx],
+                                                                                df, feature_df, randomize=randomize)
             X_train.extend(x_train.tolist())
             Y_train.extend(y_train.tolist())
             X_test.extend(x_test.tolist())
             Y_test.extend(y_test.tolist())
-            #Train_features.extend(train_features.tolist())
-            #Test_features.extend(test_features.tolist())
 
             print(series_idx, sep=' ', end=' ')
             sys.stdout.flush()
@@ -215,14 +231,17 @@ class Data:
         Y_train = np.array(Y_train)
         X_test = np.array(X_test)
         Y_test = np.array(Y_test)
-        #Train_features = np.array(Train_features)
-        #Test_features = np.array(Test_features)
 
         if randomize:
-            X_train, Y_train = shuffle(X_train, Y_train, random_state=0)
-            X_test, Y_test = shuffle(X_test, Y_test, random_state=0)
-            #X_train, Y_train, Train_features = shuffle(X_train, Y_train, Train_features, random_state=0)
-            #X_test, Y_test, Test_features = shuffle(X_test, Y_test, Test_features, random_state=0)
+            if feat:
+                Train_features = np.array(Train_features)
+                Test_features = np.array(Test_features)
+                X_train, Y_train, Train_features = shuffle(X_train, Y_train, Train_features, random_state=0)
+                X_test, Y_test, Test_features = shuffle(X_test, Y_test, Test_features, random_state=0)
+            else:
+                X_train, Y_train = shuffle(X_train, Y_train, random_state=0)
+                X_test, Y_test = shuffle(X_test, Y_test, random_state=0)
+
 
         train_step = self._config['data']['train_window_size']
         test_step = self._config['data']['test_window_size']
@@ -247,15 +266,16 @@ class Data:
                              '_day_train_step_' + str(train_step) +
                              '_day_test_step_' + str(test_step) + '.npy'), Y_test)
 
-        '''np.save(os.path.join(save_dir, 'Train_features_lag_' + str(n_lag_days) +
-                             '_day_lead_' + str(n_lead_days) +
-                             '_day_train_step_' + str(train_step) +
-                             '_day_test_step_' + str(test_step) + '.npy'), Train_features)
+        if feat:
+            np.save(os.path.join(save_dir, 'Train_features_lag_' + str(n_lag_days) +
+                                 '_day_lead_' + str(n_lead_days) +
+                                 '_day_train_step_' + str(train_step) +
+                                 '_day_test_step_' + str(test_step) + '.npy'), Train_features)
 
-        np.save(os.path.join(save_dir, 'Test_features_lag_' + str(n_lag_days) +
-                             '_day_lead_' + str(n_lead_days) +
-                             '_day_train_step_' + str(train_step) +
-                             '_day_test_step_' + str(test_step) + '.npy'), Test_features)'''
+            np.save(os.path.join(save_dir, 'Test_features_lag_' + str(n_lag_days) +
+                                 '_day_lead_' + str(n_lead_days) +
+                                 '_day_train_step_' + str(train_step) +
+                                 '_day_test_step_' + str(test_step) + '.npy'), Test_features)
 
         print('Finished Generating : ', str(n_lag_days))
         sys.stdout.flush()
@@ -279,6 +299,7 @@ class Data:
         train_step = self._config['data']['train_window_size']
         test_step = self._config['data']['test_window_size']
         npy_path = self._config['data']['npy_path']
+        feat = self._config.getboolean('data', 'features')
 
         if not os.path.isfile(os.path.join(npy_path, 'X_train_lag_' + str(input_horizon) +
                                                      '_day_lead_' + str(output_horizon) +
@@ -306,18 +327,20 @@ class Data:
                              '_day_train_step_' + str(train_step) +
                              '_day_test_step_' + str(test_step) + '.npy'))
 
-        '''Train_features = np.load(os.path.join(npy_path, 'Train_features_lag_' + str(input_horizon) +
-                             '_day_lead_' + str(output_horizon) +
-                             '_day_train_step_' + str(train_step) +
-                             '_day_test_step_' + str(test_step) + '.npy'))
+        if feat:
+            Train_features = np.load(os.path.join(npy_path, 'Train_features_lag_' + str(input_horizon) +
+                                 '_day_lead_' + str(output_horizon) +
+                                 '_day_train_step_' + str(train_step) +
+                                 '_day_test_step_' + str(test_step) + '.npy'))
 
-        Test_features = np.load(os.path.join(npy_path, 'Test_features_lag_' + str(input_horizon) +
-                                              '_day_lead_' + str(output_horizon) +
-                                              '_day_train_step_' + str(train_step) +
-                                              '_day_test_step_' + str(test_step) + '.npy'))'''
+            Test_features = np.load(os.path.join(npy_path, 'Test_features_lag_' + str(input_horizon) +
+                                                  '_day_lead_' + str(output_horizon) +
+                                                  '_day_train_step_' + str(train_step) +
+                                                  '_day_test_step_' + str(test_step) + '.npy'))
+            return X_train, Y_train, X_test, Y_test, Train_features, Test_features
+        else:
+            return X_train, Y_train, X_test, Y_test
 
-        return X_train, Y_train, X_test, Y_test
-        #return X_train, Y_train, X_test, Y_test, Train_features, Test_features
 
     def load_one_hot_train(self, X_train, Y_train, X_test, Y_test, train=True):
         '''

@@ -5,7 +5,7 @@ import random
 from data import Data
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-#torch.manual_seed(0)
+torch.manual_seed(0)
 #torch.set_deterministic(True) # type: ignore
 
 class Encoder(nn.Module):
@@ -21,7 +21,7 @@ class Encoder(nn.Module):
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.gru = nn.GRU(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers, batch_first=True)
-        #self.dropout = nn.Dropout(p=dropout)
+        self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, input, hidden):
         '''
@@ -32,7 +32,7 @@ class Encoder(nn.Module):
                 hidden represents context vector. shape (num_layers, batch_size, hidden_size)
         '''
         output, hidden = self.gru(input, hidden)
-        #output = self.dropout(output)
+        output = self.dropout(output)
         return output, hidden
 
     def init_hidden(self, batch_size):
@@ -57,7 +57,7 @@ class Decoder(nn.Module):
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.gru = nn.GRU(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers, batch_first=True)
-        #self.dropout = nn.Dropout(p=dropout)
+        self.dropout = nn.Dropout(p=dropout)
         self.linear = nn.Linear(hidden_size, output_size)
 
     def forward(self, input, hidden):
@@ -70,7 +70,7 @@ class Decoder(nn.Module):
         '''
         # Add an extra dimension for seq_len = 1 because we are sending one input at a time
         output, hidden = self.gru(input.unsqueeze(1), hidden)
-        #output = self.dropout(output)
+        output = self.dropout(output)
         out = self.linear(output)
 
         # squeeze the seq_len dimension so that output is (batch_size, output_dim)
@@ -146,10 +146,11 @@ class Embedding(nn.Module):
 
 class Seq2Seq(nn.Module):
 
-    def __init__(self, encoder, decoder):
+    def __init__(self, encoder, decoder, config):
         super(Seq2Seq, self).__init__()
         self.encoder = encoder
         self.decoder = decoder
+        self.config = config
         #self.embedding = embedding
         self.data_obj = Data()
 
@@ -166,9 +167,13 @@ class Seq2Seq(nn.Module):
         encoder_out, hidden = self.encoder(source, hidden)
         #features = self.embedding(features)
 
-        '''features = features.unsqueeze(0)  # add extra dimensino for concatenation
-        features = features.repeat(hidden.shape[0], 1, 1)  # copy features to each layers (num_layers, batch, hidden_size)
-        hidden = torch.cat((hidden, features), 2)  # (num_layers, batch, hidden_size + feat_size)'''
+        feat = self.config.getboolean('data', 'features')
+        decode = self.config['model']['deoder']
+
+        if feat:
+            features = features.unsqueeze(0)  # add extra dimensino for concatenation
+            features = features.repeat(hidden.shape[0], 1, 1)  # copy features to each layers (num_layers, batch, hidden_size)
+            hidden = torch.cat((hidden, features), 2)  # (num_layers, batch, hidden_size + feat_size)
 
         # First input to decoder will be last input of encoder
         #decoder_input = source[:, -1, :] # shape(batch_size, input_size)
@@ -190,12 +195,14 @@ class Seq2Seq(nn.Module):
         else:
             # feed output as next input
             for t in range(target_len):
-                out, hidden = self.decoder(decoder_input, hidden)
-                #out, hidden = self.decoder(decoder_input, hidden, encoder_out)
+
+                if decode == 'attention':
+                    out, hidden = self.decoder(decoder_input, hidden, encoder_out)
+                else:
+                    out, hidden = self.decoder(decoder_input, hidden)
+
                 outputs[:, t] = out.squeeze(1)
-
                 output = out.clone()
-
                 decoder_input = output.float()
 
         return outputs

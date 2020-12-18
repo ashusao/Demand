@@ -64,16 +64,24 @@ if __name__ == '__main__':
 
     baseline_approach.log_result(data_type=data_type, n_train=n_train, n_test=n_test, accuracy=np.mean(acc_), f1=np.mean(f1_, axis=0))'''
 
-    #X_train, Y_train, X_test, Y_test, Train_features, Test_features = data_obj.split_train_test(df, 0, aggregate=True)
-    Train_features = np.array([1, 2, 3, 4, 5])
-    Test_features = np.array([1, 2, 3, 4, 5])
-    X_train, Y_train, X_test, Y_test = data_obj.split_train_test(df, 0, aggregate=True)
+    feat = config.getboolean('data', 'features')
+    eval_train = config.getboolean('data', 'eval_train')
+    if feat:
+        X_train, Y_train, X_test, Y_test, Train_features, Test_features = data_obj.split_train_test(df, 0, aggregate=True)
+    else:
+        X_train, Y_train, X_test, Y_test = data_obj.split_train_test(df, 0, aggregate=True)
+        Train_features = np.array([1, 2, 3, 4, 5])
+        Test_features = np.array([1, 2, 3, 4, 5])
+
     print(X_train.shape, Y_train.shape, X_test.shape, Y_test.shape, Train_features.shape, Test_features.shape)
 
-    #train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_features)
+    train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_features)
 
-    evaluate(config, X_test, Y_test, Test_features, X_train.shape[0])
-    #evaluate(config, X_train, Y_train, Train_features, X_train.shape[0])
+    if eval_train:
+        evaluate(config, X_train, Y_train, Train_features, X_train.shape[0])
+    else:
+        evaluate(config, X_test, Y_test, Test_features, X_train.shape[0])
+
 
 
 
