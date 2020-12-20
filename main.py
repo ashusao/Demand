@@ -66,6 +66,7 @@ if __name__ == '__main__':
 
     feat = config.getboolean('data', 'features')
     eval_train = config.getboolean('data', 'eval_train')
+
     if feat:
         X_train, Y_train, X_test, Y_test, Train_features, Test_features = data_obj.split_train_test(df, 0, aggregate=True)
     else:
@@ -75,7 +76,8 @@ if __name__ == '__main__':
 
     print(X_train.shape, Y_train.shape, X_test.shape, Y_test.shape, Train_features.shape, Test_features.shape)
 
-    train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_features)
+    if not eval_train:
+        train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_features)
 
     if eval_train:
         evaluate(config, X_train, Y_train, Train_features, X_train.shape[0])
