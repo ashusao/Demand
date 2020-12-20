@@ -80,7 +80,7 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
     input_size = X_train.shape[2] # 1 or additional attributes
     output_size = 1
     hidden_size = 100
-    #embed_size = 500
+    embed_size = hidden_size
 
     #Model hyperparameters
     lr = float(config['train']['lr'])
@@ -98,6 +98,7 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
 
     if algo == 'seq2seq':
         encoder = Encoder(input_size=input_size, hidden_size=hidden_size, dropout=dropout, num_layers=num_layers).to(device)
+        embedding = Embedding(feat_size=hidden_size + Train_features.shape[1], embed_size=embed_size)
 
         if decode == 'attention':
             decoder = AttnDecoder(input_size=1, hidden_size=hidden_size, output_size=output_size, input_len=X_train.shape[1],
@@ -107,10 +108,12 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
             decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size, dropout=dropout, num_layers=num_layers).to(device)
 
         if decode == 'features':
-            decoder = Decoder(input_size=1, hidden_size=hidden_size + Train_features.shape[1], output_size=output_size, dropout=dropout,
+            decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size, dropout=dropout,
                               num_layers=num_layers).to(device)
-        #embedding = Embedding(feat_size=Train_features.shape[1], embed_size=embed_size)
-        model = Seq2Seq(encoder, decoder, config).to(device)
+            '''decoder = Decoder(input_size=1, hidden_size=hidden_size + Train_features.shape[1], output_size=output_size, dropout=dropout,
+                              num_layers=num_layers).to(device)'''
+
+        model = Seq2Seq(encoder, decoder, embedding, config).to(device)
     elif algo == 'baseline':
         # ouput size = seq length
         model = DeepBaseline(input_size=input_size, hidden_size=hidden_size, output_size=Y_train.shape[1]).to(device)
@@ -212,7 +215,7 @@ def evaluate(config, X_test, Y_test, Test_features, n_train):
     input_size = X_test.shape[2]
     output_size = 1
     hidden_size = 100
-    #embed_size = 500
+    embed_size = hidden_size
 
     # Model hyperparameters
     lr = float(config['train']['lr'])
@@ -226,6 +229,7 @@ def evaluate(config, X_test, Y_test, Test_features, n_train):
 
     if algo == 'seq2seq':
         encoder = Encoder(input_size=input_size, hidden_size=hidden_size, dropout=dropout, num_layers=num_layers).to(device)
+        embedding = Embedding(feat_size=hidden_size + Test_features.shape[1], embed_size=embed_size)
 
         if decode == 'attention':
             decoder = AttnDecoder(input_size=1, hidden_size=hidden_size, output_size=output_size, input_len=X_test.shape[1],
@@ -235,10 +239,12 @@ def evaluate(config, X_test, Y_test, Test_features, n_train):
             decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size, dropout=dropout, num_layers=num_layers).to(device)
 
         if decode == 'features':
-            decoder = Decoder(input_size=1, hidden_size=hidden_size + Test_features.shape[1], output_size=output_size, dropout=dropout,
+            decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size, dropout=dropout,
                               num_layers=num_layers).to(device)
+            '''decoder = Decoder(input_size=1, hidden_size=hidden_size + Test_features.shape[1], output_size=output_size, dropout=dropout,
+                              num_layers=num_layers).to(device)'''
 
-        model = Seq2Seq(encoder, decoder, config).to(device)
+        model = Seq2Seq(encoder, decoder, embedding, config).to(device)
     elif algo == 'baseline':
         model = DeepBaseline(input_size=input_size, hidden_size=hidden_size, output_size=Y_test.shape[1]).to(device)
 

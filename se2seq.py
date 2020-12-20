@@ -146,12 +146,12 @@ class Embedding(nn.Module):
 
 class Seq2Seq(nn.Module):
 
-    def __init__(self, encoder, decoder, config):
+    def __init__(self, encoder, decoder, embedding, config):
         super(Seq2Seq, self).__init__()
         self.encoder = encoder
         self.decoder = decoder
         self.config = config
-        #self.embedding = embedding
+        self.embedding = embedding
         self.data_obj = Data()
 
     def forward(self, source, target, features, teacher_force_ratio=0.5):
@@ -165,7 +165,7 @@ class Seq2Seq(nn.Module):
         hidden = self.encoder.init_hidden(batch_size).to(device)
 
         encoder_out, hidden = self.encoder(source, hidden)
-        #features = self.embedding(features)
+
 
         feat = self.config.getboolean('data', 'features')
         decode = self.config['model']['decoder']
@@ -174,6 +174,7 @@ class Seq2Seq(nn.Module):
             features = features.unsqueeze(0)  # add extra dimensino for concatenation
             features = features.repeat(hidden.shape[0], 1, 1)  # copy features to each layers (num_layers, batch, hidden_size)
             hidden = torch.cat((hidden, features), 2)  # (num_layers, batch, hidden_size + feat_size)
+            hidden = self.embedding(hidden) # features + hidden =====>>> hidden
 
         # First input to decoder will be last input of encoder
         #decoder_input = source[:, -1, :] # shape(batch_size, input_size)

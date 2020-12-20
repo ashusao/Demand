@@ -51,7 +51,7 @@ if __name__ == '__main__':
             X_train, Y_train, X_test, Y_test = data_obj.split_train_test(df, idx, aggregate=agg_series)
             if idx == 0:
                 n_train = X_train.shape[0]
-                n_test = X_test.shape[0]ls 
+                n_test = X_test.shape[0]
             if algo == 'knn':
                 acc, f1, cm = baseline_approach.nearest_neighbour(X_train, Y_train, X_test, Y_test, aggregate=agg_series)
             elif algo == 'rf':
@@ -70,8 +70,8 @@ if __name__ == '__main__':
         X_train, Y_train, X_test, Y_test, Train_features, Test_features = data_obj.split_train_test(df, 0, aggregate=True)
     else:
         X_train, Y_train, X_test, Y_test = data_obj.split_train_test(df, 0, aggregate=True)
-        Train_features = np.array([1, 2, 3, 4, 5])
-        Test_features = np.array([1, 2, 3, 4, 5])
+        Train_features = np.array([[1], [2], [3]])
+        Test_features = np.array([[1], [2], [3]])
 
     print(X_train.shape, Y_train.shape, X_test.shape, Y_test.shape, Train_features.shape, Test_features.shape)
 
