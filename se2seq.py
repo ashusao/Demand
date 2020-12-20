@@ -151,7 +151,9 @@ class Seq2Seq(nn.Module):
         self.encoder = encoder
         self.decoder = decoder
         self.config = config
-        self.embedding = embedding
+        feat = self.config.getboolean('data', 'features')
+        if feat:
+            self.embedding = embedding
         self.data_obj = Data()
 
     def forward(self, source, target, features, teacher_force_ratio=0.5):
