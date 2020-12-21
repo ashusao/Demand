@@ -95,13 +95,13 @@ class AttnDecoder(nn.Module):
         self.feat_size = feat_size
 
         # combine prev_hidden and input to input len
-        self.attn = nn.Linear(self.hidden_size + self.feat_size + self.input_size, self.input_len)  # hidden_size = hidden + feat_size
+        self.attn = nn.Linear(self.hidden_size + self.input_size, self.input_len)  # hidden_size = hidden + feat_size
 
         # concat attention applied and input to hidden size which act as i/p for rnn
         self.attn_combine = nn.Linear(self.input_size + self.hidden_size, self.input_size)
-        self.gru = nn.GRU(input_size=input_size, hidden_size=hidden_size+feat_size, num_layers=num_layers,  batch_first=True)  # hidden_size = hidden + feat_size
+        self.gru = nn.GRU(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers,  batch_first=True)  # hidden_size = hidden + feat_size
         self.dropout = nn.Dropout(p=dropout)
-        self.linear = nn.Linear(self.hidden_size + self.feat_size, output_size)
+        self.linear = nn.Linear(self.hidden_size, output_size)
 
     def forward(self, input, hidden, encoder_outputs):
         '''
@@ -198,7 +198,11 @@ class Seq2Seq(nn.Module):
             # feed the target as next input
             for t in range(target_len):
                 # Using precious hidden state which is context from encoder at start
-                out, hidden = self.decoder(decoder_input, hidden)
+                if decode == 'attention':
+                    out, hidden = self.decoder(decoder_input, hidden, encoder_out)
+                else:
+                    out, hidden = self.decoder(decoder_input, hidden)
+
                 outputs[:, t] = out.squeeze(1)
 
                 decoder_input = target[:, t]
