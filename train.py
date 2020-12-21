@@ -97,7 +97,7 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
     f_name = algo + '_' + str(input_horizon) + '.pth.tar'
 
     if algo == 'seq2seq':
-        encoder = Encoder(input_size=input_size + embed_size, hidden_size=hidden_size, dropout=dropout, num_layers=num_layers).to(device)
+        encoder = Encoder(input_size=input_size, hidden_size=hidden_size, dropout=dropout, num_layers=num_layers).to(device)
         embedding = Embedding(feat_size=Train_features.shape[1], embed_size=embed_size)
 
         if decode == 'attention':
@@ -228,7 +228,7 @@ def evaluate(config, X_test, Y_test, Test_features, n_train):
     feat = config.getboolean('data', 'features')
 
     if algo == 'seq2seq':
-        encoder = Encoder(input_size=input_size + embed_size, hidden_size=hidden_size, dropout=dropout, num_layers=num_layers).to(device)
+        encoder = Encoder(input_size=input_size, hidden_size=hidden_size, dropout=dropout, num_layers=num_layers).to(device)
         embedding = Embedding(feat_size=Test_features.shape[1], embed_size=embed_size)
 
         if decode == 'attention':

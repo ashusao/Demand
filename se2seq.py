@@ -164,20 +164,25 @@ class Seq2Seq(nn.Module):
         #outputs = torch.zeros(batch_size, target_len, output_size).to(device)
         outputs = torch.zeros(batch_size, target_len).to(device)
 
-        hidden = self.encoder.init_hidden(batch_size).to(device)
-
         feat = self.config.getboolean('data', 'features')
         decode = self.config['model']['decoder']
+        num_layers = int(self.config['train']['num_layers'])
 
         if feat:
-            features = self.embedding(features)  # features  =====>>> hidden
-            #features = features.unsqueeze(0)  # add extra dimensino for concatenation
+            #intial hidden as features
+            hidden = self.embedding(features)  # features  =====>>> hidden
+            hidden = hidden.unsqueeze(0)
+            hidden = hidden.repeat(num_layers, 1, 1)
+
+            #features = features.unsqueeze(0)  # add extra dimensino for num_layers
             #features = features.repeat(hidden.shape[0], 1, 1)  # copy features to each layers (num_layers, batch, hidden_size)
             #hidden = torch.cat((hidden, features), 2)  # (num_layers, batch, hidden_size + feat_size)
 
-            features = features.unsqueeze(1)
-            features = features.repeat(1, source.shape[1], 1)
-            source = torch.cat((source, features), 2)
+            #features = features.unsqueeze(1)
+            #features = features.repeat(1, source.shape[1], 1)
+            #source = torch.cat((source, features), 2)
+        else:
+            hidden = self.encoder.init_hidden(batch_size).to(device)
 
         encoder_out, hidden = self.encoder(source, hidden)
 
