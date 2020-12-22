@@ -78,10 +78,10 @@ class Data:
         station_df.provider.fillna('gewerblich', inplace=True)
         station_df.payment.fillna('undefiniert', inplace=True)
 
-        feature_df = station_df[['identifier', 'anschluss']]
+        #feature_df = station_df[['identifier', 'anschluss']]
         dum = pd.get_dummies(station_df,
-                             prefix=['identifier', 'anschluss', 'type', 'suitable', 'zugang', 'cost', 'payment'],
-                             columns=['identifier', 'anschluss', 'type', 'suitable_for', 'zugang', 'cost', 'payment'])
+                             prefix=['type', 'suitable', 'zugang', 'cost', 'payment'],
+                             columns=['type', 'suitable_for', 'zugang', 'cost', 'payment'])  # removed 'identifier', 'anschluss'
         feature_df = pd.concat([feature_df, dum], axis=1)
         feature_df.power = feature_df['power'].map(lambda x: str(x)[:-1])
         feature_df.current = feature_df['current'].map(lambda x: str(x)[:-1])
@@ -95,6 +95,11 @@ class Data:
 
         scaler = MinMaxScaler()
         feature_df[['anschlusse', 'power', 'current']] = scaler.fit_transform(feature_df[['anschlusse', 'power', 'current']])
+
+        # switch anschlusse and anschluss columns so that features can be extracted from col index 2:
+        titles = list(feature_df.columns)
+        titles[1], titles[2] = titles[2], titles[1]
+        feature_df = feature_df.reindex(columns=titles)
         return feature_df
 
     def generate_features(self, series, feature_df):
