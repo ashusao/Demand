@@ -81,12 +81,12 @@ class Data:
         #feature_df = station_df[['identifier', 'anschluss']]
         '''dum = pd.get_dummies(station_df,
                              prefix=['type', 'suitable', 'zugang', 'cost', 'payment'],
-                             columns=['type', 'suitable_for', 'zugang', 'cost', 'payment'])  # removed 'identifier', 'anschluss''''
+                             columns=['type', 'suitable_for', 'zugang', 'cost', 'payment'])  # removed 'identifier', 'anschluss'''
         #feature_df = pd.concat([feature_df, dum], axis=1)
-        station_df = station_df[['identifier', 'anschluss', 'type', 'power', 'current']]
-        dum = pd.get_dummies(station_df, prefix=['type'],
-                             columns=['type'])
-        feature_df = dum
+        station_df = station_df[['identifier', 'anschluss', 'power', 'current']]
+        '''dum = pd.get_dummies(station_df, prefix=['type'],
+                             columns=['type'])'''
+        feature_df = station_df
         # feature_df = pd.concat([feature_df, dum], axis=1)
         feature_df.power = feature_df['power'].map(lambda x: str(x)[:-1])
         feature_df.current = feature_df['current'].map(lambda x: str(x)[:-1])
