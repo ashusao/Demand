@@ -58,9 +58,9 @@ class Decoder(nn.Module):
         self.num_layers = num_layers
         self.gru = nn.GRU(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers, batch_first=True)
         self.dropout = nn.Dropout(p=dropout)
-        self.linear = nn.Linear(2 * hidden_size, output_size)
+        self.linear = nn.Linear(hidden_size, output_size)
 
-    def forward(self, input, hidden, features):
+    def forward(self, input, hidden):
         '''
         :param input:           should be 2D (batch_size, input_size)
         :param hidden:          last hidden state (num_layers, batch_size, hidden_size)
@@ -71,7 +71,7 @@ class Decoder(nn.Module):
         # Add an extra dimension for seq_len = 1 because we are sending one input at a time
         output, hidden = self.gru(input.unsqueeze(1), hidden)
         output = self.dropout(output)
-        output = torch.cat((output, features.unsqueeze(1)), 2) # concat decoder output and features
+        #output = torch.cat((output, features.unsqueeze(1)), 2) # concat decoder output and features
         out = self.linear(output)
 
         # squeeze the seq_len dimension so that output is (batch_size, output_dim)
@@ -174,17 +174,18 @@ class Seq2Seq(nn.Module):
         num_layers = int(self.config['train']['num_layers'])
 
         hidden = self.encoder.init_hidden(batch_size).to(device)
+        encoder_out, hidden = self.encoder(source, hidden)
 
         if feat:
             #intial hidden as features
-            features = self.embedding(features)  # features  =====>>> hidden
+            #features = self.embedding(features)  # features  =====>>> hidden
             #hidden = hidden.unsqueeze(0)  # add extra dimensino for num_layers
             #hidden = hidden.repeat(num_layers, 1, 1)
             #hidden[:, :, :features.shape[2]] = features  # fill intial hidden with avail features
 
-            #features = features.unsqueeze(0)  # add extra dimensino for num_layers
-            #features = features.repeat(hidden.shape[0], 1, 1)  # copy features to each layers (num_layers, batch, hidden_size)
-            #hidden = torch.cat((hidden, features), 2)  # (num_layers, batch, hidden_size + feat_size)
+            features = features.unsqueeze(0)  # add extra dimensino for num_layers
+            features = features.repeat(hidden.shape[0], 1, 1)  # copy features to each layers (num_layers, batch, hidden_size)
+            hidden = torch.cat((hidden, features), 2)  # (num_layers, batch, hidden_size + feat_size)
 
             #features = features.unsqueeze(1)
             #features = features.repeat(1, source.shape[1], 1)
@@ -195,7 +196,6 @@ class Seq2Seq(nn.Module):
 
         #hidden = self.encoder.init_hidden(batch_size).to(device)
         #print(hidden.shape)
-        encoder_out, hidden = self.encoder(source, hidden)
 
         # First input to decoder will be last input of encoder
         #decoder_input = source[:, -1, :] # shape(batch_size, input_size)
@@ -225,7 +225,7 @@ class Seq2Seq(nn.Module):
                 if decode == 'attention':
                     out, hidden = self.decoder(decoder_input, hidden, encoder_out)
                 else:
-                    out, hidden = self.decoder(decoder_input, hidden, features)
+                    out, hidden = self.decoder(decoder_input, hidden)
 
                 outputs[:, t] = out.squeeze(1)
                 output = out.clone()
