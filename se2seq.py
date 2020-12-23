@@ -191,7 +191,7 @@ class Seq2Seq(nn.Module):
 
 
         #hidden = self.encoder.init_hidden(batch_size).to(device)
-        print(hidden.shape)
+        #print(hidden.shape)
         encoder_out, hidden = self.encoder(source, hidden)
 
         # First input to decoder will be last input of encoder
