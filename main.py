@@ -71,8 +71,8 @@ if __name__ == '__main__':
         X_train, Y_train, X_test, Y_test, Train_features, Test_features = data_obj.split_train_test(df, 0, aggregate=True)
     else:
         X_train, Y_train, X_test, Y_test = data_obj.split_train_test(df, 0, aggregate=True)
-        Train_features = np.array([[1], [2], [3]])
-        Test_features = np.array([[1], [2], [3]])
+        Train_features = np.random.rand(X_train.shape[0], 2)
+        Test_features = np.random.rand(X_test.shape[0], 2)
 
     print(X_train.shape, Y_train.shape, X_test.shape, Y_test.shape, Train_features.shape, Test_features.shape)
 

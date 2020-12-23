@@ -162,6 +162,9 @@ class Seq2Seq(nn.Module):
         target_len = target.shape[1]
         #output_size = target.shape[2]
 
+        #print(source.shape, target.shape)
+        #print(features.shape)
+
         #outputs = torch.zeros(batch_size, target_len, output_size).to(device)
         outputs = torch.zeros(batch_size, target_len).to(device)
 
@@ -169,14 +172,12 @@ class Seq2Seq(nn.Module):
         decode = self.config['model']['decoder']
         num_layers = int(self.config['train']['num_layers'])
 
-        hidden = self.encoder.init_hidden(batch_size).to(device)
-
         if feat:
             #intial hidden as features
-            #hidden = self.embedding(features)  # features  =====>>> hidden
-            features = features.unsqueeze(0)  # add extra dimensino for num_layers
-            features = features.repeat(num_layers, 1, 1)
-            hidden[:, :, :features.shape[2]] = features  # fill intial hidden with avail features
+            hidden = self.embedding(features)  # features  =====>>> hidden
+            hidden = hidden.unsqueeze(0)  # add extra dimensino for num_layers
+            hidden = hidden.repeat(num_layers, 1, 1)
+            #hidden[:, :, :features.shape[2]] = features  # fill intial hidden with avail features
 
             #features = features.unsqueeze(0)  # add extra dimensino for num_layers
             #features = features.repeat(hidden.shape[0], 1, 1)  # copy features to each layers (num_layers, batch, hidden_size)
@@ -185,8 +186,12 @@ class Seq2Seq(nn.Module):
             #features = features.unsqueeze(1)
             #features = features.repeat(1, source.shape[1], 1)
             #source = torch.cat((source, features), 2)
+        else:
+            hidden = self.encoder.init_hidden(batch_size).to(device)
+
 
         #hidden = self.encoder.init_hidden(batch_size).to(device)
+        print(hidden.shape)
         encoder_out, hidden = self.encoder(source, hidden)
 
         # First input to decoder will be last input of encoder

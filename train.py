@@ -144,17 +144,13 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
                 if phase == 'train':
                     input_batch = X_train[b: b + batch_size, :, :]
                     target_label = Y_train[b: b + batch_size, :]
-
-                    if feat:
-                        features = Train_features[b: b + batch_size, :]
+                    features = Train_features[b: b + batch_size, :]
                     #positive_wt, negative_wt = compute_weights(target_label)
                     model.train()
                 else:
                     input_batch = X_test[b % X_test.shape[0]: ((b % X_test.shape[0]) + batch_size), :, :]
                     target_label = Y_test[b % Y_test.shape[0]: ((b % Y_test.shape[0]) + batch_size), :]
-
-                    if feat:
-                        features = Test_features[b % Test_features.shape[0]: ((b % Test_features.shape[0]) + batch_size), :]
+                    features = Test_features[b % Test_features.shape[0]: ((b % Test_features.shape[0]) + batch_size), :]
                     #positive_wt, negative_wt = compute_weights(target_label)
                     model.eval()
 
@@ -162,10 +158,7 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
 
                 with torch.set_grad_enabled(phase == 'train'):
                     if algo == 'seq2seq':
-                        if feat:
-                            outputs = model(input_batch, target_label, features, 0.0) # no teacher force
-                        else:
-                            outputs = model(input_batch, target_label, 0.0)  # no teacher force
+                        outputs = model(input_batch, target_label, features, 0.0) # no teacher force
                     elif algo == 'baseline':
                         hidden = model.init_hidden(batch_size).to(device)
                         outputs = model(input_batch, hidden)
@@ -270,16 +263,11 @@ def evaluate(config, X_test, Y_test, Test_features, n_train):
         b = b * batch_size
         input_batch = X_test[b: b + batch_size, :, :]
         target_label = Y_test[b: b + batch_size, :]
-
-        if feat:
-            features = Test_features[b: b + batch_size, :]
+        features = Test_features[b: b + batch_size, :]
 
         if algo == 'seq2seq':
             # prediction is sigmoid activation
-            if feat:
-                prediction = model(input_batch, target_label, features, 0.0)
-            else:
-                prediction = model(input_batch, target_label, 0.0)
+            prediction = model(input_batch, target_label, features, 0.0)
             pred.append(prediction.detach().cpu().numpy())
         elif algo == 'baseline':
             # prediction is sigmoid activation
