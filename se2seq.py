@@ -58,9 +58,9 @@ class Decoder(nn.Module):
         self.num_layers = num_layers
         self.gru = nn.GRU(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers, batch_first=True)
         self.dropout = nn.Dropout(p=dropout)
-        self.linear = nn.Linear(hidden_size, output_size)
+        self.linear = nn.Linear(2 * hidden_size, output_size)
 
-    def forward(self, input, hidden):
+    def forward(self, input, hidden, features):
         '''
         :param input:           should be 2D (batch_size, input_size)
         :param hidden:          last hidden state (num_layers, batch_size, hidden_size)
@@ -71,6 +71,7 @@ class Decoder(nn.Module):
         # Add an extra dimension for seq_len = 1 because we are sending one input at a time
         output, hidden = self.gru(input.unsqueeze(1), hidden)
         output = self.dropout(output)
+        output = torch.cat((output, features.unsqueeze(1)), 2) # concat decoder output and features
         out = self.linear(output)
 
         # squeeze the seq_len dimension so that output is (batch_size, output_dim)
@@ -172,11 +173,13 @@ class Seq2Seq(nn.Module):
         decode = self.config['model']['decoder']
         num_layers = int(self.config['train']['num_layers'])
 
+        hidden = self.encoder.init_hidden(batch_size).to(device)
+
         if feat:
             #intial hidden as features
-            hidden = self.embedding(features)  # features  =====>>> hidden
-            hidden = hidden.unsqueeze(0)  # add extra dimensino for num_layers
-            hidden = hidden.repeat(num_layers, 1, 1)
+            features = self.embedding(features)  # features  =====>>> hidden
+            #hidden = hidden.unsqueeze(0)  # add extra dimensino for num_layers
+            #hidden = hidden.repeat(num_layers, 1, 1)
             #hidden[:, :, :features.shape[2]] = features  # fill intial hidden with avail features
 
             #features = features.unsqueeze(0)  # add extra dimensino for num_layers
@@ -186,8 +189,8 @@ class Seq2Seq(nn.Module):
             #features = features.unsqueeze(1)
             #features = features.repeat(1, source.shape[1], 1)
             #source = torch.cat((source, features), 2)
-        else:
-            hidden = self.encoder.init_hidden(batch_size).to(device)
+        #else:
+        #    hidden = self.encoder.init_hidden(batch_size).to(device)
 
 
         #hidden = self.encoder.init_hidden(batch_size).to(device)
@@ -222,7 +225,7 @@ class Seq2Seq(nn.Module):
                 if decode == 'attention':
                     out, hidden = self.decoder(decoder_input, hidden, encoder_out)
                 else:
-                    out, hidden = self.decoder(decoder_input, hidden)
+                    out, hidden = self.decoder(decoder_input, hidden, features)
 
                 outputs[:, t] = out.squeeze(1)
                 output = out.clone()
