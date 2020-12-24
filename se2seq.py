@@ -70,6 +70,8 @@ class Decoder(nn.Module):
         '''
         # Add an extra dimension for seq_len = 1 because we are sending one input at a time
         output, hidden = self.gru(input.unsqueeze(1), hidden)
+        output, hidden = self.gru(input.unsqueeze(1), hidden)
+        output, hidden = self.gru(input.unsqueeze(1), hidden)
         output = self.dropout(output)
         #output = torch.cat((output, features.unsqueeze(1)), 2) # concat decoder output and features
         out = self.linear(output)
