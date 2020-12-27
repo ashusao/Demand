@@ -86,8 +86,8 @@ class Data:
 
         #feature_df = station_df[['anschluss']]
         dum = pd.get_dummies(station_df,
-                             prefix=['cost'],
-                             columns=['cost'])
+                             prefix=['payment'],
+                             columns=['payment'])
 
         feature_df = dum
         #feature_df = pd.concat([feature_df, dum], axis=1)
@@ -96,7 +96,7 @@ class Data:
 
         # drop unnecessary columns
         feature_df.drop(['lat', 'lon', 'provider', 'electricity', 'opening_hours',
-                         'type', 'suitable_for', 'zugang', 'payment',
+                         'type', 'suitable_for', 'zugang', 'cost',
                          'anschlusse', 'power', 'current', 'park_area'], axis=1, inplace=True)
 
         '''feature_df.power = feature_df.power.astype('int64')
