@@ -84,10 +84,10 @@ class Data:
                              prefix=['identifier', 'anschluss', 'type', 'suitable', 'zugang', 'cost', 'payment'],
                              columns=['identifier', 'anschluss', 'type', 'suitable_for', 'zugang', 'cost', 'payment'])'''
 
-        feature_df = station_df[['identifier']]
+        feature_df = station_df[['anschluss']]
         dum = pd.get_dummies(station_df,
-                             prefix=['identifier'],
-                             columns=['identifier'])
+                             prefix=['anschluss'],
+                             columns=['anschluss'])
 
         feature_df = pd.concat([feature_df, dum], axis=1)
         feature_df.power = feature_df['power'].map(lambda x: str(x)[:-1])
