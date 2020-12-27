@@ -102,7 +102,7 @@ class Data:
         #feature_df.power = feature_df.power.astype('int64')
         #feature_df.current = feature_df.current.astype('int64')
         #feature_df.anschlusse = feature_df.anschlusse.astype('int64')
-        feature_df.park_area = feature_df.park_area.astype('float')
+        feature_df.park_area = feature_df.park_area.astype('float64')
 
         scaler = MinMaxScaler()
         feature_df[['park_area']] = \
