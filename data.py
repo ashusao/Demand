@@ -84,14 +84,14 @@ class Data:
                              prefix=['identifier', 'anschluss', 'type', 'suitable', 'zugang', 'cost', 'payment'],
                              columns=['identifier', 'anschluss', 'type', 'suitable_for', 'zugang', 'cost', 'payment'])'''
 
-        feature_df = station_df[['identifier', 'anschluss', 'anschlusse']]
+        feature_df = station_df[['identifier', 'anschluss', 'power']]
         '''dum = pd.get_dummies(station_df,
                              prefix=['payment'],
                              columns=['payment'])'''
 
         #feature_df = dum
         #feature_df = pd.concat([feature_df, dum], axis=1)
-        #feature_df.power = feature_df['power'].map(lambda x: str(x)[:-1])
+        feature_df.power = feature_df['power'].map(lambda x: str(x)[:-1])
         #feature_df.current = feature_df['current'].map(lambda x: str(x)[:-1])
 
         # drop unnecessary columns
@@ -99,14 +99,14 @@ class Data:
                          'type', 'suitable_for', 'zugang', 'cost',
                          'anschlusse', 'power', 'current', 'park_area'], axis=1, inplace=True)'''
 
-        #feature_df.power = feature_df.power.astype('int64')
+        feature_df.power = feature_df.power.astype('int64')
         #feature_df.current = feature_df.current.astype('int64')
-        feature_df.anschlusse = feature_df.anschlusse.astype('int64')
+        #feature_df.anschlusse = feature_df.anschlusse.astype('int64')
         #feature_df.park_area = feature_df.park_area.astype('float')
 
         scaler = MinMaxScaler()
-        feature_df[['anschlusse']] = \
-            scaler.fit_transform(feature_df[['anschlusse']])
+        feature_df[['power']] = \
+            scaler.fit_transform(feature_df[['power']])
 
         '''titles = list(feature_df.columns)
         titles[1], titles[2] = titles[2], titles[1]
