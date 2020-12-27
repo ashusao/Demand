@@ -71,7 +71,8 @@ class Data:
         station_df = pd.read_csv(os.path.join(data_dir, 'station_info.csv'), header=None,
                                  names=['identifier', 'lat', 'lon', 'address', 'anschlusse', 'anschluss',
                                         'type', 'power', 'current', 'status', 'suitable_for', 'provider',
-                                        'zugang', 'opening_hours', 'cost', 'payment', 'electricity', 'geom'])
+                                        'zugang', 'opening_hours', 'cost', 'payment', 'electricity', 'geom',
+                                        'park_area'])
         station_df.drop(['geom', 'address', 'status'], axis=1, inplace=True)
 
         # Fill NAN
@@ -92,9 +93,11 @@ class Data:
         feature_df.power = feature_df.power.astype('int64')
         feature_df.current = feature_df.current.astype('int64')
         feature_df.anschlusse = feature_df.anschlusse.astype('int64')
+        feature_df.park_area = feature_df.park_area.astype('float')
 
         scaler = MinMaxScaler()
-        feature_df[['anschlusse', 'power', 'current']] = scaler.fit_transform(feature_df[['anschlusse', 'power', 'current']])
+        feature_df[['anschlusse', 'power', 'current', 'park_area']] = \
+            scaler.fit_transform(feature_df[['anschlusse', 'power', 'current', 'park_area']])
         '''titles = list(feature_df.columns)
         titles[1], titles[2] = titles[2], titles[1]
         feature_df=feature_df.reindex(columns=titles)'''
