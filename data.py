@@ -96,7 +96,7 @@ class Data:
 
         # drop unnecessary columns
         feature_df.drop(['lat', 'lon', 'provider', 'electricity', 'opening_hours',
-                         'type', 'suitable_for', 'zugang', 'cost',
+                         'type', 'suitable_for', 'zugang', 'cost', 'payment',
                          'anschlusse', 'power', 'current'], axis=1, inplace=True)
 
         #feature_df.power = feature_df.power.astype('int64')
