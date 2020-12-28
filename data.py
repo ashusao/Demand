@@ -79,12 +79,17 @@ class Data:
         station_df.provider.fillna('gewerblich', inplace=True)
         station_df.payment.fillna('undefiniert', inplace=True)
 
+        #switch anschlusse and anschluss
+        titles = list(station_df.columns)
+        titles[3], titles[4] = titles[4], titles[3]
+        station_df = station_df.reindex(columns=titles)
+
         '''feature_df = station_df[['identifier', 'anschluss']]
         dum = pd.get_dummies(station_df,
                              prefix=['identifier', 'anschluss', 'type', 'suitable', 'zugang', 'cost', 'payment'],
                              columns=['identifier', 'anschluss', 'type', 'suitable_for', 'zugang', 'cost', 'payment'])'''
 
-        feature_df = station_df[['identifier', 'anschluss', 'type']]
+        feature_df = station_df[['identifier', 'type']]
         dum = pd.get_dummies(station_df,
                              prefix=['identifier', 'type'],
                              columns=['identifier', 'type'])
