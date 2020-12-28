@@ -96,22 +96,22 @@ class Data:
 
         #feature_df = dum
         feature_df = pd.concat([feature_df, dum], axis=1)
-        #feature_df.power = feature_df['power'].map(lambda x: str(x)[:-1])
-        #feature_df.current = feature_df['current'].map(lambda x: str(x)[:-1])
+        feature_df.power = feature_df['power'].map(lambda x: str(x)[:-1])
+        feature_df.current = feature_df['current'].map(lambda x: str(x)[:-1])
 
         # drop unnecessary columns
         feature_df.drop(['lat', 'lon', 'provider', 'electricity', 'opening_hours',
                          'type', 'suitable_for', 'zugang', 'cost', 'payment',
-                        'power', 'current', 'park_area'], axis=1, inplace=True)
+                        'park_area'], axis=1, inplace=True)
 
-        #feature_df.power = feature_df.power.astype('int64')
-        #feature_df.current = feature_df.current.astype('int64')
+        feature_df.power = feature_df.power.astype('int64')
+        feature_df.current = feature_df.current.astype('int64')
         feature_df.anschlusse = feature_df.anschlusse.astype('int64')
         #feature_df.park_area = feature_df.park_area.astype('float64')
 
         scaler = MinMaxScaler()
-        feature_df[['anschlusse']] = \
-            scaler.fit_transform(feature_df[['anschlusse']])
+        feature_df[['anschlusse', 'power', 'current']] = \
+            scaler.fit_transform(feature_df[['anschlusse', 'power', 'current']])
 
         '''titles = list(feature_df.columns)
         titles[1], titles[2] = titles[2], titles[1]
