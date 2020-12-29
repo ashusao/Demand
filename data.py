@@ -72,8 +72,14 @@ class Data:
                                  names=['identifier', 'lat', 'lon', 'address', 'anschlusse', 'anschluss',
                                         'type', 'power', 'current', 'status', 'suitable_for', 'provider',
                                         'zugang', 'opening_hours', 'cost', 'payment', 'electricity', 'geom',
-                                        'park_area'])
+                                        'park_area', 'restaurant', 'cafe', 'fast_food', 'toilet', 'pub'])
         station_df.drop(['geom', 'address', 'status'], axis=1, inplace=True)
+
+        station_df.loc[station_df['restaurant'] > 0, 'restaurant'] = 1
+        station_df.loc[station_df['cafe'] > 0, 'cafe'] = 1
+        station_df.loc[station_df['fast_food'] > 0, 'fast_food'] = 1
+        station_df.loc[station_df['toilet'] > 0, 'toilet'] = 1
+        station_df.loc[station_df['pub'] > 0, 'pub'] = 1
 
         # Fill NAN
         station_df.provider.fillna('gewerblich', inplace=True)
@@ -101,7 +107,8 @@ class Data:
 
         # drop unnecessary columns
         feature_df.drop(['lat', 'lon', 'provider', 'electricity', 'opening_hours',
-                         'type', 'suitable_for', 'zugang', 'cost', 'payment'], axis=1, inplace=True)
+                         'type', 'suitable_for', 'zugang', 'cost', 'payment',
+                         'cafe', 'fast_food', 'toilet', 'pub'], axis=1, inplace=True)
 
         feature_df.power = feature_df.power.astype('int64')
         feature_df.current = feature_df.current.astype('int64')
