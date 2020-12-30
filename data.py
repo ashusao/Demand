@@ -114,11 +114,11 @@ class Data:
         feature_df.current = feature_df.current.astype('int64')
         feature_df.anschlusse = feature_df.anschlusse.astype('int64')
         feature_df.park_area = feature_df.park_area.astype('float64')
-        feature_df.restaurant = feature_df.restaurant.astype('int64')
+        feature_df.restaurant = feature_df.restaurant.astype('float64')
 
         scaler = MinMaxScaler()
-        feature_df[['anschlusse', 'power', 'current', 'park_area', 'restaurant']] = \
-            scaler.fit_transform(feature_df[['anschlusse', 'power', 'current', 'park_area', 'restaurant']])
+        feature_df[['anschlusse', 'power', 'current', 'park_area']] = \
+            scaler.fit_transform(feature_df[['anschlusse', 'power', 'current', 'park_area']])
 
         '''titles = list(feature_df.columns)
         titles[1], titles[2] = titles[2], titles[1]
