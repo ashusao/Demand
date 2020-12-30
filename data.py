@@ -75,11 +75,11 @@ class Data:
                                         'park_area', 'restaurant', 'cafe', 'fast_food', 'toilet', 'pub'])
         station_df.drop(['geom', 'address', 'status'], axis=1, inplace=True)
 
-        station_df.loc[station_df['restaurant'] > 0, 'restaurant'] = 1
-        station_df.loc[station_df['cafe'] > 0, 'cafe'] = 1
-        station_df.loc[station_df['fast_food'] > 0, 'fast_food'] = 1
-        station_df.loc[station_df['toilet'] > 0, 'toilet'] = 1
-        station_df.loc[station_df['pub'] > 0, 'pub'] = 1
+        station_df['restaurant'].where(~(station_df.restaurant > 0), other=1, inplace=True)
+        station_df['cafe'].where(~(station_df.cafe > 0), other=1, inplace=True)
+        station_df['fast_food'].where(~(station_df.fast_food > 0), other=1, inplace=True)
+        station_df['toilet'].where(~(station_df.toilet > 0), other=1, inplace=True)
+        station_df['pub'].where(~(station_df.pub > 0), other=1, inplace=True)
 
         # Fill NAN
         station_df.provider.fillna('gewerblich', inplace=True)
