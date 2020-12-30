@@ -114,7 +114,6 @@ class Data:
         feature_df.current = feature_df.current.astype('int64')
         feature_df.anschlusse = feature_df.anschlusse.astype('int64')
         feature_df.park_area = feature_df.park_area.astype('float64')
-        feature_df.restaurant = feature_df.restaurant.astype('float64')
 
         scaler = MinMaxScaler()
         feature_df[['anschlusse', 'power', 'current', 'park_area']] = \
