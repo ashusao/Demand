@@ -76,7 +76,9 @@ class Decoder(nn.Module):
 
         # squeeze the seq_len dimension so that output is (batch_size, output_dim)
         out = out.squeeze(1)
-        return torch.sigmoid(out).clamp(0, 1), hidden
+        out = torch.sigmoid(out)
+        out = torch.clamp(out, 0, 1)
+        return out, hidden
 
 class AttnDecoder(nn.Module):
 
@@ -132,7 +134,9 @@ class AttnDecoder(nn.Module):
 
         # squeeze the seq_len dimension so that output is (batch_size, output_dim)
         out = out.squeeze(1)
-        return torch.sigmoid(out).clamp(0, 1), hidden
+        out = torch.sigmoid(out)
+        out = torch.clamp(out, 0, 1)
+        return out, hidden
 
 class Embedding(nn.Module):
 
