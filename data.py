@@ -75,11 +75,11 @@ class Data:
                                         'park_area', 'restaurant', 'cafe', 'fast_food', 'toilet', 'pub'])
         station_df.drop(['geom', 'address', 'status'], axis=1, inplace=True)
 
-        station_df['restaurant'].where(~(station_df.restaurant > 0), other=1, inplace=True)
-        station_df['cafe'].where(~(station_df.cafe > 0), other=1, inplace=True)
-        station_df['fast_food'].where(~(station_df.fast_food > 0), other=1, inplace=True)
-        station_df['toilet'].where(~(station_df.toilet > 0), other=1, inplace=True)
-        station_df['pub'].where(~(station_df.pub > 0), other=1, inplace=True)
+        #station_df['restaurant'].where(~(station_df.restaurant > 0), other=1, inplace=True)
+        #station_df['cafe'].where(~(station_df.cafe > 0), other=1, inplace=True)
+        #station_df['fast_food'].where(~(station_df.fast_food > 0), other=1, inplace=True)
+        #station_df['toilet'].where(~(station_df.toilet > 0), other=1, inplace=True)
+        #station_df['pub'].where(~(station_df.pub > 0), other=1, inplace=True)
 
         # Fill NAN
         station_df.provider.fillna('gewerblich', inplace=True)
@@ -116,8 +116,8 @@ class Data:
         feature_df.park_area = feature_df.park_area.astype('float64')
 
         scaler = MinMaxScaler()
-        feature_df[['anschlusse', 'power', 'current', 'park_area']] = \
-            scaler.fit_transform(feature_df[['anschlusse', 'power', 'current', 'park_area']])
+        feature_df[['anschlusse', 'power', 'current', 'park_area', 'restaurant']] = \
+            scaler.fit_transform(feature_df[['anschlusse', 'power', 'current', 'park_area', 'restaurant']])
 
         '''titles = list(feature_df.columns)
         titles[1], titles[2] = titles[2], titles[1]
