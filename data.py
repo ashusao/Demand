@@ -75,11 +75,11 @@ class Data:
                                         'park_area', 'restaurant', 'cafe', 'fast_food', 'toilet', 'pub'])
         station_df.drop(['geom', 'address', 'status'], axis=1, inplace=True)
 
-        #station_df['restaurant'].where(~(station_df.restaurant > 0), other=1, inplace=True)
-        #station_df['cafe'].where(~(station_df.cafe > 0), other=1, inplace=True)
-        #station_df['fast_food'].where(~(station_df.fast_food > 0), other=1, inplace=True)
-        #station_df['toilet'].where(~(station_df.toilet > 0), other=1, inplace=True)
-        #station_df['pub'].where(~(station_df.pub > 0), other=1, inplace=True)
+        station_df['restaurant'].where(~(station_df.restaurant > 0), other=1, inplace=True)
+        station_df['cafe'].where(~(station_df.cafe > 0), other=1, inplace=True)
+        station_df['fast_food'].where(~(station_df.fast_food > 0), other=1, inplace=True)
+        station_df['toilet'].where(~(station_df.toilet > 0), other=1, inplace=True)
+        station_df['pub'].where(~(station_df.pub > 0), other=1, inplace=True)
 
         # Fill NAN
         station_df.provider.fillna('gewerblich', inplace=True)
@@ -108,7 +108,7 @@ class Data:
         # drop unnecessary columns
         feature_df.drop(['lat', 'lon', 'provider', 'electricity', 'opening_hours',
                          'type', 'suitable_for', 'zugang', 'cost', 'payment',
-                         'cafe', 'fast_food', 'toilet', 'pub'], axis=1, inplace=True)
+                         'restaurant', 'cafe', 'fast_food', 'toilet', 'pub'], axis=1, inplace=True)
 
         feature_df.power = feature_df.power.astype('int64')
         feature_df.current = feature_df.current.astype('int64')
@@ -116,8 +116,8 @@ class Data:
         feature_df.park_area = feature_df.park_area.astype('float64')
 
         scaler = MinMaxScaler()
-        feature_df[['anschlusse', 'power', 'current', 'park_area', 'restaurant']] = \
-            scaler.fit_transform(feature_df[['anschlusse', 'power', 'current', 'park_area', 'restaurant']])
+        feature_df[['anschlusse', 'power', 'current', 'park_area']] = \
+            scaler.fit_transform(feature_df[['anschlusse', 'power', 'current', 'park_area']])
 
         '''titles = list(feature_df.columns)
         titles[1], titles[2] = titles[2], titles[1]
