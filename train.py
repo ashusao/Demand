@@ -110,7 +110,7 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
         if decode == 'features':
             '''decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size, dropout=dropout,
                               num_layers=num_layers).to(device)'''
-            decoder = Decoder(input_size=input_size, hidden_size=hidden_size + Train_features.shape[1], output_size=output_size, dropout=dropout,
+            decoder = Decoder(input_size=1, hidden_size=hidden_size + Train_features.shape[1], output_size=output_size, dropout=dropout,
                               num_layers=num_layers).to(device) # here
 
         model = Seq2Seq(encoder, decoder, embedding, config).to(device)
@@ -143,13 +143,13 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
 
                 if phase == 'train':
                     input_batch = X_train[b: b + batch_size, :, :]
-                    target_label = Y_train[b: b + batch_size, :, :] #here
+                    target_label = Y_train[b: b + batch_size, :]   # here
                     features = Train_features[b: b + batch_size, :]
                     #positive_wt, negative_wt = compute_weights(target_label)
                     model.train()
                 else:
                     input_batch = X_test[b % X_test.shape[0]: ((b % X_test.shape[0]) + batch_size), :, :]
-                    target_label = Y_test[b % Y_test.shape[0]: ((b % Y_test.shape[0]) + batch_size), :, :] # here
+                    target_label = Y_test[b % Y_test.shape[0]: ((b % Y_test.shape[0]) + batch_size), :]  # here
                     features = Test_features[b % Test_features.shape[0]: ((b % Test_features.shape[0]) + batch_size), :]
                     #positive_wt, negative_wt = compute_weights(target_label)
                     model.eval()
@@ -168,7 +168,7 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
                     #weights = compute_weight_matrix(target_label, positive_wt, negative_wt)
                     #criterion.weight = weights
 
-                    loss = criterion(outputs, target_label[:, :, 0]) # here
+                    loss = criterion(outputs, target_label)  # here
                     print(loss)
 
                     if phase == 'train':
@@ -234,7 +234,7 @@ def evaluate(config, X_test, Y_test, Test_features, n_train):
         if decode == 'features':
             '''decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size, dropout=dropout,
                               num_layers=num_layers).to(device)'''
-            decoder = Decoder(input_size=input_size, hidden_size=hidden_size + Test_features.shape[1], output_size=output_size, dropout=dropout, # here
+            decoder = Decoder(input_size=1, hidden_size=hidden_size + Test_features.shape[1], output_size=output_size, dropout=dropout, # here
                               num_layers=num_layers).to(device)
 
         model = Seq2Seq(encoder, decoder, embedding, config).to(device)
@@ -262,7 +262,7 @@ def evaluate(config, X_test, Y_test, Test_features, n_train):
 
         b = b * batch_size
         input_batch = X_test[b: b + batch_size, :, :]
-        target_label = Y_test[b: b + batch_size, :, :]  #here
+        target_label = Y_test[b: b + batch_size, :]  #here
         features = Test_features[b: b + batch_size, :]
 
         if algo == 'seq2seq':
@@ -275,7 +275,7 @@ def evaluate(config, X_test, Y_test, Test_features, n_train):
             prediction = model(input_batch, hidden)
             pred.append(prediction.detach().cpu().numpy())
 
-        target_.append(target_label[:, :, 0].detach().cpu().numpy()) #here
+        target_.append(target_label.detach().cpu().numpy()) #here
 
     pred = np.array(pred).reshape(-1, target_len)
     target_ = np.array(target_).reshape(-1, target_len)
