@@ -207,7 +207,7 @@ class Seq2Seq(nn.Module):
         #decoder_input = source[:, -1, :] # shape(batch_size, input_size)
         # input the state of charger without features
         decoder_input = source[:, -1, :]  # [0] : Occupancy             #here
-        decoder_input = decoder_input.unsqueeze(1)
+        #decoder_input = decoder_input.unsqueeze(1)
 
         use_teacher_force = True if random.random() < teacher_force_ratio else False
 
@@ -235,7 +235,7 @@ class Seq2Seq(nn.Module):
 
                 outputs[:, t] = out.squeeze(1)
                 output = out.clone()
-                output = torch.cat((output, target[:, t, :].unsqueeze(1)), 2)  # here
+                output = torch.cat((output, target[:, t, :]), 2)  # here
                 decoder_input = output.float()
 
         return outputs
