@@ -297,6 +297,7 @@ def log_plot(config, n_train, n_test, n_features, prediction, target):
     show_plot(config, prec, rec, ap, n_features)
 
     fscore = (2 * prec * rec) / (prec + rec)
+    fscore = np.nan_to_num(fscore)
     ix = np.argmax(fscore)
     print('Best Threshold=%f, F-Score=%.3f' % (th[ix], fscore[ix]))
 
