@@ -26,6 +26,7 @@ import csv
 from utils import save_loss
 from utils import show_plot
 
+np.seterr(divide='ignore', invalid='ignore')
 device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 torch.manual_seed(0)
 #torch.set_deterministic(True) # type: ignore
