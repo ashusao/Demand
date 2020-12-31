@@ -235,7 +235,7 @@ class Seq2Seq(nn.Module):
 
                 outputs[:, t] = out.squeeze(1)
                 output = out.clone()
-                output = torch.cat((output, target[:, t, :]), 2)  # here
+                output = torch.cat((output, target[:, t, :]), 1)  # here
                 decoder_input = output.float()
 
         return outputs
