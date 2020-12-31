@@ -26,7 +26,6 @@ import csv
 from utils import save_loss
 from utils import show_plot
 
-np.seterr(divide='ignore', invalid='ignore')
 device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 torch.manual_seed(0)
 #torch.set_deterministic(True) # type: ignore
@@ -197,7 +196,7 @@ def evaluate(config, X_test, Y_test, Test_features, n_train):
     :return:
     '''
 
-    Y_test = torch.from_numpy(Y_test).long().to(device)
+    Y_test = torch.from_numpy(Y_test).float().to(device)
     X_test = torch.from_numpy(X_test).float().to(device)
     Test_features = torch.from_numpy(Test_features).float().to(device)
 

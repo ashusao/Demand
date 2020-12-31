@@ -234,8 +234,12 @@ class Seq2Seq(nn.Module):
                     out, hidden = self.decoder(decoder_input, hidden)
 
                 outputs[:, t] = out.squeeze(1)
+
+                if t == (target_len - 1):       # here
+                    break
+
                 output = out.clone()
-                output = torch.cat((output, target[:, t, 1:]), 1)  # here
+                output = torch.cat((output, target[:, t+1, 1:]), 1)  # here
                 decoder_input = output.float()
 
         return outputs
