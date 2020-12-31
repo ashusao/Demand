@@ -185,7 +185,9 @@ class Data:
                     train_features.append(features.tolist())
                 else:
                     X_train.append(series.tolist()[start_ix:i])
-                Y_train.append(series.tolist()[i:(end_ix + 1)])
+                #Y_train.append(series.tolist()[i:(end_ix + 1)])
+                data, _ = self.generate_data(series, df, feature_df, i, (end_ix + 1))
+                Y_train.append(data.tolist())
 
             elif i%test_step == 0:
 
@@ -195,7 +197,9 @@ class Data:
                     test_features.append(features.tolist())
                 else:
                     X_test.append(series.tolist()[start_ix:i])
-                Y_test.append(series.tolist()[i:(end_ix + 1)])
+                #Y_test.append(series.tolist()[i:(end_ix + 1)])
+                data, _ = self.generate_data(series, df, feature_df, i, (end_ix + 1))
+                Y_test.append(data.tolist())
 
         # shuffle
         if randomize:
