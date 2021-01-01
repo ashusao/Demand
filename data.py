@@ -72,7 +72,8 @@ class Data:
                                  names=['identifier', 'lat', 'lon', 'address', 'anschlusse', 'anschluss',
                                         'type', 'power', 'current', 'status', 'suitable_for', 'provider',
                                         'zugang', 'opening_hours', 'cost', 'payment', 'electricity', 'geom',
-                                        'park_area', 'restaurant', 'cafe', 'fast_food', 'toilet', 'pub', 'airport'])
+                                        'park_area', 'restaurant', 'cafe', 'fast_food', 'toilet', 'pub',
+                                        'airport', 'railway'])
         station_df.drop(['geom', 'address', 'status'], axis=1, inplace=True)
 
         station_df['restaurant'].where(~(station_df.restaurant > 0), other=1, inplace=True)
@@ -115,8 +116,8 @@ class Data:
         feature_df.anschlusse = feature_df.anschlusse.astype('int64')
 
         scaler = MinMaxScaler()
-        feature_df[['anschlusse', 'power', 'current', 'park_area']] = \
-            scaler.fit_transform(feature_df[['anschlusse', 'power', 'current', 'park_area']])
+        feature_df[['anschlusse', 'power', 'current', 'park_area', 'railway']] = \
+            scaler.fit_transform(feature_df[['anschlusse', 'power', 'current', 'park_area', 'railway']])
 
         '''titles = list(feature_df.columns)
         titles[1], titles[2] = titles[2], titles[1]
