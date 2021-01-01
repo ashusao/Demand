@@ -207,7 +207,7 @@ class Seq2Seq(nn.Module):
         #decoder_input = source[:, -1, :] # shape(batch_size, input_size)
         # input the state of charger without features
         decoder_input = source[:, -1, 0]  # [0] : Occupancy             #here
-        #decoder_input = decoder_input.unsqueeze(1)
+        decoder_input = decoder_input.unsqueeze(1)
 
         use_teacher_force = True if random.random() < teacher_force_ratio else False
 
