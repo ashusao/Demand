@@ -109,15 +109,19 @@ class Data:
         # drop unnecessary columns
         feature_df.drop(['lat', 'lon', 'provider', 'electricity', 'opening_hours',
                          'type', 'suitable_for', 'zugang', 'cost', 'payment',
-                         'airport', 'restaurant', 'cafe', 'fast_food', 'toilet', 'pub'], axis=1, inplace=True)
+                         'restaurant', 'cafe', 'fast_food', 'toilet', 'pub'], axis=1, inplace=True)
 
         feature_df.power = feature_df.power.astype('int64')
         feature_df.current = feature_df.current.astype('int64')
         feature_df.anschlusse = feature_df.anschlusse.astype('int64')
 
         scaler = MinMaxScaler()
-        feature_df[['anschlusse', 'power', 'current', 'park_area', 'railway']] = \
-            scaler.fit_transform(feature_df[['anschlusse', 'power', 'current', 'park_area', 'railway']])
+        feature_df[['anschlusse', 'power', 'current', 'park_area', 'railway', 'airport']] = \
+            scaler.fit_transform(feature_df[['anschlusse', 'power', 'current', 'park_area', 'railway', 'airport']])
+
+        feature_df['airport'] = 1 - feature_df['airport']
+        feature_df['railway'] = 1 - feature_df['railway']
+
 
         '''titles = list(feature_df.columns)
         titles[1], titles[2] = titles[2], titles[1]
