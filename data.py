@@ -73,7 +73,7 @@ class Data:
                                         'type', 'power', 'current', 'status', 'suitable_for', 'provider',
                                         'zugang', 'opening_hours', 'cost', 'payment', 'electricity', 'geom',
                                         'park_area', 'restaurant', 'cafe', 'fast_food', 'toilet', 'pub',
-                                        'airport', 'railway'])
+                                        'airport', 'railway', 'beach', 'sea', 'river'])
         station_df.drop(['geom', 'address', 'status'], axis=1, inplace=True)
 
         station_df['restaurant'].where(~(station_df.restaurant > 0), other=1, inplace=True)
@@ -109,7 +109,8 @@ class Data:
         # drop unnecessary columns
         feature_df.drop(['lat', 'lon', 'provider', 'electricity', 'opening_hours',
                          'type', 'suitable_for', 'zugang', 'cost', 'payment',
-                         'restaurant', 'cafe', 'fast_food', 'toilet', 'pub'], axis=1, inplace=True)
+                         'restaurant', 'cafe', 'fast_food', 'toilet', 'pub',
+                         'beach', 'river'], axis=1, inplace=True)
 
         feature_df.power = feature_df.power.astype('int64')
         feature_df.current = feature_df.current.astype('int64')
@@ -121,6 +122,7 @@ class Data:
 
         feature_df['airport'] = 1 - feature_df['airport']
         feature_df['railway'] = 1 - feature_df['railway']
+        feature_df['sea'] = 1 - feature_df['sea']
 
 
         '''titles = list(feature_df.columns)
