@@ -124,7 +124,7 @@ class Data:
         feature_df['airport'] = 1 - feature_df['airport']
         feature_df['railway'] = 1 - feature_df['railway']
         feature_df['sea'] = 1 - feature_df['sea']
-        feature_df['river'] = 1 - feature_df['river']
+        #feature_df['river'] = 1 - feature_df['river']
 
 
         '''titles = list(feature_df.columns)
