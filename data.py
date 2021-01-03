@@ -73,7 +73,8 @@ class Data:
                                         'type', 'power', 'current', 'status', 'suitable_for', 'provider',
                                         'zugang', 'opening_hours', 'cost', 'payment', 'electricity', 'geom',
                                         'park_area', 'restaurant', 'cafe', 'fast_food', 'toilet', 'pub',
-                                        'airport', 'railway', 'beach', 'sea', 'river'])
+                                        'airport', 'railway', 'beach', 'sea', 'river',
+                                        'residential', 'commercial', 'retail', 'industrial'])
         station_df.drop(['geom', 'address', 'status'], axis=1, inplace=True)
 
         station_df['restaurant'].where(~(station_df.restaurant > 0), other=1, inplace=True)
@@ -110,16 +111,15 @@ class Data:
         feature_df.drop(['lat', 'lon', 'provider', 'electricity', 'opening_hours',
                          'type', 'suitable_for', 'zugang', 'cost', 'payment',
                          'restaurant', 'cafe', 'fast_food', 'toilet', 'pub',
-                         'beach'], axis=1, inplace=True)
+                         'beach', 'river', 'commercial', 'retail', 'industrial'], axis=1, inplace=True)
 
         feature_df.power = feature_df.power.astype('int64')
         feature_df.current = feature_df.current.astype('int64')
         feature_df.anschlusse = feature_df.anschlusse.astype('int64')
 
         scaler = MinMaxScaler()
-        feature_df[['anschlusse', 'power', 'current', 'park_area', 'railway', 'airport', 'sea', 'river']] = \
-            scaler.fit_transform(feature_df[['anschlusse', 'power', 'current', 'park_area', 'railway', 'airport', 'sea',
-                                             'river']])
+        feature_df[['anschlusse', 'power', 'current', 'park_area', 'railway', 'airport', 'sea', 'residential']] = \
+            scaler.fit_transform(feature_df[['anschlusse', 'power', 'current', 'park_area', 'railway', 'airport', 'sea', 'residential']])
 
         feature_df['airport'] = 1 - feature_df['airport']
         feature_df['railway'] = 1 - feature_df['railway']
