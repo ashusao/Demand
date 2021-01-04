@@ -111,7 +111,7 @@ class Data:
         feature_df.drop(['lat', 'lon', 'provider', 'electricity', 'opening_hours',
                          'type', 'suitable_for', 'zugang', 'cost', 'payment',
                          'restaurant', 'cafe', 'fast_food', 'toilet', 'pub',
-                         'beach', 'river'], axis=1, inplace=True)
+                         'beach', 'river', 'residential'], axis=1, inplace=True)
 
         feature_df.power = feature_df.power.astype('int64')
         feature_df.current = feature_df.current.astype('int64')
@@ -119,9 +119,9 @@ class Data:
 
         scaler = MinMaxScaler()
         feature_df[['anschlusse', 'power', 'current', 'park_area', 'railway', 'airport', 'sea',
-                    'residential', 'commercial', 'retail', 'industrial']] = \
+                    'commercial', 'retail', 'industrial']] = \
             scaler.fit_transform(feature_df[['anschlusse', 'power', 'current', 'park_area', 'railway', 'airport', 'sea',
-                                             'residential', 'commercial', 'retail', 'industrial']])
+                                             'commercial', 'retail', 'industrial']])
 
         feature_df['airport'] = 1 - feature_df['airport']
         feature_df['railway'] = 1 - feature_df['railway']
