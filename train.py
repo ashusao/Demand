@@ -125,7 +125,6 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
     n_batches_train = int(X_train.shape[0] / batch_size)
     n_batches_test = int(X_test.shape[0] / batch_size)
     print(n_batches_train, n_batches_test)
-
     #positive_wt, negative_wt = compute_weights(Y_train)
 
     train_loss = []
