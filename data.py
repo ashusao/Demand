@@ -115,7 +115,7 @@ class Data:
                          'type', 'suitable_for', 'zugang', 'cost', 'payment',
                          'restaurant', 'cafe', 'fast_food', 'toilet', 'pub',
                          'beach', 'river', 'residential',
-                         'motorway', 'trunk', 'primary', 'secondary',
+                         'trunk', 'primary', 'secondary',
                          'motorway_link', 'trunk_link', 'primary_link', 'secondary_link'], axis=1, inplace=True)
 
         feature_df.power = feature_df.power.astype('int64')
