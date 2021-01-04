@@ -74,7 +74,10 @@ class Data:
                                         'zugang', 'opening_hours', 'cost', 'payment', 'electricity', 'geom',
                                         'park_area', 'restaurant', 'cafe', 'fast_food', 'toilet', 'pub',
                                         'airport', 'railway', 'beach', 'sea', 'river',
-                                        'residential', 'commercial', 'retail', 'industrial'])
+                                        'residential', 'commercial', 'retail', 'industrial',
+                                        'motorway', 'trunk', 'primary', 'secondary',
+                                        'motorway_link', 'trunk_link', 'primary_link', 'secondary_link'])
+
         station_df.drop(['geom', 'address', 'status'], axis=1, inplace=True)
 
         station_df['restaurant'].where(~(station_df.restaurant > 0), other=1, inplace=True)
@@ -111,7 +114,9 @@ class Data:
         feature_df.drop(['lat', 'lon', 'provider', 'electricity', 'opening_hours',
                          'type', 'suitable_for', 'zugang', 'cost', 'payment',
                          'restaurant', 'cafe', 'fast_food', 'toilet', 'pub',
-                         'beach', 'river', 'residential'], axis=1, inplace=True)
+                         'beach', 'river', 'residential',
+                         'motorway', 'trunk', 'primary', 'secondary',
+                         'motorway_link', 'trunk_link', 'primary_link', 'secondary_link'], axis=1, inplace=True)
 
         feature_df.power = feature_df.power.astype('int64')
         feature_df.current = feature_df.current.astype('int64')
@@ -119,14 +124,14 @@ class Data:
 
         scaler = MinMaxScaler()
         feature_df[['anschlusse', 'power', 'current', 'park_area', 'railway', 'airport', 'sea',
-                    'commercial', 'retail', 'industrial']] = \
+                    'commercial', 'retail', 'industrial', 'motorway']] = \
             scaler.fit_transform(feature_df[['anschlusse', 'power', 'current', 'park_area', 'railway', 'airport', 'sea',
-                                             'commercial', 'retail', 'industrial']])
+                                             'commercial', 'retail', 'industrial', 'motorway']])
 
         feature_df['airport'] = 1 - feature_df['airport']
         feature_df['railway'] = 1 - feature_df['railway']
         feature_df['sea'] = 1 - feature_df['sea']
-        #feature_df['river'] = 1 - feature_df['river']
+        feature_df['motorway'] = 1 - feature_df['motorway']
 
 
         '''titles = list(feature_df.columns)
