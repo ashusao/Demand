@@ -116,7 +116,7 @@ class Data:
                          'restaurant', 'cafe', 'fast_food', 'toilet', 'pub',
                          'beach', 'river', 'residential',
                          'motorway', 'trunk', 'primary', 'secondary',
-                         'motorway_link', 'trunk_link', 'secondary_link'], axis=1, inplace=True)
+                         'motorway_link', 'trunk_link', 'primary_link'], axis=1, inplace=True)
 
         feature_df.power = feature_df.power.astype('int64')
         feature_df.current = feature_df.current.astype('int64')
@@ -124,9 +124,9 @@ class Data:
 
         scaler = MinMaxScaler()
         feature_df[['anschlusse', 'power', 'current', 'park_area', 'railway', 'airport', 'sea',
-                    'commercial', 'retail', 'industrial', 'primary_link']] = \
+                    'commercial', 'retail', 'industrial', 'secondary_link']] = \
             scaler.fit_transform(feature_df[['anschlusse', 'power', 'current', 'park_area', 'railway', 'airport', 'sea',
-                                             'commercial', 'retail', 'industrial', 'primary_link']])
+                                             'commercial', 'retail', 'industrial', 'secondary_link']])
 
         feature_df['airport'] = 1 - feature_df['airport']
         feature_df['railway'] = 1 - feature_df['railway']
@@ -134,7 +134,7 @@ class Data:
         #feature_df['motorway'] = 1 - feature_df['motorway']
         #feature_df['trunk'] = 1 - feature_df['trunk']
         #feature_df['primary'] = 1 - feature_df['primary']
-        feature_df['primary_link'] = 1 - feature_df['primary_link']
+        feature_df['secondary_link'] = 1 - feature_df['secondary_link']
 
 
         '''titles = list(feature_df.columns)
