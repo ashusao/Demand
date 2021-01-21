@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import random
 from data import Data
 
-device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 torch.manual_seed(0)
 #torch.set_deterministic(True) # type: ignore
 
@@ -192,6 +192,7 @@ class Seq2Seq(nn.Module):
             features = features.unsqueeze(0)  # add extra dimensino for num_layers
             features = features.repeat(hidden.shape[0], 1, 1)  # copy features to each layers (num_layers, batch, hidden_size)
             hidden = torch.cat((hidden, features), 2)  # (num_layers, batch, hidden_size + feat_size)
+            hidden = self.embedding(hidden)
 
             #features = features.unsqueeze(1)
             #features = features.repeat(1, source.shape[1], 1)
@@ -234,7 +235,7 @@ class Seq2Seq(nn.Module):
                     out, hidden = self.decoder(decoder_input, hidden)
 
                 outputs[:, t] = out.squeeze(1)
-                output = out.detach().clone()
+                output = out.clone()
                 #output = torch.cat((output.float(), target[:, t, 1:]), 1)  # here
                 decoder_input = output.float()
 

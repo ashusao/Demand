@@ -26,7 +26,7 @@ import csv
 from utils import save_loss
 from utils import show_plot
 
-device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 torch.manual_seed(0)
 #torch.set_deterministic(True) # type: ignore
 
@@ -98,7 +98,8 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
 
     if algo == 'seq2seq':
         encoder = Encoder(input_size=input_size, hidden_size=hidden_size, dropout=dropout, num_layers=num_layers).to(device)
-        embedding = Embedding(feat_size=Train_features.shape[1], embed_size=embed_size)
+        #embedding = Embedding(feat_size=Train_features.shape[1], embed_size=embed_size)
+        embedding = Embedding(feat_size=Train_features.shape[1] + hidden_size, embed_size=embed_size)
 
         if decode == 'attention':
             decoder = AttnDecoder(input_size=1, hidden_size=hidden_size, output_size=output_size, input_len=X_train.shape[1],
@@ -108,10 +109,10 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
             decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size, dropout=dropout, num_layers=num_layers).to(device)
 
         if decode == 'features':
-            '''decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size, dropout=dropout,
+            decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size, dropout=dropout,
+                              num_layers=num_layers).to(device)
+            '''decoder = Decoder(input_size=1, hidden_size=hidden_size + Train_features.shape[1], output_size=output_size, dropout=dropout,
                               num_layers=num_layers).to(device)'''
-            decoder = Decoder(input_size=1, hidden_size=hidden_size + Train_features.shape[1], output_size=output_size, dropout=dropout,
-                              num_layers=num_layers).to(device) # here
 
         model = Seq2Seq(encoder, decoder, embedding, config).to(device)
     elif algo == 'baseline':
@@ -221,7 +222,8 @@ def evaluate(config, X_test, Y_test, Test_features, n_train):
 
     if algo == 'seq2seq':
         encoder = Encoder(input_size=input_size, hidden_size=hidden_size, dropout=dropout, num_layers=num_layers).to(device)
-        embedding = Embedding(feat_size=Test_features.shape[1], embed_size=embed_size)
+        #embedding = Embedding(feat_size=Test_features.shape[1], embed_size=embed_size)
+        embedding = Embedding(feat_size=Test_features.shape[1] + hidden_size, embed_size=embed_size)
 
         if decode == 'attention':
             decoder = AttnDecoder(input_size=1, hidden_size=hidden_size, output_size=output_size, input_len=X_test.shape[1],
@@ -231,10 +233,10 @@ def evaluate(config, X_test, Y_test, Test_features, n_train):
             decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size, dropout=dropout, num_layers=num_layers).to(device)
 
         if decode == 'features':
-            '''decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size, dropout=dropout,
-                              num_layers=num_layers).to(device)'''
-            decoder = Decoder(input_size=1, hidden_size=hidden_size + Test_features.shape[1], output_size=output_size, dropout=dropout, # here
+            decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size, dropout=dropout,
                               num_layers=num_layers).to(device)
+            '''decoder = Decoder(input_size=1, hidden_size=hidden_size + Test_features.shape[1], output_size=output_size, dropout=dropout, # here
+                              num_layers=num_layers).to(device)'''
 
         model = Seq2Seq(encoder, decoder, embedding, config).to(device)
     elif algo == 'baseline':
