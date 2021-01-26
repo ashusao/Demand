@@ -22,6 +22,7 @@ from loss import FocalLoss
 import numpy as np
 import os
 import csv
+import sys
 
 from utils import save_loss
 from utils import show_plot
@@ -117,11 +118,14 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
         model = Seq2Seq(encoder, decoder, embedding, config).to(device)
     elif algo == 'baseline':
         # ouput size = seq length
-        model = DeepBaseline(input_size=input_size, hidden_size=hidden_size, output_size=Y_train.shape[1]).to(device)
+        model = DeepBaseline(input_size=input_size, hidden_size=hidden_size, output_size=Y_train.shape[1], feat_size=Train_features.shape[1]).to(device)
 
     criterion = nn.BCELoss()
     #criterion = FocalLoss()
     optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=wd)
+
+    pytorch_total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print('Total trainable Params: ', pytorch_total_params)
 
     n_batches_train = int(X_train.shape[0] / batch_size)
     n_batches_test = int(X_test.shape[0] / batch_size)
@@ -161,7 +165,7 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
                         outputs = model(input_batch, target_label, features, 0.0) # no teacher force
                     elif algo == 'baseline':
                         hidden = model.init_hidden(batch_size).to(device)
-                        outputs = model(input_batch, hidden)
+                        outputs = model(input_batch, hidden, features)
 
                     #print(target_label.shape, outputs.shape)
 
@@ -240,7 +244,7 @@ def evaluate(config, X_test, Y_test, Test_features, n_train):
 
         model = Seq2Seq(encoder, decoder, embedding, config).to(device)
     elif algo == 'baseline':
-        model = DeepBaseline(input_size=input_size, hidden_size=hidden_size, output_size=Y_test.shape[1]).to(device)
+        model = DeepBaseline(input_size=input_size, hidden_size=hidden_size, output_size=Y_test.shape[1], feat_size=Test_features.shape[1]).to(device)
 
     optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=wd)
 
@@ -273,7 +277,7 @@ def evaluate(config, X_test, Y_test, Test_features, n_train):
         elif algo == 'baseline':
             # prediction is sigmoid activation
             hidden = model.init_hidden(batch_size).to(device)
-            prediction = model(input_batch, hidden)
+            prediction = model(input_batch, hidden, features)
             pred.append(prediction.detach().cpu().numpy())
 
         target_.append(target_label.detach().cpu().numpy()) #here
