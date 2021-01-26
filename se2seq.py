@@ -192,7 +192,7 @@ class Seq2Seq(nn.Module):
             features = features.unsqueeze(0)  # add extra dimensino for num_layers
             features = features.repeat(hidden.shape[0], 1, 1)  # copy features to each layers (num_layers, batch, hidden_size)
             hidden = torch.cat((hidden, features), 2)  # (num_layers, batch, hidden_size + feat_size)
-            hidden = self.embedding(hidden)
+            #hidden = self.embedding(hidden)
 
             #features = features.unsqueeze(1)
             #features = features.repeat(1, source.shape[1], 1)

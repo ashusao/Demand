@@ -32,7 +32,7 @@ class Data:
     def read_tsv(self):
         data_dir = self._config['data']['path']
 
-        df = pd.read_csv(os.path.join(data_dir, 'train_val.tsv'), sep='\t', header=None,
+        df = pd.read_csv(os.path.join(data_dir, 'train_val_new.tsv'), sep='\t', header=None,
                          names=['identifier', 'outlet', 'usage_count', 'time_stamp'])
 
         df['time_stamp'] = pd.to_datetime(df['time_stamp'], infer_datetime_format=True)
