@@ -94,7 +94,7 @@ if __name__ == '__main__':
             X, Y, Feat = generate_test_set(config)
         else:
             X, Y = generate_test_set(config)
-            Feat = [np.random.rand(X.shape[0], 2)] * 5
+            Feat = [np.random.rand(X[0].shape[0], 2)] * 5
 
         for i in range(len(X)):
             print(X[i].shape, Y[i].shape, Feat[i].shape)
