@@ -124,7 +124,7 @@ def evaluate_test_set(config, X, Y, Feat, n_train):
 
     for i in range(len(X)):
         pred, target = evaluate(config, X[i], Y[i], Feat[i], n_train)
-        prec, rec, th = precision_recall_curve(target.ravel(), prediction.ravel())
+        prec, rec, th = precision_recall_curve(target.ravel(), pred.ravel())
         print('threshold: ')
         print(th)
         fscore = (2 * prec * rec) / (prec + rec)
