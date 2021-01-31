@@ -19,11 +19,11 @@ class DeepBaseline(nn.Module):
         self.num_layers = num_layers
         self.output_size = output_size
         self.gru = nn.GRU(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers, batch_first=True)
-        self.linear = nn.Linear(hidden_size + feat_size, output_size)
+        self.linear = nn.Linear(hidden_size, output_size)
 
     def forward(self, input, hidden, features):
         output, hidden = self.gru(input, hidden)
-        hidden = torch.cat((hidden, features.unsqueeze(0)), 2)
+        #hidden = torch.cat((hidden, features.unsqueeze(0)), 2)
         out = self.linear(hidden)
         out = out.squeeze(0)
         return torch.sigmoid(out)
