@@ -10,14 +10,15 @@ from baseline import Baseline
 from train import train
 from train import evaluate
 from train import log_result
+from test_data import generate_test_set
+from test_data import evaluate_test_set
 
 if __name__ == '__main__':
 
     data_obj = Data()
     config = ConfigParser()
     config.read('config.ini')
-
-    df = data_obj.read_tsv()
+    df = data_obj.read_tsv('train_val.tsv', config['data']['train_start'], config['data']['val_stop'])
     '''baseline_approach = Baseline()
 
     acc_ = list()
@@ -68,6 +69,7 @@ if __name__ == '__main__':
     eval_train = config.getboolean('data', 'eval_train')
     train_ = config.getboolean('data', 'train')
     eval_ = config.getboolean('data', 'eval')
+    eval_tests = config.getboolean('data', 'eval_tests')
 
     if feat:
         X_train, Y_train, X_test, Y_test, Train_features, Test_features = data_obj.split_train_test(df, 0, aggregate=True)
@@ -86,6 +88,20 @@ if __name__ == '__main__':
 
     if eval_train:
         evaluate(config, X_train, Y_train, Train_features, X_train.shape[0])
+
+    if eval_tests:
+        if feat:
+            X, Y, Feat = generate_test_set(config)
+        else:
+            Feat = [np.random.rand(X.shape[0], 2)] * 5
+            X, Y = generate_test_set(config)
+
+        for i in range(len(X)):
+            print(X[i].shape, Y[i].shape, Feat[i].shape)
+
+        evaluate_test_set(config, X, Y, Feat, X_train.shape[0])
+
+
 
 
 

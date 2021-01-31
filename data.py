@@ -29,10 +29,10 @@ class Data:
     :returns
     dataframe containing the data
     '''
-    def read_tsv(self):
+    def read_tsv(self, f_name, start, stop):
         data_dir = self._config['data']['path']
 
-        df = pd.read_csv(os.path.join(data_dir, 'train_val.tsv'), sep='\t', header=None,
+        df = pd.read_csv(os.path.join(data_dir, f_name), sep='\t', header=None,
                          names=['identifier', 'outlet', 'usage_count', 'time_stamp'])
 
         df['time_stamp'] = pd.to_datetime(df['time_stamp'], infer_datetime_format=True)
@@ -49,7 +49,7 @@ class Data:
         new_df = new_df.reindex(pd.date_range(start=df.time_stamp.min(), end=df.time_stamp.max(), freq='15min'),
                                 fill_value=0)
 
-        new_df = new_df.loc[self._config['data']['train_start']:self._config['data']['val_stop']]
+        new_df = new_df.loc[start:stop]
 
         # adding time features
         new_df['day'] = new_df.index.dayofweek

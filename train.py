@@ -285,9 +285,12 @@ def evaluate(config, X_test, Y_test, Test_features, n_train):
     pred = np.array(pred).reshape(-1, target_len)
     target_ = np.array(target_).reshape(-1, target_len)
     print(pred.shape, target_.shape)
-    print(np.unique(target_.ravel()))
+    #print(np.unique(target_.ravel()))
 
-    log_plot(config, n_train, n_test, X_test.shape[2], pred, target_)
+    eval_tests = config.getboolean('data', 'eval_tests')
+
+    if not eval_tests:
+        log_plot(config, n_train, n_test, X_test.shape[2], pred, target_)
 
     return pred, target_
 
