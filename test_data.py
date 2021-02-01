@@ -154,7 +154,7 @@ def evaluate_test_set(config, X, Y, Feat, n_train):
         prediction[prediction >= th[ix]] = 1
         prediction[prediction < th[ix]] = 0
 
-        precision, recall, f1 = precision_recall_fscore_support(target.ravel(), prediction.ravel(), average=None)
+        precision, recall, f1, _ = precision_recall_fscore_support(target.ravel(), prediction.ravel(), average=None)
         prec_0.append(precision[0])
         prec_1.append(precision[1])
         rec_0.append(recall[0])
