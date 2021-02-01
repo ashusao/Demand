@@ -182,7 +182,7 @@ class Seq2Seq(nn.Module):
         hidden = self.encoder.init_hidden(batch_size).to(device)
         encoder_out, hidden = self.encoder(source, hidden)
 
-        if feat:
+        if feat and decode == 'features':
             #intial hidden as features
             #features = self.embedding(features)  # features  =====>>> hidden
             #features = features.unsqueeze(0)  # add extra dimensino for num_layers
