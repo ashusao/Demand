@@ -8,6 +8,7 @@ from train import evaluate
 from sklearn.metrics import f1_score
 from sklearn.metrics import average_precision_score
 from sklearn.metrics import precision_recall_curve
+from sklearn.utils import shuffle
 
 def split_test_set(config, data_obj, series, df, feature_df,  start_date, stop_date):
 
@@ -42,8 +43,10 @@ def split_test_set(config, data_obj, series, df, feature_df,  start_date, stop_d
             # Y_train.append(data.tolist())
 
     if feat:
+        X_test, Y_test, test_features = shuffle(X_test, Y_test, test_features, random_state=0)
         return np.array(X_test), np.array(Y_test), np.array(test_features)
     else:
+        X_test, Y_test = shuffle(X_test, Y_test, random_state=0)
         return np.array(X_test), np.array(Y_test)
 
 
