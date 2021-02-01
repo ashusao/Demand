@@ -4,10 +4,12 @@ import os
 import datetime
 from data import Data
 import sys
+import csv
 from train import evaluate
 from sklearn.metrics import f1_score
 from sklearn.metrics import average_precision_score
 from sklearn.metrics import precision_recall_curve
+from sklearn.metrics import precision_recall_fscore_support
 from sklearn.utils import shuffle
 
 def split_test_set(config, data_obj, series, df, feature_df,  start_date, stop_date):
@@ -125,6 +127,19 @@ def generate_test_set(config):
 
 def evaluate_test_set(config, X, Y, Feat, n_train):
 
+    prec_0 = list()
+    prec_1 = list()
+    rec_0 = list()
+    rec_1 = list()
+    f1_0 = list()
+    f1_1 = list()
+
+    result_path = config['result']['path']
+    input_horizon = int(config['data']['input_horizon'])
+    comment = config['result']['comment']
+    output_horizon = int(config['data']['output_horizon'])
+
+
     for i in range(len(X)):
         pred, target = evaluate(config, X[i], Y[i], Feat[i], n_train)
         prec, rec, th = precision_recall_curve(target.ravel(), pred.ravel())
@@ -134,3 +149,63 @@ def evaluate_test_set(config, X, Y, Feat, n_train):
         fscore = np.nan_to_num(fscore)
         ix = np.argmax(fscore)
         print('Best Threshold=%f, F-Score=%.3f' % (th[ix], fscore[ix]))
+
+        prediction = np.copy(pred)
+        prediction[prediction >= th[ix]] = 1
+        prediction[prediction < th[ix]] = 0
+
+        precision, recall, f1 = precision_recall_fscore_support(target.ravel(), prediction.ravel(), average=None)
+        prec_0.append(precision[0])
+        prec_1.append(precision[1])
+        rec_0.append(recall[0])
+        rec_1.append(recall[1])
+        f1_0.append(f1[0])
+        f1_1.append(f1[1])
+
+        result_row = [n_train, X[i].shape[0], input_horizon, output_horizon, th[ix],
+                      precision[0], precision[1], recall[0], recall[1], f1[0], f1[1], comment]
+
+        result_file = os.path.join(result_path, 'test_set_' + str(i+1) + '.csv')
+
+        if not os.path.isfile(result_file):
+            header = ['n_train', 'n_test', 'input_horizon', 'output_horizon', 'threshold',
+                      'prec_0', 'prec_1', 'rec_0', 'rec_1', 'F1_0', 'F1_1', 'comment']
+
+            with open(result_file, "a+", newline='') as f:
+                csv_writer = csv.writer(f, delimiter=',')
+                csv_writer.writerow(header)
+                csv_writer.writerow(result_row)
+        else:
+            with open(result_file, "a+", newline='') as f:
+                csv_writer = csv.writer(f, delimiter=',')
+                csv_writer.writerow(result_row)
+
+    result_file = os.path.join(result_path, 'avg_test_set.csv')
+
+    prec_0 = np.array(prec_0)
+    prec_1 = np.array(prec_1)
+    rec_0 = np.array(rec_0)
+    rec_1 = np.array(rec_1)
+    f1_0 = np.array(f1_0)
+    f1_1 = np.array(f1_1)
+
+    result_row = [n_train, X[i].shape[0], input_horizon, output_horizon, np.mean(prec_0), np.mean(prec_1),
+                  np.mean(rec_0), np.mean(rec_1), np.mean(f1_0), np.mean(f1_1), comment]
+
+    if not os.path.isfile(result_file):
+        header = ['n_train', 'n_test', 'input_horizon', 'output_horizon',
+                  'prec_0', 'prec_1', 'rec_0', 'rec_1', 'F1_0', 'F1_1', 'comment']
+
+        with open(result_file, "a+", newline='') as f:
+            csv_writer = csv.writer(f, delimiter=',')
+            csv_writer.writerow(header)
+            csv_writer.writerow(result_row)
+    else:
+        with open(result_file, "a+", newline='') as f:
+            csv_writer = csv.writer(f, delimiter=',')
+            csv_writer.writerow(result_row)
+
+
+
+
+
