@@ -160,7 +160,7 @@ class Seq2Seq(nn.Module):
         self.decoder = decoder
         self.config = config
         feat = self.config.getboolean('data', 'features')
-        if feat:
+        if feat and self.config['model']['decoder'] == 'features':
             self.embedding = embedding
         self.data_obj = Data()
 
