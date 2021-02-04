@@ -329,7 +329,7 @@ class Data:
         print('Finished Generating : ', str(n_lag_days))
         sys.stdout.flush()
 
-    def split_train_test(self, df, series_idx, aggregate=True, randomize=True):
+    def split_train_test(self, df, randomize=True):
 
         '''
         :param df: Dataframe containing all time series
@@ -341,9 +341,6 @@ class Data:
 
         input_horizon = int(self._config['data']['input_horizon'])
         output_horizon = int(self._config['data']['output_horizon'])
-
-        if not aggregate:
-            return self.split_series_train_test(df.iloc[:, series_idx], df, randomize=randomize)
 
         train_step = self._config['data']['train_window_size']
         test_step = self._config['data']['test_window_size']

@@ -19,62 +19,43 @@ if __name__ == '__main__':
     config = ConfigParser()
     config.read('config.ini')
     df = data_obj.read_tsv('train_val.tsv', config['data']['train_start'], config['data']['val_stop'])
-    '''baseline_approach = Baseline()
 
-    acc_ = list()
-    f1_ = list()
-    cm_ = list()'''
-
-    '''algo = config['train']['algo']
-    agg_series = config.getboolean('data', 'complete_data')
-    if agg_series:
-        data_type = 'Complete'
-    else:
-        data_type = 'Individual'
+    baseline_approach = Baseline()
+    algo = config['train']['algo']
+    eval_tests = config.getboolean('data', 'eval_tests')
 
     # For complete data
     n_train = 0
     n_test = 0
 
-    if agg_series:
-        X_train, Y_train, X_test, Y_test = data_obj.split_train_test(df, 0, aggregate=agg_series)
+    X_train, Y_train, X_test, Y_test = data_obj.split_train_test(df)
+
+    if not eval_tests:
         n_train = X_train.shape[0]
         n_test = X_test.shape[0]
         if algo == 'knn':
-            acc, f1, cm = baseline_approach.nearest_neighbour(X_train, Y_train, X_test, Y_test, aggregate=agg_series)
+            prec, rec, f1 = baseline_approach.nearest_neighbour(X_train, Y_train, X_test, Y_test)
         elif algo == 'rf':
-            acc, f1, cm = baseline_approach.random_forest(X_train, Y_train, X_test, Y_test, aggregate=agg_series)
-        acc_.append(acc)
-        f1_.append(f1)
-        cm_.append(cm)
+            prec, rec, f1 = baseline_approach.random_forest(X_train, Y_train, X_test, Y_test)
+        elif algo == 'svm':
+            prec, rec, f1 = baseline_approach.support_vector_classifier(X_train, Y_train, X_test, Y_test)
+
+        baseline_approach.log_result(n_train, n_test, prec, rec, f1, 'Org')
     else:
-        for idx in range(df.shape[1]):
-            X_train, Y_train, X_test, Y_test = data_obj.split_train_test(df, idx, aggregate=agg_series)
-            if idx == 0:
-                n_train = X_train.shape[0]
-                n_test = X_test.shape[0]
-            if algo == 'knn':
-                acc, f1, cm = baseline_approach.nearest_neighbour(X_train, Y_train, X_test, Y_test, aggregate=agg_series)
-            elif algo == 'rf':
-                acc, f1, cm = baseline_approach.random_forest(X_train, Y_train, X_test, Y_test, aggregate=agg_series)
-            acc_.append(acc)
-            f1_.append(f1)
-            cm_.append(cm)
+        X, Y = generate_test_set(config)
+        baseline_approach.eval_test_set(X_train.shape[0], X, Y)
 
-    print('A: ' + str(np.mean(acc_)) + ' F1: ' + str(np.mean(f1_, axis=0)))
 
-    baseline_approach.log_result(data_type=data_type, n_train=n_train, n_test=n_test, accuracy=np.mean(acc_), f1=np.mean(f1_, axis=0))'''
-
-    feat = config.getboolean('data', 'features')
+    '''feat = config.getboolean('data', 'features')
     eval_train = config.getboolean('data', 'eval_train')
     train_ = config.getboolean('data', 'train')
     eval_ = config.getboolean('data', 'eval')
     eval_tests = config.getboolean('data', 'eval_tests')
 
     if feat:
-        X_train, Y_train, X_test, Y_test, Train_features, Test_features = data_obj.split_train_test(df, 0, aggregate=True)
+        X_train, Y_train, X_test, Y_test, Train_features, Test_features = data_obj.split_train_test(df)
     else:
-        X_train, Y_train, X_test, Y_test = data_obj.split_train_test(df, 0, aggregate=True)
+        X_train, Y_train, X_test, Y_test = data_obj.split_train_test(df)
         Train_features = np.random.rand(X_train.shape[0], 2)
         Test_features = np.random.rand(X_test.shape[0], 2)
 
@@ -99,7 +80,7 @@ if __name__ == '__main__':
         for i in range(len(X)):
             print(X[i].shape, Y[i].shape, Feat[i].shape)
 
-        evaluate_test_set(config, X, Y, Feat, X_train.shape[0])
+        evaluate_test_set(config, X, Y, Feat, X_train.shape[0])'''
 
 
 
