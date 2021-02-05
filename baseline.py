@@ -71,7 +71,7 @@ class Baseline:
             loaded = True
 
         if not loaded:
-            clf = OneVsRestClassifier(SVC(gamma='auto'), n_jobs=-1)
+            clf = OneVsRestClassifier(SVC(kernel='linear', gamma='auto', cache_size=7000), n_jobs=-1)
             clf.fit(X_train, Y_train)
 
         pred = clf.predict(X_test)
