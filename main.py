@@ -20,7 +20,7 @@ if __name__ == '__main__':
     config.read('config.ini')
     df = data_obj.read_tsv('train_val.tsv', config['data']['train_start'], config['data']['val_stop'])
 
-    baseline_approach = Baseline()
+    '''baseline_approach = Baseline()
     algo = config['train']['algo']
     eval_tests = config.getboolean('data', 'eval_tests')
 
@@ -39,14 +39,16 @@ if __name__ == '__main__':
             prec, rec, f1 = baseline_approach.random_forest(X_train, Y_train, X_test, Y_test)
         elif algo == 'svm':
             prec, rec, f1 = baseline_approach.support_vector_classifier(X_train, Y_train, X_test, Y_test)
+        elif algo == 'ha':
+            prec, rec, f1 = baseline_approach.historical_average(X_test, Y_test)
 
         baseline_approach.log_result(n_train, n_test, prec, rec, f1, 'Org')
     else:
         X, Y = generate_test_set(config)
-        baseline_approach.eval_test_set(X_train.shape[0], X, Y)
+        baseline_approach.eval_test_set(X_train.shape[0], X, Y)'''
 
 
-    '''feat = config.getboolean('data', 'features')
+    feat = config.getboolean('data', 'features')
     eval_train = config.getboolean('data', 'eval_train')
     train_ = config.getboolean('data', 'train')
     eval_ = config.getboolean('data', 'eval')
@@ -80,7 +82,7 @@ if __name__ == '__main__':
         for i in range(len(X)):
             print(X[i].shape, Y[i].shape, Feat[i].shape)
 
-        evaluate_test_set(config, X, Y, Feat, X_train.shape[0])'''
+        evaluate_test_set(config, X, Y, Feat, X_train.shape[0])
 
 
 

@@ -111,8 +111,20 @@ class Baseline:
 
         return precision, recall, f1
 
-    def historical_average(self, X_train, Y_train, X_test, Y_test):
-        pass
+    def historical_average(self, X_test, Y_test):
+
+        samples = np.hsplit(X_test, int(self._input_horizon))
+        samples = np.array(samples)
+        pred = np.mean(samples, axis=0)
+
+        print(samples.shape, pred.shape, Y_test.shape, X_test.shape)
+        pred[pred >= 0.5] = 1
+        pred[pred < 0.5] = 0
+
+        precision, recall, f1, _ = precision_recall_fscore_support(Y_test.ravel(), pred.ravel(), average=None)
+
+        return precision, recall, f1
+
 
     def load_model(self, algo):
 
@@ -172,11 +184,17 @@ class Baseline:
         comment = self._config['result']['comment']
 
         algo = self._config['train']['algo']
-        clf = self.load_model(algo)
+
+        if algo != 'ha':
+            clf = self.load_model(algo)
 
         for i in range(len(X)):
-            pred = clf.predict(X[i])
-            precision, recall, f1, _ = precision_recall_fscore_support(Y[i].ravel(), pred.ravel(), average=None)
+
+            if algo == 'ha':
+                precision, recall, f1 = self.historical_average(X[i], Y[i])
+            else:
+                pred = clf.predict(X[i])
+                precision, recall, f1, _ = precision_recall_fscore_support(Y[i].ravel(), pred.ravel(), average=None)
 
             prec_0.append(precision[0])
             prec_1.append(precision[1])
@@ -220,6 +238,8 @@ class Baseline:
             result_file = os.path.join(result_path, 'rf_new.csv')
         elif algo == 'svm':
             result_file = os.path.join(result_path, 'svm.csv')
+        elif algo == 'ha':
+            result_file = os.path.join(result_path, 'ha.csv')
 
         if not os.path.isfile(result_file):
             header = ['Input_Horizon', 'Output_Horizon', 'n_train', 'n_test',
