@@ -59,7 +59,10 @@ class Decoder(nn.Module):
         self.feat_size = feat_size
         self.gru = nn.GRU(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers, batch_first=True)
         self.dropout = nn.Dropout(p=dropout)
-        self.linear = nn.Linear(2 * hidden_size, output_size)
+        self.linear1 = nn.Linear(hidden_size + feat_size, 512)
+        self.linear2 = nn.Linear(512, 256)
+        self.linear3 = nn.Linear(256, hidden_size)
+        self.linear = nn.Linear(hidden_size, output_size)
 
     def forward(self, input, hidden, features, decode):
         '''
@@ -76,6 +79,9 @@ class Decoder(nn.Module):
         if decode == 'features':
             output = torch.cat((output, features.unsqueeze(1)), 2) # concat decoder output and features
 
+        output = F.relu(self.linear1(output))
+        output = F.relu(self.linear2(output))
+        output = F.relu(self.linear3(output))
         out = self.linear(output)
 
         # squeeze the seq_len dimension so that output is (batch_size, output_dim)
@@ -185,9 +191,9 @@ class Seq2Seq(nn.Module):
         hidden = self.encoder.init_hidden(batch_size).to(device)
         encoder_out, hidden = self.encoder(source, hidden)
 
-        if feat and decode == 'features':
+        #if feat and decode == 'features':
             #intial hidden as features
-            features = self.embedding(features)  # features  =====>>> hidden
+            #features = self.embedding(features)  # features  =====>>> hidden
             #features = features.unsqueeze(0)  # add extra dimensino for num_layers
             #features = features.repeat(num_layers, 1, 1)
             #hidden[:, :, :features.shape[2]] = features  # fill intial hidden with avail features
