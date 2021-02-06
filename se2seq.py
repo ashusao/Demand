@@ -59,7 +59,7 @@ class Decoder(nn.Module):
         self.feat_size = feat_size
         self.gru = nn.GRU(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers, batch_first=True)
         self.dropout = nn.Dropout(p=dropout)
-        self.linear = nn.Linear(hidden_size + self.feat_size, output_size)
+        self.linear = nn.Linear(2 * hidden_size, output_size)
 
     def forward(self, input, hidden, features, decode):
         '''
@@ -150,8 +150,9 @@ class Embedding(nn.Module):
         self.embed_size = embed_size
         self.linear = nn.Linear(feat_size, embed_size)
 
+
     def forward(self, features):
-        return self.linear(features)
+        return F.relu(self.linear(features))
 
 
 class Seq2Seq(nn.Module):
@@ -184,9 +185,9 @@ class Seq2Seq(nn.Module):
         hidden = self.encoder.init_hidden(batch_size).to(device)
         encoder_out, hidden = self.encoder(source, hidden)
 
-        #if feat and decode == 'features':
+        if feat and decode == 'features':
             #intial hidden as features
-            #features = self.embedding(features)  # features  =====>>> hidden
+            features = self.embedding(features)  # features  =====>>> hidden
             #features = features.unsqueeze(0)  # add extra dimensino for num_layers
             #features = features.repeat(num_layers, 1, 1)
             #hidden[:, :, :features.shape[2]] = features  # fill intial hidden with avail features
