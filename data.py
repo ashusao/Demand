@@ -244,7 +244,8 @@ class Data:
         :return:
         '''
 
-        save_dir = self._config['data']['npy_path']
+        train_dir = self._config['data']['train_path']
+        val_dir = self._config['data']['val_path']
         n_lag_days = int(self._config['data']['input_horizon'])
         n_lead_days = int(self._config['data']['output_horizon'])
         feat = self._config.getboolean('data', 'features')
@@ -295,33 +296,33 @@ class Data:
         train_step = self._config['data']['train_window_size']
         test_step = self._config['data']['test_window_size']
 
-        np.save(os.path.join(save_dir, 'X_train_lag_' + str(n_lag_days) +
+        np.save(os.path.join(train_dir, 'X_train_lag_' + str(n_lag_days) +
                              '_day_lead_' + str(n_lead_days) +
-                             '_day_train step_' + str(train_step) +
-                             '_day_test step_' + str(test_step) + '.npy'), X_train)
+                             '_day_train_step_' + str(train_step) +
+                             '_day_test_step_' + str(test_step) + '.npy'), X_train)
 
-        np.save(os.path.join(save_dir, 'Y_train_lag_' + str(n_lag_days) +
+        np.save(os.path.join(train_dir, 'Y_train_lag_' + str(n_lag_days) +
                              '_day_lead_' + str(n_lead_days) +
                              '_day_train_step_' + str(train_step) +
                              '_day_test_step_' + str(test_step) + '.npy'), Y_train)
 
-        np.save(os.path.join(save_dir, 'X_test_lag_' + str(n_lag_days) +
+        np.save(os.path.join(val_dir, 'X_test_lag_' + str(n_lag_days) +
                              '_day_lead_' + str(n_lead_days) +
                              '_day_train_step_' + str(train_step) +
                              '_day_test_step_' + str(test_step) + '.npy'), X_test)
 
-        np.save(os.path.join(save_dir, 'Y_test_lag_' + str(n_lag_days) +
+        np.save(os.path.join(val_dir, 'Y_test_lag_' + str(n_lag_days) +
                              '_day_lead_' + str(n_lead_days) +
                              '_day_train_step_' + str(train_step) +
                              '_day_test_step_' + str(test_step) + '.npy'), Y_test)
 
         if feat:
-            np.save(os.path.join(save_dir, 'Train_features_lag_' + str(n_lag_days) +
+            np.save(os.path.join(train_dir, 'Train_features_lag_' + str(n_lag_days) +
                                  '_day_lead_' + str(n_lead_days) +
                                  '_day_train_step_' + str(train_step) +
                                  '_day_test_step_' + str(test_step) + '.npy'), Train_features)
 
-            np.save(os.path.join(save_dir, 'Test_features_lag_' + str(n_lag_days) +
+            np.save(os.path.join(val_dir, 'Test_features_lag_' + str(n_lag_days) +
                                  '_day_lead_' + str(n_lead_days) +
                                  '_day_train_step_' + str(train_step) +
                                  '_day_test_step_' + str(test_step) + '.npy'), Test_features)
@@ -344,42 +345,43 @@ class Data:
 
         train_step = self._config['data']['train_window_size']
         test_step = self._config['data']['test_window_size']
-        npy_path = self._config['data']['npy_path']
+        train_path = self._config['data']['train_path']
+        val_path = self._config['data']['val_path']
         feat = self._config.getboolean('data', 'features')
 
-        if not os.path.isfile(os.path.join(npy_path, 'X_train_lag_' + str(input_horizon) +
+        if not os.path.isfile(os.path.join(train_path, 'X_train_lag_' + str(input_horizon) +
                                                      '_day_lead_' + str(output_horizon) +
-                                                     '_day_train step_' + str(train_step) +
-                                                     '_day_test step_' + str(test_step) + '.npy')):
+                                                     '_day_train_step_' + str(train_step) +
+                                                     '_day_test_step_' + str(test_step) + '.npy')):
             self.generate_and_save_aggregated_train_test(df=df, randomize=randomize)
 
-        X_train = np.load(os.path.join(npy_path, 'X_train_lag_' + str(input_horizon) +
-                             '_day_lead_' + str(output_horizon) +
-                             '_day_train step_' + str(train_step) +
-                             '_day_test step_' + str(test_step) + '.npy'))
-
-        Y_train = np.load(os.path.join(npy_path, 'Y_train_lag_' + str(input_horizon) +
+        X_train = np.load(os.path.join(train_path, 'X_train_lag_' + str(input_horizon) +
                              '_day_lead_' + str(output_horizon) +
                              '_day_train_step_' + str(train_step) +
                              '_day_test_step_' + str(test_step) + '.npy'))
 
-        X_test = np.load(os.path.join(npy_path, 'X_test_lag_' + str(input_horizon) +
+        Y_train = np.load(os.path.join(train_path, 'Y_train_lag_' + str(input_horizon) +
                              '_day_lead_' + str(output_horizon) +
                              '_day_train_step_' + str(train_step) +
                              '_day_test_step_' + str(test_step) + '.npy'))
 
-        Y_test = np.load(os.path.join(npy_path, 'Y_test_lag_' + str(input_horizon) +
+        X_test = np.load(os.path.join(val_path, 'X_test_lag_' + str(input_horizon) +
+                             '_day_lead_' + str(output_horizon) +
+                             '_day_train_step_' + str(train_step) +
+                             '_day_test_step_' + str(test_step) + '.npy'))
+
+        Y_test = np.load(os.path.join(val_path, 'Y_test_lag_' + str(input_horizon) +
                              '_day_lead_' + str(output_horizon) +
                              '_day_train_step_' + str(train_step) +
                              '_day_test_step_' + str(test_step) + '.npy'))
 
         if feat:
-            Train_features = np.load(os.path.join(npy_path, 'Train_features_lag_' + str(input_horizon) +
+            Train_features = np.load(os.path.join(train_path, 'Train_features_lag_' + str(input_horizon) +
                                  '_day_lead_' + str(output_horizon) +
                                  '_day_train_step_' + str(train_step) +
                                  '_day_test_step_' + str(test_step) + '.npy'))
 
-            Test_features = np.load(os.path.join(npy_path, 'Test_features_lag_' + str(input_horizon) +
+            Test_features = np.load(os.path.join(val_path, 'Test_features_lag_' + str(input_horizon) +
                                                   '_day_lead_' + str(output_horizon) +
                                                   '_day_train_step_' + str(train_step) +
                                                   '_day_test_step_' + str(test_step) + '.npy'))

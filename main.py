@@ -18,7 +18,7 @@ if __name__ == '__main__':
     data_obj = Data()
     config = ConfigParser()
     config.read('config.ini')
-    df = data_obj.read_tsv('train_val_new.tsv', config['data']['train_start'], config['data']['val_stop'])
+    df = data_obj.read_tsv('aug_dec.tsv', config['data']['train_start'], config['data']['val_stop'])
 
     '''baseline_approach = Baseline()
     algo = config['train']['algo']
