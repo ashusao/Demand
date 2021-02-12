@@ -19,8 +19,8 @@ class Data:
         self.enc.fit(self.cat)
 
     def encode_time(self, data, col):
-        data[col + '_sin'] = np.sin(2 * np.pi * data[col] / data[col].max())
-        data[col + '_cos'] = np.cos(2 * np.pi * data[col] / data[col].max())
+        data[col + '_sin'] = np.sin(2 * np.pi * data[col])
+        data[col + '_cos'] = np.cos(2 * np.pi * data[col])
         return data
 
     '''
@@ -52,15 +52,19 @@ class Data:
         new_df = new_df.loc[start:stop]
 
         # adding time features
-        new_df['day'] = new_df.index.dayofweek
-        new_df['hour'] = new_df.index.hour
-        new_df['minute'] = new_df.index.minute
+        new_df['month'] = new_df.index.month / 12
+        new_df['day'] = new_df.index.day / new_df.index.days_in_month
+        new_df['weekday'] = new_df.index.dayofweek / 7
+        new_df['hour'] = new_df.index.hour / 24
+        new_df['minute'] = new_df.index.minute / 60
+        new_df = self.encode_time(new_df, 'month')
         new_df = self.encode_time(new_df, 'day')
+        new_df = self.encode_time(new_df, 'weekday')
         new_df = self.encode_time(new_df, 'hour')
         new_df = self.encode_time(new_df, 'minute')
 
-        min_max_scalar = preprocessing.MinMaxScaler()
-        new_df[['day_sin', 'day_cos', 'hour_sin', 'hour_cos', 'minute_sin', 'minute_cos']] = min_max_scalar.fit_transform(new_df[['day_sin', 'day_cos', 'hour_sin', 'hour_cos', 'minute_sin', 'minute_cos']])
+        #min_max_scalar = preprocessing.MinMaxScaler()
+        #new_df[['day_sin', 'day_cos', 'hour_sin', 'hour_cos', 'minute_sin', 'minute_cos']] = min_max_scalar.fit_transform(new_df[['day_sin', 'day_cos', 'hour_sin', 'hour_cos', 'minute_sin', 'minute_cos']])
 
         return new_df
 
@@ -150,8 +154,12 @@ class Data:
 
     def generate_data(self, series, df, feature_df, start, stop):
         d = np.expand_dims(series.to_numpy()[start:stop], axis=1)
+        month_sin = np.expand_dims(df['month_sin'].to_numpy()[start:stop], axis=1)
+        month_cos = np.expand_dims(df['month_cos'].to_numpy()[start:stop], axis=1)
         day_sin = np.expand_dims(df['day_sin'].to_numpy()[start:stop], axis=1)
         day_cos = np.expand_dims(df['day_cos'].to_numpy()[start:stop], axis=1)
+        weekday_sin = np.expand_dims(df['weekday_sin'].to_numpy()[start:stop], axis=1)
+        weekday_cos = np.expand_dims(df['weekday_cos'].to_numpy()[start:stop], axis=1)
         hour_sin = np.expand_dims(df['hour_sin'].to_numpy()[start:stop], axis=1)
         hour_cos = np.expand_dims(df['hour_cos'].to_numpy()[start:stop], axis=1)
         minute_sin = np.expand_dims(df['minute_sin'].to_numpy()[start:stop], axis=1)
@@ -159,7 +167,8 @@ class Data:
 
         # genertate station specific features
         features = self.generate_features(series, feature_df)
-        data = np.concatenate([d, day_sin, day_cos, hour_sin, hour_cos, minute_sin, minute_cos], axis=1)
+        data = np.concatenate([d, month_sin, month_cos, day_sin, day_cos,
+                               weekday_sin, weekday_cos, hour_sin, hour_cos, minute_sin, minute_cos], axis=1)
         return data, features
 
     # @refrence: https://machinelearningmastery.com/how-to-develop-machine-learning-models-for-multivariate-multi-step-air-pollution-time-series-forecasting/
@@ -262,7 +271,7 @@ class Data:
 
         feature_df = self.read_and_process_features()
 
-        for series_idx in range(df.shape[1] - 9): # subtract last 9 time feature columns
+        for series_idx in range(df.shape[1] - 15): # subtract last 9 time feature columns
             if feat:
                 x_train, y_train, x_test, y_test, train_features, test_features = self.split_series_train_test(df.iloc[:, series_idx],
                                                                                 df, feature_df, randomize=randomize)
