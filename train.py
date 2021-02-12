@@ -111,10 +111,10 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
             dropout=dropout, num_layers=num_layers).to(device)
 
         if decode == 'features':
-            '''decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size, feat_size=Train_features.shape[1],
-                              dropout=dropout, num_layers=num_layers).to(device)'''
-            decoder = Decoder(input_size=1, hidden_size=hidden_size + Train_features.shape[1], output_size=output_size, feat_size=Train_features.shape[1],
+            decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size, feat_size=Train_features.shape[1],
                               dropout=dropout, num_layers=num_layers).to(device)
+            '''decoder = Decoder(input_size=1, hidden_size=hidden_size + Train_features.shape[1], output_size=output_size, feat_size=Train_features.shape[1],
+                              dropout=dropout, num_layers=num_layers).to(device)'''
 
         model = Seq2Seq(encoder, decoder, embedding, config).to(device)
     elif algo == 'baseline':
@@ -239,10 +239,10 @@ def evaluate(config, X_test, Y_test, Test_features, n_train):
                               dropout=dropout, num_layers=num_layers).to(device)
 
         if decode == 'features':
-            '''decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size, feat_size=Test_features.shape[1],
-                              dropout=dropout, num_layers=num_layers).to(device)'''
-            decoder = Decoder(input_size=1, hidden_size=hidden_size + Test_features.shape[1], output_size=output_size, feat_size=Test_features.shape[1],
+            decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size, feat_size=Test_features.shape[1],
                               dropout=dropout, num_layers=num_layers).to(device)
+            '''decoder = Decoder(input_size=1, hidden_size=hidden_size + Test_features.shape[1], output_size=output_size, feat_size=Test_features.shape[1],
+                              dropout=dropout, num_layers=num_layers).to(device)'''
 
         model = Seq2Seq(encoder, decoder, embedding, config).to(device)
     elif algo == 'baseline':
