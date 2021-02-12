@@ -180,7 +180,7 @@ class Data:
         train_features = list()
         test_features = list()
 
-
+        start_time = self._config['data']['train_start']
         split_time = self._config['data']['train_stop']
         train_step = int(self._config['data']['train_window_size'])
         test_step = int(self._config['data']['test_window_size'])
@@ -198,15 +198,18 @@ class Data:
 
             if (i%train_step == 0) and (series.index[end_ix] <= datetime.datetime.strptime(split_time, '%Y-%m-%d %H:%M:%S')):
 
-                if feat:
-                    data, features = self.generate_data(series, df, feature_df, start_ix, i)
-                    X_train.append(data.tolist())
-                    train_features.append(features.tolist())
-                else:
-                    X_train.append(series.tolist()[start_ix:i])
-                Y_train.append(series.tolist()[i:(end_ix + 1)])
-                #data, _ = self.generate_data(series, df, feature_df, i, (end_ix + 1))
-                #Y_train.append(data.tolist())
+                if series.index[end_ix] > \
+                        (datetime.datetime.strptime(start_time, '%Y-%m-%d %H:%M:%S') + datetime.timedelta(days=8)):
+
+                    if feat:
+                        data, features = self.generate_data(series, df, feature_df, start_ix, i)
+                        X_train.append(data.tolist())
+                        train_features.append(features.tolist())
+                    else:
+                        X_train.append(series.tolist()[start_ix:i])
+                    Y_train.append(series.tolist()[i:(end_ix + 1)])
+                    #data, _ = self.generate_data(series, df, feature_df, i, (end_ix + 1))
+                    #Y_train.append(data.tolist())
 
             elif i%test_step == 0:
 
