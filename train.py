@@ -99,8 +99,8 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_feature
 
     if algo == 'seq2seq':
         encoder = Encoder(input_size=input_size, hidden_size=hidden_size, dropout=dropout, num_layers=num_layers).to(device)
-        embedding = Embedding(feat_size=Train_features.shape[1], embed_size=embed_size)
-        #embedding = Embedding(feat_size=Train_features.shape[1] + hidden_size, embed_size=embed_size)
+        #embedding = Embedding(feat_size=Train_features.shape[1], embed_size=embed_size)
+        embedding = Embedding(feat_size=Train_features.shape[1] + hidden_size, embed_size=embed_size)
 
         if decode == 'attention':
             decoder = AttnDecoder(input_size=1, hidden_size=hidden_size, output_size=output_size, input_len=X_train.shape[1],
@@ -227,8 +227,8 @@ def evaluate(config, X_test, Y_test, Test_features, n_train):
 
     if algo == 'seq2seq':
         encoder = Encoder(input_size=input_size, hidden_size=hidden_size, dropout=dropout, num_layers=num_layers).to(device)
-        embedding = Embedding(feat_size=Test_features.shape[1], embed_size=embed_size)
-        #embedding = Embedding(feat_size=Test_features.shape[1] + hidden_size, embed_size=embed_size)
+        #embedding = Embedding(feat_size=Test_features.shape[1], embed_size=embed_size)
+        embedding = Embedding(feat_size=Test_features.shape[1] + hidden_size, embed_size=embed_size)
 
         if decode == 'attention':
             decoder = AttnDecoder(input_size=1, hidden_size=hidden_size, output_size=output_size, input_len=X_test.shape[1],

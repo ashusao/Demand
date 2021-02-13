@@ -63,9 +63,9 @@ class Data:
         new_df = self.encode_time(new_df, 'hour')
         new_df = self.encode_time(new_df, 'minute')
 
-        min_max_scalar = preprocessing.MinMaxScaler()
-        new_df[['month_sin', 'month_cos', 'day_sin', 'day_cos', 'weekday_sin', 'weekday_cos', 'hour_sin', 'hour_cos', 'minute_sin', 'minute_cos']] = \
-            min_max_scalar.fit_transform(new_df[['month_sin', 'month_cos', 'day_sin', 'day_cos', 'weekday_sin', 'weekday_cos', 'hour_sin', 'hour_cos', 'minute_sin', 'minute_cos']])
+        #min_max_scalar = preprocessing.MinMaxScaler()
+        #new_df[['month_sin', 'month_cos', 'day_sin', 'day_cos', 'weekday_sin', 'weekday_cos', 'hour_sin', 'hour_cos', 'minute_sin', 'minute_cos']] = \
+        #    min_max_scalar.fit_transform(new_df[['month_sin', 'month_cos', 'day_sin', 'day_cos', 'weekday_sin', 'weekday_cos', 'hour_sin', 'hour_cos', 'minute_sin', 'minute_cos']])
 
         return new_df
 
