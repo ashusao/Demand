@@ -12,11 +12,13 @@ from sklearn.metrics import precision_recall_curve
 from sklearn.metrics import precision_recall_fscore_support
 from sklearn.utils import shuffle
 
-def split_test_set(config, data_obj, series, df, feature_df,  start_date, stop_date):
+
+def split_test_set(config, data_obj, series, df, cs_feature, spatial_feature, start_date, stop_date):
 
     X_test = list()
     Y_test = list()
-    test_features = list()
+    test_features_cs = list()
+    test_features_spatial = list()
 
     test_step = int(config['data']['test_window_size'])
     n_lag = 96 * int(config['data']['input_horizon'])  # *96 when lag value is in days
@@ -35,9 +37,10 @@ def split_test_set(config, data_obj, series, df, feature_df,  start_date, stop_d
                 (series.index[end_ix] <= datetime.datetime.strptime(stop_date, '%Y-%m-%d %H:%M:%S')):
 
             if feat:
-                data, features = data_obj.generate_data(series, df, feature_df, start_ix, i)
+                data, features_cs, features_spatial = data_obj.generate_data(series, df, cs_feature, spatial_feature, start_ix, i)
                 X_test.append(data.tolist())
-                test_features.append(features.tolist())
+                test_features_cs.append(features_cs.tolist())
+                test_features_spatial.append(features_spatial.tolist())
             else:
                 X_test.append(series.tolist()[start_ix:i])
             Y_test.append(series.tolist()[i:(end_ix + 1)])
@@ -45,8 +48,8 @@ def split_test_set(config, data_obj, series, df, feature_df,  start_date, stop_d
             # Y_train.append(data.tolist())
 
     if feat:
-        X_test, Y_test, test_features = shuffle(X_test, Y_test, test_features, random_state=0)
-        return np.array(X_test), np.array(Y_test), np.array(test_features)
+        X_test, Y_test, test_features_cs, test_features_spatial = shuffle(X_test, Y_test, test_features_cs, test_features_spatial, random_state=0)
+        return np.array(X_test), np.array(Y_test), np.array(test_features_cs), np.array(test_features_spatial)
     else:
         X_test, Y_test = shuffle(X_test, Y_test, random_state=0)
         return np.array(X_test), np.array(Y_test)
@@ -61,21 +64,23 @@ def generate_and_save(config, folder_list):
 
     data_obj = Data()
     df = data_obj.read_tsv('aug_dec.tsv', start, stop)
-    feature_df = data_obj.read_and_process_features()
+    cs_feature, spatial_feature = data_obj.read_and_process_features()
 
     for i, val in enumerate(folder_list):
         X = list()
         Y = list()
-        feature = list()
+        feat_cs = list()
+        feat_spatial = list()
         start_date = config['test']['test' + str(i+1) + '_start']
         stop_date = config['test']['test' + str(i+1) + '_stop']
 
-        for series_idx in range(df.shape[1] - 9):
+        for series_idx in range(df.shape[1] - 15):
             if feat:
-                x, y, f = split_test_set(config, data_obj, df.iloc[:, series_idx], df, feature_df, start_date, stop_date)
-                feature.extend(f)
+                x, y, f_cs, f_spatial = split_test_set(config, data_obj, df.iloc[:, series_idx], df, cs_feature, spatial_feature, start_date, stop_date)
+                feat_cs.extend(f_cs)
+                feat_spatial.extend(f_spatial)
             else:
-                x, y = split_test_set(config, data_obj, df.iloc[:, series_idx], df, feature_df, start_date, stop_date)
+                x, y = split_test_set(config, data_obj, df.iloc[:, series_idx], df, cs_feature, spatial_feature, start_date, stop_date)
 
             X.extend(x)
             Y.extend(y)
@@ -87,7 +92,8 @@ def generate_and_save(config, folder_list):
         np.save(os.path.join(test_path, folder_list[i], 'Y_lag_' + str(input_horizon) + '.npy'), np.array(Y))
 
         if feat:
-            np.save(os.path.join(test_path, folder_list[i], 'Feature_lag_' + str(input_horizon) + '.npy'), np.array(feature))
+            np.save(os.path.join(test_path, folder_list[i], 'Cs_lag_' + str(input_horizon) + '.npy'), np.array(feat_cs))
+            np.save(os.path.join(test_path, folder_list[i], 'Spatial_lag_' + str(input_horizon) + '.npy'), np.array(feat_spatial))
 
         print('Finished test set ', str(i+1))
 
@@ -103,7 +109,8 @@ def generate_test_set(config):
 
     X = list()
     Y = list()
-    Feat = list()
+    Feat_cs = list()
+    Feat_spatial = list()
 
     if feat:
         folder_list = ['test1_data_time', 'test2_data_time', 'test3_data_time', 'test4_data_time', 'test5_data_time']
@@ -119,13 +126,14 @@ def generate_test_set(config):
         Y.append(np.load(os.path.join(test_path, folder_list[i], 'Y_lag_' + str(input_horizon) + '.npy')))
 
         if feat:
-            Feat.append(np.load(os.path.join(test_path, folder_list[i], 'Feature_lag_' + str(input_horizon) + '.npy')))
+            Feat_cs.append(np.load(os.path.join(test_path, folder_list[i], 'Cs_lag_' + str(input_horizon) + '.npy')))
+            Feat_spatial.append(np.load(os.path.join(test_path, folder_list[i], 'Spatial_lag_' + str(input_horizon) + '.npy')))
     if feat:
-        return X, Y, Feat
+        return X, Y, Feat_cs, Feat_spatial
     else:
         return X, Y
 
-def evaluate_test_set(config, X, Y, Feat, n_train):
+def evaluate_test_set(config, X, Y, Feat_cs, Feat_spatial, n_train):
 
     prec_0 = list()
     prec_1 = list()
@@ -141,7 +149,7 @@ def evaluate_test_set(config, X, Y, Feat, n_train):
 
 
     for i in range(len(X)):
-        pred, target = evaluate(config, X[i], Y[i], Feat[i], n_train)
+        pred, target = evaluate(config, X[i], Y[i], Feat_cs[i], Feat_spatial[i], n_train)
         prec, rec, th = precision_recall_curve(target.ravel(), pred.ravel())
         print('threshold: ')
         print(th)

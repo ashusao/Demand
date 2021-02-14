@@ -44,7 +44,7 @@ class Encoder(nn.Module):
 
 class Decoder(nn.Module):
 
-    def __init__(self, input_size, hidden_size, output_size, feat_size, dropout, num_layers=1):
+    def __init__(self, input_size, hidden_size, output_size, feat_size_cs, feat_size_spatial, dropout, num_layers=1):
         '''
 
         :param input_size:              number of features in input
@@ -56,14 +56,15 @@ class Decoder(nn.Module):
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.num_layers = num_layers
-        self.feat_size = feat_size
+        self.feat_size_cs = feat_size_cs
+        self.feat_size_spatial = feat_size_spatial
         self.gru = nn.GRU(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers, batch_first=True)
         self.dropout = nn.Dropout(p=dropout)
-        self.linear1 = nn.Linear(hidden_size + feat_size, hidden_size)
+        self.linear1 = nn.Linear(hidden_size + feat_size_cs + feat_size_spatial, hidden_size)
         #self.linear3 = nn.Linear(256, hidden_size)
         self.linear = nn.Linear(hidden_size, output_size)
 
-    def forward(self, input, hidden, features, decode):
+    def forward(self, input, hidden):
         '''
         :param input:           should be 2D (batch_size, input_size)
         :param hidden:          last hidden state (num_layers, batch_size, hidden_size)
@@ -91,7 +92,7 @@ class Decoder(nn.Module):
 
 class AttnDecoder(nn.Module):
 
-    def __init__(self, input_size, hidden_size, output_size, input_len, feat_size, dropout, num_layers=1):
+    def __init__(self, input_size, hidden_size, output_size, input_len, feat_size_cs, feat_size_spatial, dropout, num_layers=1):
         '''
 
         :param input_size:              number of features in input
@@ -104,7 +105,8 @@ class AttnDecoder(nn.Module):
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.input_len = input_len
-        self.feat_size = feat_size
+        self.feat_size_cs = feat_size_cs
+        self.feat_size_spatial = feat_size_spatial
 
         # combine prev_hidden and input to input len
         self.attn = nn.Linear(self.hidden_size + self.input_size, self.input_len)  # hidden_size = hidden + feat_size
@@ -161,17 +163,19 @@ class Embedding(nn.Module):
 
 class Seq2Seq(nn.Module):
 
-    def __init__(self, encoder, decoder, embedding, config):
+    def __init__(self, encoder, decoder, embedding_cs, embedding_spatial, embedding, config):
         super(Seq2Seq, self).__init__()
         self.encoder = encoder
         self.decoder = decoder
         self.config = config
         feat = self.config.getboolean('data', 'features')
         if feat and self.config['model']['decoder'] == 'features':
+            self.embedding_cs = embedding_cs
+            self.embedding_spatial = embedding_spatial
             self.embedding = embedding
         self.data_obj = Data()
 
-    def forward(self, source, target, features, teacher_force_ratio=0.5):
+    def forward(self, source, target, features_cs, features_spatial, teacher_force_ratio=0.5):
         batch_size = source.shape[0]
         target_len = target.shape[1]
         #output_size = target.shape[2]
@@ -196,9 +200,15 @@ class Seq2Seq(nn.Module):
             #features = features.repeat(num_layers, 1, 1)
             #hidden[:, :, :features.shape[2]] = features  # fill intial hidden with avail features
 
-            features = features.unsqueeze(0)  # add extra dimensino for num_layers
-            features = features.repeat(hidden.shape[0], 1, 1)  # copy features to each layers (num_layers, batch, hidden_size)
-            concat = torch.cat((hidden, features), 2)  # (num_layers, batch, hidden_size + feat_size)
+            features_cs = features_cs.unsqueeze(0)  # add extra dimensino for num_layers
+            features_spatial = features_spatial.unsqueeze(0)
+            features_cs = features_cs.repeat(hidden.shape[0], 1, 1)  # copy features to each layers (num_layers, batch, hidden_size)
+            features_spatial = features_spatial.repeat(hidden.shape[0], 1, 1)
+
+            features_cs = self.embedding_cs(features_cs)
+            features_spatial = self.embedding_spatial(features_spatial)
+
+            concat = torch.cat((hidden, features_cs, features_spatial), 2)  # (num_layers, batch, hidden_size + feat_size)
             hidden = self.embedding(concat)
 
             #features = features.unsqueeze(1)
@@ -226,7 +236,7 @@ class Seq2Seq(nn.Module):
                 if decode == 'attention':
                     out, hidden = self.decoder(decoder_input, hidden, encoder_out)
                 else:
-                    out, hidden = self.decoder(decoder_input, hidden, features, decode)
+                    out, hidden = self.decoder(decoder_input, hidden)
 
                 outputs[:, t] = out.squeeze(1)
 
@@ -239,7 +249,7 @@ class Seq2Seq(nn.Module):
                 if decode == 'attention':
                     out, hidden = self.decoder(decoder_input, hidden, encoder_out)
                 else:
-                    out, hidden = self.decoder(decoder_input, hidden, features, decode)
+                    out, hidden = self.decoder(decoder_input, hidden)
 
                 outputs[:, t] = out.squeeze(1)
                 output = out.clone()

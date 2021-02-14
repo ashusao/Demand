@@ -55,34 +55,40 @@ if __name__ == '__main__':
     eval_tests = config.getboolean('data', 'eval_tests')
 
     if feat:
-        X_train, Y_train, X_test, Y_test, Train_features, Test_features = data_obj.split_train_test(df)
+        X_train, Y_train, X_test, Y_test, Train_cs_features, Test_cs_features, \
+        Train_spatial_features, Test_spatial_features = data_obj.split_train_test(df)
     else:
         X_train, Y_train, X_test, Y_test = data_obj.split_train_test(df)
-        Train_features = np.random.rand(X_train.shape[0], 2)
-        Test_features = np.random.rand(X_test.shape[0], 2)
+        Train_cs_features = np.random.rand(X_train.shape[0], 2)
+        Test_cs_features = np.random.rand(X_test.shape[0], 2)
+        Train_spatial_features = np.random.rand(X_train.shape[0], 2)
+        Test_spatial_features = np.random.rand(X_test.shape[0], 2)
 
-    print(X_train.shape, Y_train.shape, X_test.shape, Y_test.shape, Train_features.shape, Test_features.shape)
+    print(X_train.shape, Y_train.shape, X_test.shape, Y_test.shape, Train_cs_features.shape, Test_cs_features.shape,
+          Train_spatial_features.shape, Test_spatial_features.shape)
 
     if train_:
-        train(config, X_train, Y_train, X_test, Y_test, Train_features, Test_features)
+        train(config, X_train, Y_train, X_test, Y_test, Train_cs_features, Test_cs_features,
+              Train_spatial_features, Test_spatial_features)
 
     if eval_:
-        evaluate(config, X_test, Y_test, Test_features, X_train.shape[0])
+        evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, X_train.shape[0])
 
     if eval_train:
-        evaluate(config, X_train, Y_train, Train_features, X_train.shape[0])
+        evaluate(config, X_train, Y_train, Train_cs_features, Train_spatial_features, X_train.shape[0])
 
     if eval_tests:
         if feat:
-            X, Y, Feat = generate_test_set(config)
+            X, Y, Feat_cs, Feat_spatial = generate_test_set(config)
         else:
             X, Y = generate_test_set(config)
-            Feat = [np.random.rand(X[0].shape[0], 2)] * 5
+            Feat_cs = [np.random.rand(X[0].shape[0], 2)] * 5
+            Feat_spatia = [np.random.rand(X[0].shape[0], 2)] * 5
 
         for i in range(len(X)):
-            print(X[i].shape, Y[i].shape, Feat[i].shape)
+            print(X[i].shape, Y[i].shape, Feat_cs[i].shape, Feat_spatial[i].shape)
 
-        evaluate_test_set(config, X, Y, Feat, X_train.shape[0])
+        evaluate_test_set(config, X, Y, Feat_cs, Feat_spatial, X_train.shape[0])
 
 
 

@@ -14,9 +14,6 @@ class Data:
     def __init__(self):
         self._config = ConfigParser()
         self._config.read('config.ini')
-        self.cat = [[0],[1]]
-        self.enc = OneHotEncoder()
-        self.enc.fit(self.cat)
 
     def encode_time(self, data, col):
         data[col + '_sin'] = np.sin(2 * np.pi * data[col])
@@ -63,10 +60,6 @@ class Data:
         new_df = self.encode_time(new_df, 'hour')
         new_df = self.encode_time(new_df, 'minute')
 
-        #min_max_scalar = preprocessing.MinMaxScaler()
-        #new_df[['month_sin', 'month_cos', 'day_sin', 'day_cos', 'weekday_sin', 'weekday_cos', 'hour_sin', 'hour_cos', 'minute_sin', 'minute_cos']] = \
-        #    min_max_scalar.fit_transform(new_df[['month_sin', 'month_cos', 'day_sin', 'day_cos', 'weekday_sin', 'weekday_cos', 'hour_sin', 'hour_cos', 'minute_sin', 'minute_cos']])
-
         return new_df
 
     def read_and_process_features(self):
@@ -82,7 +75,6 @@ class Data:
                                         'residential', 'commercial', 'retail', 'industrial',
                                         'motorway', 'trunk', 'primary', 'secondary',
                                         'motorway_link', 'trunk_link', 'primary_link', 'secondary_link'])
-
         station_df.drop(['geom', 'address', 'status'], axis=1, inplace=True)
 
         station_df['restaurant'].where(~(station_df.restaurant > 0), other=1, inplace=True)
@@ -95,65 +87,50 @@ class Data:
         station_df.provider.fillna('gewerblich', inplace=True)
         station_df.payment.fillna('undefiniert', inplace=True)
 
-        #switch anschlusse and anschluss
-        titles = list(station_df.columns)
-        titles[3], titles[4] = titles[4], titles[3]
-        station_df = station_df.reindex(columns=titles)
+        id_anschluss = station_df[['identifier', 'anschluss']]
+        cs_feature = station_df[['identifier', 'type', 'cost', 'payment', 'suitable_for', 'zugang', 'anschlusse',
+                                'power', 'current']]
+        spatial_feature = station_df[['identifier', 'anschluss', 'park_area', 'railway', 'airport',
+                                      'sea', 'commercial', 'retail', 'industrial']]
 
-        '''feature_df = station_df[['identifier', 'anschluss']]
-        dum = pd.get_dummies(station_df,
-                             prefix=['identifier', 'anschluss', 'type', 'suitable', 'zugang', 'cost', 'payment'],
-                             columns=['identifier', 'anschluss', 'type', 'suitable_for', 'zugang', 'cost', 'payment'])'''
-
-        feature_df = station_df[['identifier', 'type', 'cost', 'payment', 'suitable_for', 'zugang']]
-        dum = pd.get_dummies(station_df,
+        # one hot encode
+        dum = pd.get_dummies(cs_feature,
                              prefix=['identifier', 'type', 'cost', 'payment', 'suitable_for', 'zugang'],
                              columns=['identifier', 'type', 'cost', 'payment', 'suitable_for', 'zugang'])
 
-        #feature_df = dum
-        feature_df = pd.concat([feature_df, dum], axis=1)
-        feature_df.power = feature_df['power'].map(lambda x: str(x)[:-1])
-        feature_df.current = feature_df['current'].map(lambda x: str(x)[:-1])
+        cs_feature = pd.concat([id_anschluss, dum], axis=1)
+        cs_feature.power = cs_feature['power'].map(lambda x: str(x)[:-1])
+        cs_feature.current = cs_feature['current'].map(lambda x: str(x)[:-1])
 
-        # drop unnecessary columns
-        feature_df.drop(['lat', 'lon', 'provider', 'electricity', 'opening_hours',
-                         'type', 'suitable_for', 'zugang', 'cost', 'payment',
-                         'restaurant', 'cafe', 'fast_food', 'toilet', 'pub',
-                         'beach', 'river', 'residential',
-                         'motorway', 'trunk', 'primary', 'secondary',
-                         'motorway_link', 'trunk_link', 'primary_link', 'secondary_link'], axis=1, inplace=True)
-
-        feature_df.power = feature_df.power.astype('int64')
-        feature_df.current = feature_df.current.astype('int64')
-        feature_df.anschlusse = feature_df.anschlusse.astype('int64')
+        cs_feature.power = cs_feature.power.astype('int64')
+        cs_feature.current = cs_feature.current.astype('int64')
+        cs_feature.anschlusse = cs_feature.anschlusse.astype('int64')
 
         scaler = MinMaxScaler()
-        feature_df[['anschlusse', 'power', 'current', 'park_area', 'railway', 'airport', 'sea',
-                    'commercial', 'retail', 'industrial']] = \
-            scaler.fit_transform(feature_df[['anschlusse', 'power', 'current', 'park_area', 'railway', 'airport', 'sea',
-                                             'commercial', 'retail', 'industrial']])
+        cs_feature[['anschlusse', 'power', 'current']] = \
+            scaler.fit_transform(cs_feature[['anschlusse', 'power', 'current']])
 
-        feature_df['airport'] = 1 - feature_df['airport']
-        feature_df['railway'] = 1 - feature_df['railway']
-        feature_df['sea'] = 1 - feature_df['sea']
-        #feature_df['motorway'] = 1 - feature_df['motorway']
-        #feature_df['trunk'] = 1 - feature_df['trunk']
-        #feature_df['primary'] = 1 - feature_df['primary']
-        #feature_df['secondary_link'] = 1 - feature_df['secondary_link']
+        spatial_feature[['park_area', 'railway', 'airport',
+                         'sea', 'commercial', 'retail', 'industrial']] = \
+            scaler.fit_transform(spatial_feature[['park_area', 'railway', 'airport',
+                         'sea', 'commercial', 'retail', 'industrial']])
 
+        spatial_feature['airport'] = 1 - spatial_feature['airport']
+        spatial_feature['railway'] = 1 - spatial_feature['railway']
+        spatial_feature['sea'] = 1 - spatial_feature['sea']
 
-        '''titles = list(feature_df.columns)
-        titles[1], titles[2] = titles[2], titles[1]
-        feature_df=feature_df.reindex(columns=titles)'''
-        return feature_df
+        return cs_feature, spatial_feature
 
-    def generate_features(self, series, feature_df):
+    def generate_features(self, series, cs_feature, spatial_feature):
         idx = series.name
-        features = feature_df[(feature_df['identifier'] == idx[0]) &
-                              (feature_df['anschluss'] == idx[1])].iloc[0, 2:].values
-        return features
+        cs_feat = cs_feature[(cs_feature['identifier'] == idx[0]) &
+                              (cs_feature['anschluss'] == idx[1])].iloc[0, 2:].values
+        spatial_feat = spatial_feature[(spatial_feature['identifier'] == idx[0]) &
+                             (spatial_feature['anschluss'] == idx[1])].iloc[0, 2:].values
 
-    def generate_data(self, series, df, feature_df, start, stop):
+        return cs_feat, spatial_feat
+
+    def generate_data(self, series, df, cs_feature, spatial_feature, start, stop):
         d = np.expand_dims(series.to_numpy()[start:stop], axis=1)
         month_sin = np.expand_dims(df['month_sin'].to_numpy()[start:stop], axis=1)
         month_cos = np.expand_dims(df['month_cos'].to_numpy()[start:stop], axis=1)
@@ -167,13 +144,13 @@ class Data:
         minute_cos = np.expand_dims(df['minute_cos'].to_numpy()[start:stop], axis=1)
 
         # genertate station specific features
-        features = self.generate_features(series, feature_df)
+        cs_feat, spatial_feat = self.generate_features(series, cs_feature, spatial_feature)
         data = np.concatenate([d, month_sin, month_cos, day_sin, day_cos,
                                weekday_sin, weekday_cos, hour_sin, hour_cos, minute_sin, minute_cos], axis=1)
-        return data, features
+        return data, cs_feat, spatial_feat
 
     # @refrence: https://machinelearningmastery.com/how-to-develop-machine-learning-models-for-multivariate-multi-step-air-pollution-time-series-forecasting/
-    def split_series_train_test(self, series, df, feature_df, randomize=True):
+    def split_series_train_test(self, series, df, cs_feature, spatial_feature, randomize=True):
         '''
         :param series: pandas series containing Time series data
         :param randomize: if true shuffle the data
@@ -189,6 +166,10 @@ class Data:
         Y_test = list()
         train_features = list()
         test_features = list()
+        train_cs_features = list()
+        train_spatial_features = list()
+        test_cs_features = list()
+        test_spatial_features = list()
 
         start_time = self._config['data']['train_start']
         split_time = self._config['data']['train_stop']
@@ -212,9 +193,11 @@ class Data:
                         (datetime.datetime.strptime(start_time, '%Y-%m-%d %H:%M:%S') + datetime.timedelta(days=8)):
 
                     if feat:
-                        data, features = self.generate_data(series, df, feature_df, start_ix, i)
+                        data, cs_feat, spatial_feat = self.generate_data(series, df, cs_feature, spatial_feature, start_ix, i)
                         X_train.append(data.tolist())
-                        train_features.append(features.tolist())
+                        #train_features.append(features.tolist())
+                        train_cs_features.append(cs_feat.tolist())
+                        train_spatial_features.append(spatial_feat.tolist())
                     else:
                         X_train.append(series.tolist()[start_ix:i])
                     Y_train.append(series.tolist()[i:(end_ix + 1)])
@@ -224,27 +207,29 @@ class Data:
             elif i%test_step == 0:
 
                 if feat:
-                    data, features = self.generate_data(series, df, feature_df, start_ix, i)
+                    data, cs_feat, spatial_feat = self.generate_data(series, df, cs_feature, spatial_feature, start_ix, i)
                     X_test.append(data.tolist())
-                    test_features.append(features.tolist())
+                    #test_features.append(features.tolist())
+                    test_cs_features.append(cs_feat.tolist())
+                    test_spatial_features.append(spatial_feat.tolist())
                 else:
                     X_test.append(series.tolist()[start_ix:i])
                 Y_test.append(series.tolist()[i:(end_ix + 1)])
-                #data, _ = self.generate_data(series, df, feature_df, i, (end_ix + 1))
-                #Y_test.append(data.tolist())
 
         # shuffle
         if randomize:
 
             if feat:
-                X_train, Y_train, train_features = shuffle(X_train, Y_train, train_features, random_state=0)
-                X_test, Y_test, test_features = shuffle(X_test, Y_test, test_features, random_state=0)
+                X_train, Y_train, train_cs_features, train_spatial_features = shuffle(X_train, Y_train, train_cs_features, train_spatial_features, random_state=0)
+                X_test, Y_test, test_cs_features, test_spatial_features = shuffle(X_test, Y_test, test_cs_features, test_spatial_features, random_state=0)
             else:
                 X_train, Y_train = shuffle(X_train, Y_train, random_state=0)
                 X_test, Y_test = shuffle(X_test, Y_test, random_state=0)
 
         if feat:
-            return np.array(X_train), np.array(Y_train), np.array(X_test), np.array(Y_test), np.array(train_features), np.array(test_features)
+            return np.array(X_train), np.array(Y_train), np.array(X_test), np.array(Y_test), \
+                   np.array(train_cs_features), np.array(test_cs_features), \
+                   np.array(train_spatial_features), np.array(test_spatial_features)
         else:
             return np.array(X_train), np.array(Y_train), np.array(X_test), np.array(Y_test)
 
@@ -269,18 +254,28 @@ class Data:
         Y_test = list()
         Train_features = list()
         Test_features = list()
+        Train_cs_features = list()
+        Test_cs_features = list()
+        Train_spatial_features = list()
+        Test_spatial_features = list()
 
-        feature_df = self.read_and_process_features()
+        cs_feature, spatial_feature = self.read_and_process_features()
 
         for series_idx in range(df.shape[1] - 15): # subtract last 9 time feature columns
             if feat:
-                x_train, y_train, x_test, y_test, train_features, test_features = self.split_series_train_test(df.iloc[:, series_idx],
-                                                                                df, feature_df, randomize=randomize)
-                Train_features.extend(train_features.tolist())
-                Test_features.extend(test_features.tolist())
+                x_train, y_train, x_test, y_test, \
+                train_cs_features, test_cs_features, \
+                train_spatial_features, test_spatial_features = self.split_series_train_test(df.iloc[:, series_idx],
+                                                                                df, cs_feature, spatial_feature, randomize=randomize)
+                #Train_features.extend(train_features.tolist())
+                #Test_features.extend(test_features.tolist())
+                Train_cs_features.extend(train_cs_features.tolist())
+                Test_cs_features.extend(test_cs_features.tolist())
+                Train_spatial_features.extend(train_spatial_features.tolist())
+                Test_spatial_features.extend(test_spatial_features.tolist())
             else:
                 x_train, y_train, x_test, y_test = self.split_series_train_test(df.iloc[:, series_idx],
-                                                                                df, feature_df, randomize=randomize)
+                                                                                df, cs_feature, spatial_feature, randomize=randomize)
             X_train.extend(x_train.tolist())
             Y_train.extend(y_train.tolist())
             X_test.extend(x_test.tolist())
@@ -297,14 +292,18 @@ class Data:
 
         if randomize:
             if feat:
-                Train_features = np.array(Train_features)
-                Test_features = np.array(Test_features)
-                X_train, Y_train, Train_features = shuffle(X_train, Y_train, Train_features, random_state=0)
-                X_test, Y_test, Test_features = shuffle(X_test, Y_test, Test_features, random_state=0)
+                #Train_features = np.array(Train_features)
+                #Test_features = np.array(Test_features)
+                Train_cs_features = np.array(Train_cs_features)
+                Test_cs_features = np.array(Test_cs_features)
+                Train_spatial_features = np.array(Train_spatial_features)
+                Test_spatial_features = np.array(Test_spatial_features)
+
+                X_train, Y_train, Train_cs_features, Train_spatial_features = shuffle(X_train, Y_train, Train_cs_features, Train_spatial_features, random_state=0)
+                X_test, Y_test, Test_cs_features, Test_spatial_features = shuffle(X_test, Y_test, Test_cs_features, Test_spatial_features, random_state=0)
             else:
                 X_train, Y_train = shuffle(X_train, Y_train, random_state=0)
                 X_test, Y_test = shuffle(X_test, Y_test, random_state=0)
-
 
         train_step = self._config['data']['train_window_size']
         test_step = self._config['data']['test_window_size']
@@ -330,15 +329,35 @@ class Data:
                              '_day_test_step_' + str(test_step) + '.npy'), Y_test)
 
         if feat:
-            np.save(os.path.join(train_dir, 'Train_features_lag_' + str(n_lag_days) +
+            '''np.save(os.path.join(train_dir, 'Train_features_lag_' + str(n_lag_days) +
                                  '_day_lead_' + str(n_lead_days) +
                                  '_day_train_step_' + str(train_step) +
-                                 '_day_test_step_' + str(test_step) + '.npy'), Train_features)
+                                 '_day_test_step_' + str(test_step) + '.npy'), Train_features)'''
 
-            np.save(os.path.join(val_dir, 'Test_features_lag_' + str(n_lag_days) +
+            np.save(os.path.join(train_dir, 'Train_cs_features_lag_' + str(n_lag_days) +
                                  '_day_lead_' + str(n_lead_days) +
                                  '_day_train_step_' + str(train_step) +
-                                 '_day_test_step_' + str(test_step) + '.npy'), Test_features)
+                                 '_day_test_step_' + str(test_step) + '.npy'), Train_cs_features)
+
+            np.save(os.path.join(train_dir, 'Train_spatial_features_lag_' + str(n_lag_days) +
+                                 '_day_lead_' + str(n_lead_days) +
+                                 '_day_train_step_' + str(train_step) +
+                                 '_day_test_step_' + str(test_step) + '.npy'), Train_spatial_features)
+
+            '''np.save(os.path.join(val_dir, 'Test_features_lag_' + str(n_lag_days) +
+                                 '_day_lead_' + str(n_lead_days) +
+                                 '_day_train_step_' + str(train_step) +
+                                 '_day_test_step_' + str(test_step) + '.npy'), Test_features)'''
+
+            np.save(os.path.join(val_dir, 'Test_cs_features_lag_' + str(n_lag_days) +
+                                 '_day_lead_' + str(n_lead_days) +
+                                 '_day_train_step_' + str(train_step) +
+                                 '_day_test_step_' + str(test_step) + '.npy'), Test_cs_features)
+
+            np.save(os.path.join(val_dir, 'Test_spatial_features_lag_' + str(n_lag_days) +
+                                 '_day_lead_' + str(n_lead_days) +
+                                 '_day_train_step_' + str(train_step) +
+                                 '_day_test_step_' + str(test_step) + '.npy'), Test_spatial_features)
 
         print('Finished Generating : ', str(n_lag_days))
         sys.stdout.flush()
@@ -389,93 +408,41 @@ class Data:
                              '_day_test_step_' + str(test_step) + '.npy'))
 
         if feat:
-            Train_features = np.load(os.path.join(train_path, 'Train_features_lag_' + str(input_horizon) +
+            '''Train_features = np.load(os.path.join(train_path, 'Train_features_lag_' + str(input_horizon) +
                                  '_day_lead_' + str(output_horizon) +
                                  '_day_train_step_' + str(train_step) +
-                                 '_day_test_step_' + str(test_step) + '.npy'))
+                                 '_day_test_step_' + str(test_step) + '.npy'))'''
 
-            Test_features = np.load(os.path.join(val_path, 'Test_features_lag_' + str(input_horizon) +
+            Train_cs_features = np.load(os.path.join(train_path, 'Train_cs_features_lag_' + str(input_horizon) +
                                                   '_day_lead_' + str(output_horizon) +
                                                   '_day_train_step_' + str(train_step) +
                                                   '_day_test_step_' + str(test_step) + '.npy'))
-            return X_train, Y_train, X_test, Y_test, Train_features, Test_features
+
+            Train_spatial_features = np.load(os.path.join(train_path, 'Train_spatial_features_lag_' + str(input_horizon) +
+                                                  '_day_lead_' + str(output_horizon) +
+                                                  '_day_train_step_' + str(train_step) +
+                                                  '_day_test_step_' + str(test_step) + '.npy'))
+
+            '''Test_features = np.load(os.path.join(val_path, 'Test_features_lag_' + str(input_horizon) +
+                                                  '_day_lead_' + str(output_horizon) +
+                                                  '_day_train_step_' + str(train_step) +
+                                                  '_day_test_step_' + str(test_step) + '.npy'))'''
+
+            Test_cs_features = np.load(os.path.join(val_path, 'Test_cs_features_lag_' + str(input_horizon) +
+                                                 '_day_lead_' + str(output_horizon) +
+                                                 '_day_train_step_' + str(train_step) +
+                                                 '_day_test_step_' + str(test_step) + '.npy'))
+
+            Test_spatial_features = np.load(os.path.join(val_path, 'Test_spatial_features_lag_' + str(input_horizon) +
+                                                 '_day_lead_' + str(output_horizon) +
+                                                 '_day_train_step_' + str(train_step) +
+                                                 '_day_test_step_' + str(test_step) + '.npy'))
+
+            return X_train, Y_train, X_test, Y_test, \
+                   Train_cs_features, Test_cs_features, Train_spatial_features, Test_spatial_features
         else:
             return X_train, Y_train, X_test, Y_test
 
-
-    def load_one_hot_train(self, X_train, Y_train, X_test, Y_test, train=True):
-        '''
-
-        :param X_train: shape (batch_size, input_horizon)
-        :param Y_train: shape (batch_size, output_horizon)
-        :return:
-            X_train_one_hot: shape (batch_size, input_horizon, one_hot_size)
-            Y_train_one_hot: shape (batch_size, output_horizon, one_hot_size)
-        '''
-        input_horizon = int(self._config['data']['input_horizon'])
-        output_horizon = int(self._config['data']['output_horizon'])
-        train_step = self._config['data']['train_window_size']
-        test_step = self._config['data']['test_window_size']
-        one_hot_path = self._config['data']['npy_one_hot']
-
-        X_train_one_hot_path = 'X_train_lag_' + str(input_horizon) + '_day_lead_' + str(output_horizon) + '_day_train step_' + str(train_step) + '_day_test step_' + str(test_step) + '.npy'
-        Y_train_one_hot_path = 'Y_train_lag_' + str(input_horizon) + '_day_lead_' + str(output_horizon) + '_day_train step_' + str(train_step) + '_day_test step_' + str(test_step) + '.npy'
-        X_test_one_hot_path = 'X_test_lag_' + str(input_horizon) + '_day_lead_' + str(output_horizon) + '_day_train step_' + str(train_step) + '_day_test step_' + str(test_step) + '.npy'
-        Y_test_one_hot_path = 'Y_test_lag_' + str(input_horizon) + '_day_lead_' + str(output_horizon) + '_day_train step_' + str(train_step) + '_day_test step_' + str(test_step) + '.npy'
-
-        if train:
-            if not os.path.isfile(os.path.join(one_hot_path, X_train_one_hot_path)):
-                np.save(os.path.join(one_hot_path, X_train_one_hot_path), self.one_hot_transform(X_train))
-            X_train_one_hot = np.load(os.path.join(one_hot_path, X_train_one_hot_path))
-
-            if not os.path.isfile(os.path.join(one_hot_path, Y_train_one_hot_path)):
-                np.save(os.path.join(one_hot_path, Y_train_one_hot_path), self.one_hot_transform(Y_train))
-            Y_train_one_hot = np.load(os.path.join(one_hot_path, Y_train_one_hot_path))
-
-            return X_train_one_hot, Y_train_one_hot
-
-        else:
-            if not os.path.isfile(os.path.join(one_hot_path, X_test_one_hot_path)):
-                np.save(os.path.join(one_hot_path, X_test_one_hot_path), self.one_hot_transform(X_test))
-            X_test_one_hot = np.load(os.path.join(one_hot_path, X_test_one_hot_path))
-
-            if not os.path.isfile(os.path.join(one_hot_path, Y_test_one_hot_path)):
-                np.save(os.path.join(one_hot_path, Y_test_one_hot_path), self.one_hot_transform(Y_test))
-            Y_test_one_hot = np.load(os.path.join(one_hot_path, Y_test_one_hot_path))
-
-            return X_test_one_hot, Y_test_one_hot
-
-
-    def one_hot_transform(self, batch):
-        '''
-        Function takes an input sequence and transforms it to one hot encoded sequence data
-
-        :param batch: 2d - input sequence of shape(batch_size,seq_len)
-        :return: 3d - one hot encoded output of shape(batch_size, seq_len, one_hot_size)
-        '''
-        enc_res = list()
-        for seq in batch:
-            for x in seq:
-                # transform each input in 2d since sklearn transform excepts input of 2d shape
-                tmp = self.enc.transform(x.reshape(1,-1)).toarray()
-                # flatten the transformed data
-                tmp = tmp.flatten()
-                enc_res.append(tmp)
-
-        return np.array(enc_res).reshape(batch.shape[0], batch.shape[1], -1)
-
-    def one_hot_inv_transform(self, batch):
-        '''
-        Function takes an one hot encoded sequence and transforms it to decoded data
-
-        :param batch: 3d - one hot encoded output of shape(batch_size, seq_len, one_hot_size)
-        :return: 2d - decoded sequence of shape(batch_size,seq_len)
-        '''
-        dec_res = list()
-        for seq in batch:
-            dec_res.append(self.enc.inverse_transform(seq))
-
-        return np.array(dec_res).reshape(batch.shape[0], -1)
 
 
 
