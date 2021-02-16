@@ -63,7 +63,7 @@ def generate_and_save(config, folder_list):
     stop = config['test']['test5_stop']
 
     data_obj = Data()
-    df = data_obj.read_tsv('aug_dec.tsv', start, stop)
+    df = data_obj.read_tsv('aug_dec_no_filter.tsv', start, stop)
     cs_feature, spatial_feature = data_obj.read_and_process_features()
 
     for i, val in enumerate(folder_list):

@@ -18,7 +18,7 @@ if __name__ == '__main__':
     data_obj = Data()
     config = ConfigParser()
     config.read('config.ini')
-    df = data_obj.read_tsv('aug_dec.tsv', config['data']['train_start'], config['data']['val_stop'])
+    df = data_obj.read_tsv('aug_dec_no_filter.tsv', config['data']['train_start'], config['data']['val_stop'])
 
     '''baseline_approach = Baseline()
     algo = config['train']['algo']
@@ -83,7 +83,7 @@ if __name__ == '__main__':
         else:
             X, Y = generate_test_set(config)
             Feat_cs = [np.random.rand(X[0].shape[0], 2)] * 5
-            Feat_spatia = [np.random.rand(X[0].shape[0], 2)] * 5
+            Feat_spatial = [np.random.rand(X[0].shape[0], 2)] * 5
 
         for i in range(len(X)):
             print(X[i].shape, Y[i].shape, Feat_cs[i].shape, Feat_spatial[i].shape)
