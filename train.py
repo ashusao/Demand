@@ -66,17 +66,17 @@ def compute_weight_matrix(targets, positive_weight, negative_weight):
 def train(config, X_train, Y_train, X_test, Y_test, Train_cs_features, Test_cs_features,
           Train_spatial_features, Test_spatial_features):
 
-    Y_train = torch.from_numpy(Y_train).float().to(device)
-    X_train = torch.from_numpy(X_train).float().to(device)
+    Y_train = torch.from_numpy(Y_train).float()
+    X_train = torch.from_numpy(X_train).float()
 
-    Train_cs_features = torch.from_numpy(Train_cs_features).float().to(device)
-    Test_cs_features = torch.from_numpy(Test_cs_features).float().to(device)
+    Train_cs_features = torch.from_numpy(Train_cs_features).float()
+    Test_cs_features = torch.from_numpy(Test_cs_features).float()
 
-    Train_spatial_features = torch.from_numpy(Train_spatial_features).float().to(device)
-    Test_spatial_features = torch.from_numpy(Test_spatial_features).float().to(device)
+    Train_spatial_features = torch.from_numpy(Train_spatial_features).float()
+    Test_spatial_features = torch.from_numpy(Test_spatial_features).float()
 
-    Y_test = torch.from_numpy(Y_test).float().to(device)
-    X_test = torch.from_numpy(X_test).float().to(device)
+    Y_test = torch.from_numpy(Y_test).float()
+    X_test = torch.from_numpy(X_test).float()
 
     if len(X_train.shape) == 2: # if 2d make it 3d
         X_train = X_train.unsqueeze(2)  # add 3rd dimesion when not one hot enocded or no additional features
@@ -156,17 +156,17 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_cs_features, Test_cs_f
             for phase in phases:
 
                 if phase == 'train':
-                    input_batch = X_train[b: b + batch_size, :, :]
-                    target_label = Y_train[b: b + batch_size, :]   # here
-                    features_cs = Train_cs_features[b: b + batch_size, :]
-                    features_spatial = Train_spatial_features[b: b + batch_size, :]
+                    input_batch = X_train[b: b + batch_size, :, :].to(device)
+                    target_label = Y_train[b: b + batch_size, :].to(device)   # here
+                    features_cs = Train_cs_features[b: b + batch_size, :].to(device)
+                    features_spatial = Train_spatial_features[b: b + batch_size, :].to(device)
                     #positive_wt, negative_wt = compute_weights(target_label)
                     model.train()
                 else:
-                    input_batch = X_test[b % X_test.shape[0]: ((b % X_test.shape[0]) + batch_size), :, :]
-                    target_label = Y_test[b % Y_test.shape[0]: ((b % Y_test.shape[0]) + batch_size), :]  # here
-                    features_cs = Test_cs_features[b % Test_cs_features.shape[0]: ((b % Test_cs_features.shape[0]) + batch_size), :]
-                    features_spatial = Test_spatial_features[b % Test_spatial_features.shape[0]: ((b % Test_spatial_features.shape[0]) + batch_size), :]
+                    input_batch = X_test[b % X_test.shape[0]: ((b % X_test.shape[0]) + batch_size), :, :].to(device)
+                    target_label = Y_test[b % Y_test.shape[0]: ((b % Y_test.shape[0]) + batch_size), :].to(device)  # here
+                    features_cs = Test_cs_features[b % Test_cs_features.shape[0]: ((b % Test_cs_features.shape[0]) + batch_size), :].to(device)
+                    features_spatial = Test_spatial_features[b % Test_spatial_features.shape[0]: ((b % Test_spatial_features.shape[0]) + batch_size), :].to(device)
                     #positive_wt, negative_wt = compute_weights(target_label)
                     model.eval()
 
@@ -212,10 +212,10 @@ def evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, n_
     :return:
     '''
 
-    Y_test = torch.from_numpy(Y_test).float().to(device)
-    X_test = torch.from_numpy(X_test).float().to(device)
-    Test_cs_features = torch.from_numpy(Test_cs_features).float().to(device)
-    Test_spatial_features = torch.from_numpy(Test_spatial_features).float().to(device)
+    Y_test = torch.from_numpy(Y_test).float()
+    X_test = torch.from_numpy(X_test).float()
+    Test_cs_features = torch.from_numpy(Test_cs_features).float()
+    Test_spatial_features = torch.from_numpy(Test_spatial_features).float()
 
     if len(X_test.shape) == 2:
         X_test = X_test.unsqueeze(2)  # add 3rd dimension when not one hot encoded and no additional features
@@ -285,10 +285,10 @@ def evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, n_
     for b in range(n_batches):
 
         b = b * batch_size
-        input_batch = X_test[b: b + batch_size, :, :]
-        target_label = Y_test[b: b + batch_size, :]  #here
-        features_cs = Test_cs_features[b: b + batch_size, :]
-        features_spatial = Test_spatial_features[b: b + batch_size, :]
+        input_batch = X_test[b: b + batch_size, :, :].to(device)
+        target_label = Y_test[b: b + batch_size, :].to(device)  #here
+        features_cs = Test_cs_features[b: b + batch_size, :].to(device)
+        features_spatial = Test_spatial_features[b: b + batch_size, :].to(device)
 
         if algo == 'seq2seq':
             # prediction is sigmoid activation
