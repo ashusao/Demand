@@ -12,6 +12,7 @@ from train import evaluate
 from train import log_result
 from test_data import generate_test_set
 from test_data import evaluate_test_set
+from mlsmote import apply_mlsmote
 
 if __name__ == '__main__':
 
@@ -53,6 +54,8 @@ if __name__ == '__main__':
     train_ = config.getboolean('data', 'train')
     eval_ = config.getboolean('data', 'eval')
     eval_tests = config.getboolean('data', 'eval_tests')
+    oversample = config.getboolean('data', 'oversample')
+    n_sample = int(config['data']['n_sample'])
 
     if feat:
         X_train, Y_train, X_test, Y_test, Train_cs_features, Test_cs_features, \
@@ -63,6 +66,13 @@ if __name__ == '__main__':
         Test_cs_features = np.random.rand(X_test.shape[0], 2)
         Train_spatial_features = np.random.rand(X_train.shape[0], 2)
         Test_spatial_features = np.random.rand(X_test.shape[0], 2)
+
+    print(X_train.shape, Y_train.shape, X_test.shape, Y_test.shape, Train_cs_features.shape, Test_cs_features.shape,
+          Train_spatial_features.shape, Test_spatial_features.shape)
+
+    if oversample:
+        X_train, Y_train, Train_cs_features, Train_spatial_features = \
+            apply_mlsmote(config, X_train, Y_train, Train_cs_features, Train_spatial_features, n_sample)
 
     print(X_train.shape, Y_train.shape, X_test.shape, Y_test.shape, Train_cs_features.shape, Test_cs_features.shape,
           Train_spatial_features.shape, Test_spatial_features.shape)
