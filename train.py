@@ -181,8 +181,8 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_cs_features, Test_cs_f
 
                     #print(target_label.shape, outputs.shape)
 
-                    weights = compute_weight_matrix(target_label, positive_wt, negative_wt)
-                    criterion.weight = weights
+                    #weights = compute_weight_matrix(target_label, positive_wt, negative_wt)
+                    #criterion.weight = weights
 
                     loss = criterion(outputs, target_label)  # here
                     print(loss)
