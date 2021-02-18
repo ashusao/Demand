@@ -25,6 +25,7 @@ def create_dataset(n_sample=1000):
     y = pd.get_dummies(y, prefix='class')
     return pd.DataFrame(X), y
 
+
 def get_tail_label(df):
     """
     Give tail label colums of the given target dataframe
@@ -48,6 +49,7 @@ def get_tail_label(df):
             tail_label.append(columns[i])
     return tail_label
 
+
 def get_index(df):
   """
   give the index of all tail_label rows
@@ -64,7 +66,8 @@ def get_index(df):
     index = index.union(sub_index)
   return list(index)
 
-def get_minority_instace(config, X, y, cs_feat, spatial_feat):
+
+def get_minority_instance(config, X, y, cs_feat, spatial_feat):
     """
     Give minority dataframe containing all the tail labels
     
@@ -87,6 +90,26 @@ def get_minority_instace(config, X, y, cs_feat, spatial_feat):
         return X_sub, y_sub, cs_sub, spatial_sub
     else:
         return X_sub, y_sub
+
+
+def get_minority_instance_new(config, X, y, cs_feat, spatial_feat):
+
+    y['minority_prop'] = y.sum(axis=1) / y.shape[1]
+    mean_prop = np.mean(y['minority_prop'])
+    index = y[y['minority_prop'] > mean_prop].index
+    y.drop(['minority_prop'], axis=1, inplace=True)
+
+    X_sub = X[X.index.isin(index)].reset_index(drop=True)
+    y_sub = y[y.index.isin(index)].reset_index(drop=True)
+
+    feat = config.getboolean('data', 'features')
+    if feat:
+        cs_sub = cs_feat[cs_feat.index.isin(index)].reset_index(drop=True)
+        spatial_sub = spatial_feat[spatial_feat.index.isin(index)].reset_index(drop=True)
+        return X_sub, y_sub, cs_sub, spatial_sub
+    else:
+        return X_sub, y_sub
+
 
 def nearest_neighbour(X):
     """
@@ -125,15 +148,15 @@ def MLSMOTE(feat, X,y, cs, spatial, n_sample):
     for i in range(n_sample):
         reference = random.randint(0, n-1)
         neighbour = random.choice(indices2[reference, 1:])
-        #all_point = indices2[reference]
-        #nn_df = y[y.index.isin(all_point)]
-        #ser = nn_df.sum(axis = 0, skipna = True)
-        #target[i] = np.array([1 if val>2 else 0 for val in ser])
-        #ratio = random.random()
-        #gap = X.loc[reference,:] - X.loc[neighbour,:]
-        #new_X[i] = np.array(X.loc[reference,:] + ratio * gap)
-        new_X[i] = X.loc[neighbour, :]
-        target[i] = y.loc[neighbour, :]
+        all_point = indices2[reference]
+        nn_df = y[y.index.isin(all_point)]
+        ser = nn_df.sum(axis = 0, skipna = True)
+        target[i] = np.array([1 if val>2 else 0 for val in ser])
+        ratio = random.random()
+        gap = X.loc[reference,:] - X.loc[neighbour,:]
+        new_X[i] = np.array(X.loc[reference,:] + ratio * gap)
+        #new_X[i] = X.loc[neighbour, :]
+        #target[i] = y.loc[neighbour, :]
         cs_feat[i] = cs.loc[neighbour, :]
         spatial_feat[i] = spatial.loc[neighbour, :]
     new_X = pd.DataFrame(new_X, columns=X.columns)
@@ -158,14 +181,14 @@ def apply_mlsmote(config, X, Y, cs_feat, spatial_feat, n_sample):
     # generate and save npy
     if not os.path.isfile(os.path.join(mlsmote_path, 'X_lag_' + str(input_horizon) + '.npy')):
         if feat:
-            x_sub, y_sub, cs_sub, spatial_sub = get_minority_instace(config, X, Y, cs_feat, spatial_feat)
+            x_sub, y_sub, cs_sub, spatial_sub = get_minority_instance_new(config, X, Y, cs_feat, spatial_feat)
             print('Minority Instance: ')
             print(x_sub.shape, y_sub.shape, cs_sub.shape, spatial_sub.shape)
             x_res, y_res, cs_res, spatial_res = MLSMOTE(feat, x_sub, y_sub, cs_sub, spatial_sub, n_sample)
             print('Generated Instance: ')
             print(x_res.shape, y_res.shape, cs_res.shape, spatial_res.shape)
         else:
-            x_sub, y_sub = get_minority_instace(config, X, Y, cs_feat, spatial_feat)
+            x_sub, y_sub = get_minority_instance_new(config, X, Y, cs_feat, spatial_feat)
             print('Minority Instance: ')
             print(x_sub.shape, y_sub.shape)
             x_res, y_res, cs_res, spatial_res = MLSMOTE(feat, x_sub, y_sub, cs_feat, spatial_feat, n_sample)
