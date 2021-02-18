@@ -125,15 +125,17 @@ def MLSMOTE(feat, X,y, cs, spatial, n_sample):
     for i in range(n_sample):
         reference = random.randint(0, n-1)
         neighbour = random.choice(indices2[reference, 1:])
-        all_point = indices2[reference]
-        nn_df = y[y.index.isin(all_point)]
-        ser = nn_df.sum(axis = 0, skipna = True)
-        target[i] = np.array([1 if val>2 else 0 for val in ser])
-        ratio = random.random()
-        gap = X.loc[reference,:] - X.loc[neighbour,:]
-        new_X[i] = np.array(X.loc[reference,:] + ratio * gap)
-        cs_feat[i] = cs.loc[reference, :]
-        spatial_feat[i] = spatial.loc[reference, :]
+        #all_point = indices2[reference]
+        #nn_df = y[y.index.isin(all_point)]
+        #ser = nn_df.sum(axis = 0, skipna = True)
+        #target[i] = np.array([1 if val>2 else 0 for val in ser])
+        #ratio = random.random()
+        #gap = X.loc[reference,:] - X.loc[neighbour,:]
+        #new_X[i] = np.array(X.loc[reference,:] + ratio * gap)
+        new_X[i] = X.loc[neighbour, :]
+        target[i] = y.loc[neighbour, :]
+        cs_feat[i] = cs.loc[neighbour, :]
+        spatial_feat[i] = spatial.loc[neighbour, :]
     new_X = pd.DataFrame(new_X, columns=X.columns)
     target = pd.DataFrame(target, columns=y.columns)
     #new_X = pd.concat([X, new_X], axis=0)
