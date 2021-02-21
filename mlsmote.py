@@ -181,14 +181,14 @@ def apply_mlsmote(config, X, Y, cs_feat, spatial_feat, n_sample):
     # generate and save npy
     if not os.path.isfile(os.path.join(mlsmote_path, 'X_lag_' + str(input_horizon) + '.npy')):
         if feat:
-            x_sub, y_sub, cs_sub, spatial_sub = get_minority_instance_new(config, X, Y, cs_feat, spatial_feat)
+            x_sub, y_sub, cs_sub, spatial_sub = get_minority_instance(config, X, Y, cs_feat, spatial_feat)
             print('Minority Instance: ')
             print(x_sub.shape, y_sub.shape, cs_sub.shape, spatial_sub.shape)
             x_res, y_res, cs_res, spatial_res = MLSMOTE(feat, x_sub, y_sub, cs_sub, spatial_sub, n_sample)
             print('Generated Instance: ')
             print(x_res.shape, y_res.shape, cs_res.shape, spatial_res.shape)
         else:
-            x_sub, y_sub = get_minority_instance_new(config, X, Y, cs_feat, spatial_feat)
+            x_sub, y_sub = get_minority_instance(config, X, Y, cs_feat, spatial_feat)
             print('Minority Instance: ')
             print(x_sub.shape, y_sub.shape)
             x_res, y_res, cs_res, spatial_res = MLSMOTE(feat, x_sub, y_sub, cs_feat, spatial_feat, n_sample)
