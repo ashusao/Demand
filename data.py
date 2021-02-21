@@ -175,8 +175,8 @@ class Data:
         split_time = self._config['data']['train_stop']
         train_step = int(self._config['data']['train_window_size'])
         test_step = int(self._config['data']['test_window_size'])
-        n_lag = 96 * int(self._config['data']['input_horizon'])  # *96 when lag value is in days
-        n_lead = 96 * int(self._config['data']['output_horizon']) # *96 when lead is in days
+        n_lag = int(self._config['data']['input_horizon'])  # *96 when lag value is in days
+        n_lead = int(self._config['data']['output_horizon']) # *96 when lead is in days
         feat = self._config.getboolean('data', 'features')
 
         for i in range(n_lag, series.size):
