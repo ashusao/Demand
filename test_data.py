@@ -21,8 +21,8 @@ def split_test_set(config, data_obj, series, df, cs_feature, spatial_feature, st
     test_features_spatial = list()
 
     test_step = int(config['data']['test_window_size'])
-    n_lag = 96 * int(config['data']['input_horizon'])  # *96 when lag value is in days
-    n_lead = 96 * int(config['data']['output_horizon'])  # *96 when lead is in days
+    n_lag = int(config['data']['input_horizon'])  # *96 when lag value is in days
+    n_lead = int(config['data']['output_horizon'])  # *96 when lead is in days
     feat = config.getboolean('data', 'features')
 
     for i in range(n_lag, series.size):
