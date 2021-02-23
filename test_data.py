@@ -74,7 +74,7 @@ def generate_and_save(config, folder_list):
         start_date = config['test']['test' + str(i+1) + '_start']
         stop_date = config['test']['test' + str(i+1) + '_stop']
 
-        for series_idx in range(df.shape[1] - 15):
+        for series_idx in range(df.shape[1] - 35):
             if feat:
                 x, y, f_cs, f_spatial = split_test_set(config, data_obj, df.iloc[:, series_idx], df, cs_feature, spatial_feature, start_date, stop_date)
                 feat_cs.extend(f_cs)

@@ -49,16 +49,16 @@ class Data:
         new_df = new_df.loc[start:stop]
 
         # adding time features
-        new_df['month'] = new_df.index.month / 12
-        new_df['day'] = new_df.index.day / new_df.index.days_in_month
-        new_df['weekday'] = new_df.index.dayofweek / 7
-        new_df['hour'] = new_df.index.hour / 24
-        new_df['minute'] = new_df.index.minute / 60
-        new_df = self.encode_time(new_df, 'month')
-        new_df = self.encode_time(new_df, 'day')
-        new_df = self.encode_time(new_df, 'weekday')
-        new_df = self.encode_time(new_df, 'hour')
-        new_df = self.encode_time(new_df, 'minute')
+
+        new_df['weekday'] = new_df.index.dayofweek
+        new_df['hour'] = new_df.index.hour
+        new_df['minute'] = new_df.index.minute
+        #new_df = self.encode_time(new_df, 'weekday')
+        #new_df = self.encode_time(new_df, 'hour')
+        #new_df = self.encode_time(new_df, 'minute')
+        new_df = pd.get_dummies(new_df,
+                                prefix=['weekday', 'hour', 'minute'],
+                                columns=['weekday', 'hour', 'minute'])
 
         return new_df
 
@@ -132,21 +132,20 @@ class Data:
 
     def generate_data(self, series, df, cs_feature, spatial_feature, start, stop):
         d = np.expand_dims(series.to_numpy()[start:stop], axis=1)
-        month_sin = np.expand_dims(df['month_sin'].to_numpy()[start:stop], axis=1)
-        month_cos = np.expand_dims(df['month_cos'].to_numpy()[start:stop], axis=1)
-        day_sin = np.expand_dims(df['day_sin'].to_numpy()[start:stop], axis=1)
-        day_cos = np.expand_dims(df['day_cos'].to_numpy()[start:stop], axis=1)
-        weekday_sin = np.expand_dims(df['weekday_sin'].to_numpy()[start:stop], axis=1)
+
+        '''weekday_sin = np.expand_dims(df['weekday_sin'].to_numpy()[start:stop], axis=1)
         weekday_cos = np.expand_dims(df['weekday_cos'].to_numpy()[start:stop], axis=1)
         hour_sin = np.expand_dims(df['hour_sin'].to_numpy()[start:stop], axis=1)
         hour_cos = np.expand_dims(df['hour_cos'].to_numpy()[start:stop], axis=1)
         minute_sin = np.expand_dims(df['minute_sin'].to_numpy()[start:stop], axis=1)
-        minute_cos = np.expand_dims(df['minute_cos'].to_numpy()[start:stop], axis=1)
+        minute_cos = np.expand_dims(df['minute_cos'].to_numpy()[start:stop], axis=1)'''
 
         # genertate station specific features
         cs_feat, spatial_feat = self.generate_features(series, cs_feature, spatial_feature)
-        data = np.concatenate([d, month_sin, month_cos, day_sin, day_cos,
-                               weekday_sin, weekday_cos, hour_sin, hour_cos, minute_sin, minute_cos], axis=1)
+        '''data = np.concatenate([d, weekday_sin, weekday_cos, hour_sin, hour_cos, 
+                               minute_sin, minute_cos], axis=1)'''
+        time_feat = df.iloc[:, -35:][start:stop]
+        data = np.concatenate([d, time_feat], axis=1)
         return data, cs_feat, spatial_feat
 
     # @refrence: https://machinelearningmastery.com/how-to-develop-machine-learning-models-for-multivariate-multi-step-air-pollution-time-series-forecasting/
@@ -261,7 +260,7 @@ class Data:
 
         cs_feature, spatial_feature = self.read_and_process_features()
 
-        for series_idx in range(df.shape[1] - 15): # subtract last 9 time feature columns
+        for series_idx in range(df.shape[1] - 35): # subtract last 9 time feature columns
             if feat:
                 x_train, y_train, x_test, y_test, \
                 train_cs_features, test_cs_features, \
