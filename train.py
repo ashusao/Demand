@@ -83,8 +83,8 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_cs_features, Test_cs_f
         X_test = X_test.unsqueeze(2)
 
     input_size = X_train.shape[2] # 1 or additional attributes
-    #output_size = 1
-    output_size = X_train.shape[2]
+    output_size = 1
+    #output_size = X_train.shape[2]
     hidden_size = int(config['train']['hidden_size'])
     embed_size = hidden_size
 
@@ -106,8 +106,8 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_cs_features, Test_cs_f
         encoder = Encoder(input_size=input_size, hidden_size=hidden_size, dropout=dropout, num_layers=num_layers).to(device)
         embedding_cs = Embedding(feat_size=Train_cs_features.shape[1], embed_size=embed_size)
         embedding_spatial = Embedding(feat_size=Train_spatial_features.shape[1], embed_size=embed_size)
-        embedding = Embedding(feat_size=hidden_size + (2 * embed_size), embed_size=embed_size)
-        #embedding = Embedding(feat_size=Train_features.shape[1] + hidden_size, embed_size=embed_size)
+        embedding = Embedding(feat_size=hidden_size + embed_size, embed_size=embed_size)
+        #embedding = Embedding(feat_size=Train_cs_features.shape[1] + hidden_size, embed_size=embed_size)
 
         if decode == 'attention':
             decoder = AttnDecoder(input_size=1, hidden_size=hidden_size, output_size=output_size, input_len=X_train.shape[1],
@@ -115,19 +115,20 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_cs_features, Test_cs_f
                                   dropout=dropout, num_layers=num_layers).to(device)
 
         if decode == 'decoder':
-            '''decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size,
+            decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size,
                               feat_size_cs=Train_cs_features.shape[1], feat_size_spatial=Train_spatial_features.shape[1],
-                              dropout=dropout, num_layers=num_layers).to(device)'''
-            decoder = Decoder(input_size=X_train.shape[2], hidden_size=hidden_size, output_size=output_size,
+                              dropout=dropout, num_layers=num_layers).to(device)
+            '''decoder = Decoder(input_size=X_train.shape[2], hidden_size=hidden_size, output_size=output_size,
                               feat_size_cs=Train_cs_features.shape[1],
                               feat_size_spatial=Train_spatial_features.shape[1],
-                              dropout=dropout, num_layers=num_layers).to(device)
+                              dropout=dropout, num_layers=num_layers).to(device)'''
 
         if decode == 'features':
             decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size,
                               feat_size_cs=Train_cs_features.shape[1], feat_size_spatial=Train_spatial_features.shape[1],
                               dropout=dropout, num_layers=num_layers).to(device)
-            '''decoder = Decoder(input_size=1, hidden_size=hidden_size + Train_features.shape[1], output_size=output_size, feat_size=Train_features.shape[1],
+            '''decoder = Decoder(input_size=1, hidden_size=hidden_size + Train_cs_features.shape[1], output_size=output_size, feat_size_cs=Train_cs_features.shape[1],
+                              feat_size_spatial=Train_spatial_features.shape[1],
                               dropout=dropout, num_layers=num_layers).to(device)'''
 
         model = Seq2Seq(encoder, decoder, embedding_cs, embedding_spatial, embedding, config).to(device)
@@ -162,16 +163,16 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_cs_features, Test_cs_f
 
                 if phase == 'train':
                     input_batch = X_train[b: b + batch_size, :, :].to(device)
-                    #target_label = Y_train[b: b + batch_size, :].to(device)   # here
-                    target_label = Y_train[b: b + batch_size, :, :].to(device)  # here
+                    target_label = Y_train[b: b + batch_size, :].to(device)   # here
+                    #target_label = Y_train[b: b + batch_size, :, :].to(device)  # here
                     features_cs = Train_cs_features[b: b + batch_size, :].to(device)
                     features_spatial = Train_spatial_features[b: b + batch_size, :].to(device)
                     #positive_wt, negative_wt = compute_weights(target_label)
                     model.train()
                 else:
                     input_batch = X_test[b % X_test.shape[0]: ((b % X_test.shape[0]) + batch_size), :, :].to(device)
-                    #target_label = Y_test[b % Y_test.shape[0]: ((b % Y_test.shape[0]) + batch_size), :].to(device)  # here
-                    target_label = Y_test[b % Y_test.shape[0]: ((b % Y_test.shape[0]) + batch_size), :, :].to(device)  # here
+                    target_label = Y_test[b % Y_test.shape[0]: ((b % Y_test.shape[0]) + batch_size), :].to(device)  # here
+                    #target_label = Y_test[b % Y_test.shape[0]: ((b % Y_test.shape[0]) + batch_size), :, :].to(device)  # here
                     features_cs = Test_cs_features[b % Test_cs_features.shape[0]: ((b % Test_cs_features.shape[0]) + batch_size), :].to(device)
                     features_spatial = Test_spatial_features[b % Test_spatial_features.shape[0]: ((b % Test_spatial_features.shape[0]) + batch_size), :].to(device)
                     #positive_wt, negative_wt = compute_weights(target_label)
@@ -230,8 +231,8 @@ def evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, n_
     n_test = X_test.shape[0]
 
     input_size = X_test.shape[2]
-    #output_size = 1
-    output_size = X_test.shape[2]
+    output_size = 1
+    #output_size = X_test.shape[2]
     hidden_size = int(config['train']['hidden_size'])
     embed_size = hidden_size
 
@@ -249,8 +250,8 @@ def evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, n_
         encoder = Encoder(input_size=input_size, hidden_size=hidden_size, dropout=dropout, num_layers=num_layers).to(device)
         embedding_cs = Embedding(feat_size=Test_cs_features.shape[1], embed_size=embed_size)
         embedding_spatial = Embedding(feat_size=Test_spatial_features.shape[1], embed_size=embed_size)
-        embedding = Embedding(feat_size=hidden_size + (2 * embed_size), embed_size=embed_size)
-        #embedding = Embedding(feat_size=Test_features.shape[1] + hidden_size, embed_size=embed_size)
+        embedding = Embedding(feat_size=hidden_size + embed_size, embed_size=embed_size)
+        #embedding = Embedding(feat_size=Test_cs_features.shape[1] + hidden_size, embed_size=embed_size)
 
         if decode == 'attention':
             decoder = AttnDecoder(input_size=1, hidden_size=hidden_size, output_size=output_size, input_len=X_test.shape[1],
@@ -258,18 +259,19 @@ def evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, n_
                                   dropout=dropout, num_layers=num_layers).to(device)
 
         if decode == 'decoder':
-            '''decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size,
+            decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size,
                               feat_size_cs=Test_cs_features.shape[1],  feat_size_spatial=Test_spatial_features.shape[1],
-                              dropout=dropout, num_layers=num_layers).to(device)'''
-            decoder = Decoder(input_size=X_test.shape[2], hidden_size=hidden_size, output_size=output_size,
-                              feat_size_cs=Test_cs_features.shape[1], feat_size_spatial=Test_spatial_features.shape[1],
                               dropout=dropout, num_layers=num_layers).to(device)
+            '''decoder = Decoder(input_size=X_test.shape[2], hidden_size=hidden_size, output_size=output_size,
+                              feat_size_cs=Test_cs_features.shape[1], feat_size_spatial=Test_spatial_features.shape[1],
+                              dropout=dropout, num_layers=num_layers).to(device)'''
 
         if decode == 'features':
             decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size,
                               feat_size_cs=Test_cs_features.shape[1],  feat_size_spatial=Test_spatial_features.shape[1],
                               dropout=dropout, num_layers=num_layers).to(device)
-            '''decoder = Decoder(input_size=1, hidden_size=hidden_size + Test_features.shape[1], output_size=output_size, feat_size=Test_features.shape[1],
+            '''decoder = Decoder(input_size=1, hidden_size=hidden_size + Test_cs_features.shape[1], output_size=output_size, feat_size_cs=Test_cs_features.shape[1],
+                              feat_size_spatial=Test_spatial_features.shape[1],
                               dropout=dropout, num_layers=num_layers).to(device)'''
 
         model = Seq2Seq(encoder, decoder, embedding_cs, embedding_spatial, embedding, config).to(device)
@@ -297,8 +299,8 @@ def evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, n_
 
         b = b * batch_size
         input_batch = X_test[b: b + batch_size, :, :].to(device)
-        #target_label = Y_test[b: b + batch_size, :].to(device)  #here
-        target_label = Y_test[b: b + batch_size, :, :].to(device)  # here
+        target_label = Y_test[b: b + batch_size, :].to(device)  #here
+        #target_label = Y_test[b: b + batch_size, :, :].to(device)  # here
         features_cs = Test_cs_features[b: b + batch_size, :].to(device)
         features_spatial = Test_spatial_features[b: b + batch_size, :].to(device)
 

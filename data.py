@@ -459,8 +459,8 @@ class Data:
                                                      '_day_lead_' + str(output_horizon) +
                                                      '_day_train_step_' + str(train_step) +
                                                      '_day_test_step_' + str(test_step) + '.npy')):
-            #self.generate_and_save_aggregated_train_test(df=df, randomize=randomize)
-            self.gen_and_save_new_data(df)
+            self.generate_and_save_aggregated_train_test(df=df, randomize=randomize)
+            #self.gen_and_save_new_data(df)
 
         X_train = np.load(os.path.join(train_path, 'X_train_lag_' + str(input_horizon) +
                              '_day_lead_' + str(output_horizon) +

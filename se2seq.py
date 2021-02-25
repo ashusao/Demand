@@ -171,7 +171,7 @@ class Seq2Seq(nn.Module):
         feat = self.config.getboolean('data', 'features')
         if feat and self.config['model']['decoder'] == 'features':
             self.embedding_cs = embedding_cs
-            self.embedding_spatial = embedding_spatial
+            #self.embedding_spatial = embedding_spatial
             self.embedding = embedding
         self.data_obj = Data()
 
@@ -182,9 +182,10 @@ class Seq2Seq(nn.Module):
 
         #print(source.shape, target.shape)
         #print(features.shape)
-        output_size = target.shape[2]
-        outputs = torch.zeros(batch_size, target_len, output_size).to(device)
-        #outputs = torch.zeros(batch_size, target_len).to(device)
+
+        #output_size = target.shape[2]
+        #outputs = torch.zeros(batch_size, target_len, output_size).to(device)
+        outputs = torch.zeros(batch_size, target_len).to(device)
 
         feat = self.config.getboolean('data', 'features')
         decode = self.config['model']['decoder']
@@ -206,9 +207,11 @@ class Seq2Seq(nn.Module):
             features_spatial = features_spatial.repeat(hidden.shape[0], 1, 1)
 
             features_cs = self.embedding_cs(features_cs)
-            features_spatial = self.embedding_spatial(features_spatial)
+            #features_spatial = self.embedding_spatial(features_spatial)
 
-            concat = torch.cat((hidden, features_cs, features_spatial), 2)  # (num_layers, batch, hidden_size + feat_size)
+            #concat = torch.cat((hidden, features_cs, features_spatial), 2)  # (num_layers, batch, hidden_size + feat_size)
+            concat = torch.cat((hidden, features_cs), 2)  # (num_layers, batch, hidden_size + feat_size)
+            #hidden = concat
             hidden = self.embedding(concat)
 
             #features = features.unsqueeze(1)
@@ -224,9 +227,9 @@ class Seq2Seq(nn.Module):
         # First input to decoder will be last input of encoder
         #decoder_input = source[:, -1, :] # shape(batch_size, input_size)
         # input the state of charger without features
-        #decoder_input = source[:, -1, 0]  # [0] : Occupancy             #here
-        #decoder_input = decoder_input.unsqueeze(1)
-        decoder_input = source[:, -1, :]  # [0] : Occupancy             #here
+        decoder_input = source[:, -1, 0]  # [0] : Occupancy             #here
+        decoder_input = decoder_input.unsqueeze(1)
+        #decoder_input = source[:, -1, :]  # [0] : Occupancy             #here
 
 
         use_teacher_force = True if random.random() < teacher_force_ratio else False
