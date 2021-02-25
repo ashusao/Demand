@@ -182,9 +182,9 @@ class Seq2Seq(nn.Module):
 
         #print(source.shape, target.shape)
         #print(features.shape)
-
-        #outputs = torch.zeros(batch_size, target_len, output_size).to(device)
-        outputs = torch.zeros(batch_size, target_len).to(device)
+        output_size = target.shape[2]
+        outputs = torch.zeros(batch_size, target_len, output_size).to(device)
+        #outputs = torch.zeros(batch_size, target_len).to(device)
 
         feat = self.config.getboolean('data', 'features')
         decode = self.config['model']['decoder']
@@ -224,8 +224,10 @@ class Seq2Seq(nn.Module):
         # First input to decoder will be last input of encoder
         #decoder_input = source[:, -1, :] # shape(batch_size, input_size)
         # input the state of charger without features
-        decoder_input = source[:, -1, 0]  # [0] : Occupancy             #here
-        decoder_input = decoder_input.unsqueeze(1)
+        #decoder_input = source[:, -1, 0]  # [0] : Occupancy             #here
+        #decoder_input = decoder_input.unsqueeze(1)
+        decoder_input = source[:, -1, :]  # [0] : Occupancy             #here
+
 
         use_teacher_force = True if random.random() < teacher_force_ratio else False
 

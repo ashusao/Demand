@@ -361,6 +361,81 @@ class Data:
         print('Finished Generating : ', str(n_lag_days))
         sys.stdout.flush()
 
+    def generate_new_data(self, df, start, mid, stop):
+
+        x = df.iloc[:, :-35][start:mid].to_numpy()
+        y = df.iloc[:, :-35][mid:stop + 1].to_numpy()
+        return x, y
+
+    def split_df_train_test(self, df):
+
+        X_train = list()
+        X_test = list()
+        Y_train = list()
+        Y_test = list()
+
+        start_time = self._config['data']['train_start']
+        split_time = self._config['data']['train_stop']
+        train_step = int(self._config['data']['train_window_size'])
+        test_step = int(self._config['data']['test_window_size'])
+        n_lag = int(self._config['data']['input_horizon'])
+        n_lead = int(self._config['data']['output_horizon'])
+
+        for i in range(n_lag, len(df)):
+            end_ix = i + (n_lead - 1)
+            # check if can create a pattern
+            if end_ix >= len(df):
+                break
+            # retrieve input and output
+            start_ix = i - n_lag
+
+            if (i % train_step == 0) and (df.index[end_ix] <= datetime.datetime.strptime(split_time, '%Y-%m-%d %H:%M:%S')):
+                if df.index[end_ix] > \
+                        (datetime.datetime.strptime(start_time, '%Y-%m-%d %H:%M:%S') + datetime.timedelta(days=8)):
+                    X, Y = self.generate_new_data(df, start_ix, i, end_ix)
+                    X_train.append(X)
+                    Y_train.append(Y)
+            elif i % test_step == 0:
+                X, Y = self.generate_new_data(df, start_ix, i, end_ix)
+                X_test.append(X)
+                Y_test.append(Y)
+
+        return np.array(X_train), np.array(Y_train), np.array(X_test), np.array(Y_test)
+
+    def gen_and_save_new_data(self, df):
+
+        train_dir = self._config['data']['train_path']
+        val_dir = self._config['data']['val_path']
+        n_lag_days = int(self._config['data']['input_horizon'])
+        n_lead_days = int(self._config['data']['output_horizon'])
+
+        x_train, y_train, x_test, y_test = self.split_df_train_test(df=df)
+        print(x_train.shape, y_train.shape, x_test.shape, y_test.shape)
+
+        train_step = self._config['data']['train_window_size']
+        test_step = self._config['data']['test_window_size']
+
+        np.save(os.path.join(train_dir, 'X_train_lag_' + str(n_lag_days) +
+                             '_day_lead_' + str(n_lead_days) +
+                             '_day_train_step_' + str(train_step) +
+                             '_day_test_step_' + str(test_step) + '.npy'), x_train)
+
+        np.save(os.path.join(train_dir, 'Y_train_lag_' + str(n_lag_days) +
+                             '_day_lead_' + str(n_lead_days) +
+                             '_day_train_step_' + str(train_step) +
+                             '_day_test_step_' + str(test_step) + '.npy'), y_train)
+
+        np.save(os.path.join(val_dir, 'X_test_lag_' + str(n_lag_days) +
+                             '_day_lead_' + str(n_lead_days) +
+                             '_day_train_step_' + str(train_step) +
+                             '_day_test_step_' + str(test_step) + '.npy'), x_test)
+
+        np.save(os.path.join(val_dir, 'Y_test_lag_' + str(n_lag_days) +
+                             '_day_lead_' + str(n_lead_days) +
+                             '_day_train_step_' + str(train_step) +
+                             '_day_test_step_' + str(test_step) + '.npy'), y_test)
+
+
     def split_train_test(self, df, randomize=True):
 
         '''
@@ -384,7 +459,8 @@ class Data:
                                                      '_day_lead_' + str(output_horizon) +
                                                      '_day_train_step_' + str(train_step) +
                                                      '_day_test_step_' + str(test_step) + '.npy')):
-            self.generate_and_save_aggregated_train_test(df=df, randomize=randomize)
+            #self.generate_and_save_aggregated_train_test(df=df, randomize=randomize)
+            self.gen_and_save_new_data(df)
 
         X_train = np.load(os.path.join(train_path, 'X_train_lag_' + str(input_horizon) +
                              '_day_lead_' + str(output_horizon) +
