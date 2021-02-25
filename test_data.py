@@ -100,6 +100,61 @@ def generate_and_save(config, folder_list):
     print('Finished Lag:', str(input_horizon))
 
 
+def generate_new_data(df, start, mid, stop):
+
+    x = df.iloc[:, :-35][start:mid].to_numpy()
+    y = df.iloc[:, :-35][mid:stop + 1].to_numpy()
+    return x, y
+
+
+def split_df_test(config, df, start_date, stop_date):
+
+    X_test = list()
+    Y_test = list()
+
+    test_step = int(config['data']['test_window_size'])
+    n_lag = int(config['data']['input_horizon'])
+    n_lead = int(config['data']['output_horizon'])
+
+    for i in range(n_lag, len(df)):
+        end_ix = i + (n_lead - 1)
+        # check if can create a pattern
+        if end_ix >= len(df):
+            break
+        # retrieve input and output
+        start_ix = i - n_lag
+
+        if (i % test_step == 0) and (df.index[end_ix] > datetime.datetime.strptime(start_date, '%Y-%m-%d %H:%M:%S')) and \
+                (df.index[end_ix] <= datetime.datetime.strptime(stop_date, '%Y-%m-%d %H:%M:%S')):
+            X, Y = generate_new_data(df, start_ix, i, end_ix)
+            X_test.append(X)
+            Y_test.append(Y)
+
+    return np.array(X_test), np.array(Y_test)
+
+
+def generate_and_save_new(config, folder_list):
+
+    input_horizon = int(config['data']['input_horizon'])
+    test_path = config['data']['test_path']
+    start = config['test']['start']
+    stop = config['test']['test5_stop']
+
+    data_obj = Data()
+    df = data_obj.read_tsv('aug_dec_no_filter.tsv', start, stop)
+
+    for i, val in enumerate(folder_list):
+
+        start_date = config['test']['test' + str(i + 1) + '_start']
+        stop_date = config['test']['test' + str(i + 1) + '_stop']
+
+        X, Y = split_df_test(config, df, start_date, stop_date)
+
+        np.save(os.path.join(test_path, folder_list[i], 'X_lag_' + str(input_horizon) + '.npy'), np.array(X))
+        np.save(os.path.join(test_path, folder_list[i], 'Y_lag_' + str(input_horizon) + '.npy'), np.array(Y))
+
+        print('Finished test set ', str(i + 1))
+
 
 def generate_test_set(config):
 
@@ -118,7 +173,7 @@ def generate_test_set(config):
         folder_list = ['test1_data', 'test2_data', 'test3_data', 'test4_data', 'test5_data']
 
     if not os.path.isfile(os.path.join(test_path, folder_list[0], 'X_lag_' + str(input_horizon) + '.npy')):
-        generate_and_save(config, folder_list)
+        generate_and_save_new(config, folder_list)
 
     # loop thorugh folder, load npy and appent to X list
     for i, val in enumerate(folder_list):
