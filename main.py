@@ -94,16 +94,17 @@ if __name__ == '__main__':
 
     if eval_tests:
         if feat:
-            X, Y, Feat_cs, Feat_spatial = generate_test_set(config)
+            X, Y, Feat_cs, Feat_spatial, Feat_pattern = generate_test_set(config)
         else:
             X, Y = generate_test_set(config)
             Feat_cs = [np.random.rand(X[0].shape[0], 2)] * 5
             Feat_spatial = [np.random.rand(X[0].shape[0], 2)] * 5
+            Feat_pattern = [np.random.rand(X[0].shape[0], 2)] * 5
 
         for i in range(len(X)):
             print(X[i].shape, Y[i].shape, Feat_cs[i].shape, Feat_spatial[i].shape)
 
-        evaluate_test_set(config, X, Y, Feat_cs, Feat_spatial, X_train.shape[0])
+        evaluate_test_set(config, X, Y, Feat_cs, Feat_spatial, Feat_pattern, X_train.shape[0])
 
 
 

@@ -199,11 +199,11 @@ def generate_test_set(config):
             Feat_spatial.append(np.load(os.path.join(test_path, folder_list[i], 'Spatial_lag_' + str(input_horizon) + '.npy')))
             Feat_pattern.append(np.load(os.path.join(test_path, folder_list[i], 'Pattern_lag_' + str(input_horizon) + '.npy')))
     if feat:
-        return X, Y, Feat_cs, Feat_spatial
+        return X, Y, Feat_cs, Feat_spatial, Feat_pattern
     else:
         return X, Y
 
-def evaluate_test_set(config, X, Y, Feat_cs, Feat_spatial, n_train):
+def evaluate_test_set(config, X, Y, Feat_cs, Feat_spatial, Feat_pattern, n_train):
 
     prec_0 = list()
     prec_1 = list()
@@ -219,7 +219,7 @@ def evaluate_test_set(config, X, Y, Feat_cs, Feat_spatial, n_train):
 
 
     for i in range(len(X)):
-        pred, target = evaluate(config, X[i], Y[i], Feat_cs[i], Feat_spatial[i], n_train)
+        pred, target = evaluate(config, X[i], Y[i], Feat_cs[i], Feat_spatial[i], Feat_pattern[i], n_train)
         prec, rec, th = precision_recall_curve(target.ravel(), pred.ravel())
         print('threshold: ')
         print(th)
