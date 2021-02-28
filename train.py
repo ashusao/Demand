@@ -131,7 +131,7 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_cs_features, Test_cs_f
             decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size,
                               feat_size_cs=Train_cs_features.shape[1], feat_size_spatial=Train_spatial_features.shape[1],
                               dropout=dropout, num_layers=num_layers).to(device)
-            '''decoder = Decoder(input_size=1, hidden_size=hidden_size + Train_cs_features.shape[1], output_size=output_size, feat_size_cs=Train_cs_features.shape[1],
+            '''decoder = Decoder(input_size=1, hidden_size=hidden_size + Train_pattern_features.shape[1], output_size=output_size, feat_size_cs=Train_cs_features.shape[1],
                               feat_size_spatial=Train_spatial_features.shape[1],
                               dropout=dropout, num_layers=num_layers).to(device)'''
 
@@ -278,7 +278,7 @@ def evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, Te
             decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size,
                               feat_size_cs=Test_cs_features.shape[1],  feat_size_spatial=Test_spatial_features.shape[1],
                               dropout=dropout, num_layers=num_layers).to(device)
-            '''decoder = Decoder(input_size=1, hidden_size=hidden_size + Test_cs_features.shape[1], output_size=output_size, feat_size_cs=Test_cs_features.shape[1],
+            '''decoder = Decoder(input_size=1, hidden_size=hidden_size + Test_pattern_features.shape[1], output_size=output_size, feat_size_cs=Test_cs_features.shape[1],
                               feat_size_spatial=Test_spatial_features.shape[1],
                               dropout=dropout, num_layers=num_layers).to(device)'''
 
