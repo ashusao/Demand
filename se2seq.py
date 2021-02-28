@@ -163,19 +163,20 @@ class Embedding(nn.Module):
 
 class Seq2Seq(nn.Module):
 
-    def __init__(self, encoder, decoder, embedding_cs, embedding_spatial, embedding, config):
+    def __init__(self, encoder, decoder, embedding_cs, embedding_spatial, embedding_pattern, embedding, config):
         super(Seq2Seq, self).__init__()
         self.encoder = encoder
         self.decoder = decoder
         self.config = config
         feat = self.config.getboolean('data', 'features')
         if feat and self.config['model']['decoder'] == 'features':
-            self.embedding_cs = embedding_cs
+            #self.embedding_cs = embedding_cs
             #self.embedding_spatial = embedding_spatial
+            self.embedding_pattern = embedding_pattern
             self.embedding = embedding
         self.data_obj = Data()
 
-    def forward(self, source, target, features_cs, features_spatial, teacher_force_ratio=0.5):
+    def forward(self, source, target, features_cs, features_spatial, features_pattern, teacher_force_ratio=0.5):
         batch_size = source.shape[0]
         target_len = target.shape[1]
         #output_size = target.shape[2]
@@ -203,14 +204,18 @@ class Seq2Seq(nn.Module):
 
             features_cs = features_cs.unsqueeze(0)  # add extra dimensino for num_layers
             features_spatial = features_spatial.unsqueeze(0)
+            features_pattern = features_pattern.unsqueeze(0)
+
             features_cs = features_cs.repeat(hidden.shape[0], 1, 1)  # copy features to each layers (num_layers, batch, hidden_size)
             features_spatial = features_spatial.repeat(hidden.shape[0], 1, 1)
+            features_pattern = features_pattern.repeat(hidden.shape[0], 1, 1)
 
-            features_cs = self.embedding_cs(features_cs)
+            #features_cs = self.embedding_cs(features_cs)
+            features_pattern = self.embedding_pattern(features_pattern)
             #features_spatial = self.embedding_spatial(features_spatial)
 
             #concat = torch.cat((hidden, features_cs, features_spatial), 2)  # (num_layers, batch, hidden_size + feat_size)
-            concat = torch.cat((hidden, features_cs), 2)  # (num_layers, batch, hidden_size + feat_size)
+            concat = torch.cat((hidden, features_pattern), 2)  # (num_layers, batch, hidden_size + feat_size)
             #hidden = concat
             hidden = self.embedding(concat)
 

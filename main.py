@@ -59,33 +59,38 @@ if __name__ == '__main__':
 
     if feat:
         X_train, Y_train, X_test, Y_test, Train_cs_features, Test_cs_features, \
-        Train_spatial_features, Test_spatial_features = data_obj.split_train_test(df)
+        Train_spatial_features, Test_spatial_features, \
+        Train_pattern_features, Test_pattern_features = data_obj.split_train_test(df)
     else:
         X_train, Y_train, X_test, Y_test = data_obj.split_train_test(df)
         Train_cs_features = np.random.rand(X_train.shape[0], 2)
         Test_cs_features = np.random.rand(X_test.shape[0], 2)
         Train_spatial_features = np.random.rand(X_train.shape[0], 2)
         Test_spatial_features = np.random.rand(X_test.shape[0], 2)
+        Train_pattern_features = np.random.rand(X_train.shape[0], 2)
+        Test_pattern_features = np.random.rand(X_test.shape[0], 2)
 
     print(X_train.shape, Y_train.shape, X_test.shape, Y_test.shape, Train_cs_features.shape, Test_cs_features.shape,
-          Train_spatial_features.shape, Test_spatial_features.shape)
+          Train_spatial_features.shape, Test_spatial_features.shape, Train_pattern_features.shape,
+          Test_pattern_features.shape)
 
     if oversample:
         X_train, Y_train, Train_cs_features, Train_spatial_features = \
             apply_mlsmote(config, X_train, Y_train, Train_cs_features, Train_spatial_features, n_sample)
 
     print(X_train.shape, Y_train.shape, X_test.shape, Y_test.shape, Train_cs_features.shape, Test_cs_features.shape,
-          Train_spatial_features.shape, Test_spatial_features.shape)
+          Train_spatial_features.shape, Test_spatial_features.shape, Train_pattern_features.shape,
+          Test_pattern_features.shape)
 
     if train_:
         train(config, X_train, Y_train, X_test, Y_test, Train_cs_features, Test_cs_features,
-              Train_spatial_features, Test_spatial_features)
+              Train_spatial_features, Test_spatial_features, Train_pattern_features, Test_pattern_features)
 
     if eval_:
-        evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, X_train.shape[0])
+        evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, Test_pattern_features, X_train.shape[0])
 
     if eval_train:
-        evaluate(config, X_train, Y_train, Train_cs_features, Train_spatial_features, X_train.shape[0])
+        evaluate(config, X_train, Y_train, Train_cs_features, Train_spatial_features, Train_pattern_features, X_train.shape[0])
 
     if eval_tests:
         if feat:
