@@ -13,13 +13,21 @@ from train import log_result
 from test_data import generate_test_set
 from test_data import evaluate_test_set
 from mlsmote import apply_mlsmote
+from dd_data import read_and_convert_dd
+from dd_data import split_train_test_
 
 if __name__ == '__main__':
 
     data_obj = Data()
     config = ConfigParser()
     config.read('config.ini')
-    df = data_obj.read_tsv('aug_dec_no_filter.tsv', config['data']['train_start'], config['data']['val_stop'])
+    dataset = config['data']['dataset']
+
+    if dataset == 'demand':
+        df = read_and_convert_dd(config, 'dataset.xlsx', config['data']['train_start'], config['data']['val_stop'])
+    else:
+        df = data_obj.read_tsv('aug_dec_no_filter.tsv', config['data']['train_start'], config['data']['val_stop'])
+    print(df.shape)
 
     '''baseline_approach = Baseline()
     algo = config['train']['algo']
@@ -58,11 +66,22 @@ if __name__ == '__main__':
     n_sample = int(config['data']['n_sample'])
 
     if feat:
-        X_train, Y_train, X_test, Y_test, Train_cs_features, Test_cs_features, \
-        Train_spatial_features, Test_spatial_features, \
-        Train_pattern_features, Test_pattern_features = data_obj.split_train_test(df)
+        if dataset == 'demand':
+            X_train, Y_train, X_test, Y_test, \
+            Train_pattern_features, Test_pattern_features = split_train_test_(config, df)
+            Train_cs_features = np.random.rand(X_train.shape[0], 2)
+            Test_cs_features = np.random.rand(X_test.shape[0], 2)
+            Train_spatial_features = np.random.rand(X_train.shape[0], 2)
+            Test_spatial_features = np.random.rand(X_test.shape[0], 2)
+        else:
+            X_train, Y_train, X_test, Y_test, Train_cs_features, Test_cs_features, \
+            Train_spatial_features, Test_spatial_features, \
+            Train_pattern_features, Test_pattern_features = data_obj.split_train_test(df)
     else:
-        X_train, Y_train, X_test, Y_test = data_obj.split_train_test(df)
+        if dataset == 'demand':
+            X_train, Y_train, X_test, Y_test = split_train_test_(config, df)
+        else:
+            X_train, Y_train, X_test, Y_test = data_obj.split_train_test(df)
         Train_cs_features = np.random.rand(X_train.shape[0], 2)
         Test_cs_features = np.random.rand(X_test.shape[0], 2)
         Train_spatial_features = np.random.rand(X_train.shape[0], 2)

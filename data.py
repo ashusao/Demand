@@ -172,8 +172,6 @@ class Data:
         X_test = list()
         Y_train = list()
         Y_test = list()
-        train_features = list()
-        test_features = list()
         train_cs_features = list()
         train_spatial_features = list()
         train_pattern_features = list()
@@ -308,9 +306,6 @@ class Data:
             X_test.extend(x_test.tolist())
             Y_test.extend(y_test.tolist())
 
-            print(series_idx, sep=' ', end=' ')
-            sys.stdout.flush()
-
         # shuffle and save the data
         X_train = np.array(X_train)
         Y_train = np.array(Y_train)
@@ -363,11 +358,6 @@ class Data:
                              '_day_test_step_' + str(test_step) + '.npy'), Y_test)
 
         if feat:
-            '''np.save(os.path.join(train_dir, 'Train_features_lag_' + str(n_lag_days) +
-                                 '_day_lead_' + str(n_lead_days) +
-                                 '_day_train_step_' + str(train_step) +
-                                 '_day_test_step_' + str(test_step) + '.npy'), Train_features)'''
-
             np.save(os.path.join(train_dir, 'Train_cs_features_lag_' + str(n_lag_days) +
                                  '_day_lead_' + str(n_lead_days) +
                                  '_day_train_step_' + str(train_step) +
@@ -382,11 +372,6 @@ class Data:
                                  '_day_lead_' + str(n_lead_days) +
                                  '_day_train_step_' + str(train_step) +
                                  '_day_test_step_' + str(test_step) + '.npy'), Train_pattern_features)
-
-            '''np.save(os.path.join(val_dir, 'Test_features_lag_' + str(n_lag_days) +
-                                 '_day_lead_' + str(n_lead_days) +
-                                 '_day_train_step_' + str(train_step) +
-                                 '_day_test_step_' + str(test_step) + '.npy'), Test_features)'''
 
             np.save(os.path.join(val_dir, 'Test_cs_features_lag_' + str(n_lag_days) +
                                  '_day_lead_' + str(n_lead_days) +
@@ -528,10 +513,6 @@ class Data:
                              '_day_test_step_' + str(test_step) + '.npy'))
 
         if feat:
-            '''Train_features = np.load(os.path.join(train_path, 'Train_features_lag_' + str(input_horizon) +
-                                 '_day_lead_' + str(output_horizon) +
-                                 '_day_train_step_' + str(train_step) +
-                                 '_day_test_step_' + str(test_step) + '.npy'))'''
 
             Train_cs_features = np.load(os.path.join(train_path, 'Train_cs_features_lag_' + str(input_horizon) +
                                                   '_day_lead_' + str(output_horizon) +
@@ -547,11 +528,6 @@ class Data:
                                                  '_day_lead_' + str(output_horizon) +
                                                  '_day_train_step_' + str(train_step) +
                                                  '_day_test_step_' + str(test_step) + '.npy'))
-
-            '''Test_features = np.load(os.path.join(val_path, 'Test_features_lag_' + str(input_horizon) +
-                                                  '_day_lead_' + str(output_horizon) +
-                                                  '_day_train_step_' + str(train_step) +
-                                                  '_day_test_step_' + str(test_step) + '.npy'))'''
 
             Test_cs_features = np.load(os.path.join(val_path, 'Test_cs_features_lag_' + str(input_horizon) +
                                                  '_day_lead_' + str(output_horizon) +
