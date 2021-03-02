@@ -15,6 +15,7 @@ from test_data import evaluate_test_set
 from mlsmote import apply_mlsmote
 from dd_data import read_and_convert_dd
 from dd_data import split_train_test_
+from dd_test_data import generate_test_set_
 
 if __name__ == '__main__':
 
@@ -113,9 +114,17 @@ if __name__ == '__main__':
 
     if eval_tests:
         if feat:
-            X, Y, Feat_cs, Feat_spatial, Feat_pattern = generate_test_set(config)
+            if dataset == 'demand':
+                X, Y,  Feat_pattern = generate_test_set_(config)
+                Feat_cs = [np.random.rand(X[0].shape[0], 2)] * 4
+                Feat_spatial = [np.random.rand(X[0].shape[0], 2)] * 4
+            else:
+                X, Y, Feat_cs, Feat_spatial, Feat_pattern = generate_test_set(config)
         else:
-            X, Y = generate_test_set(config)
+            if dataset == 'demand':
+                X, Y = generate_test_set_(config)
+            else:
+                X, Y = generate_test_set(config)
             Feat_cs = [np.random.rand(X[0].shape[0], 2)] * 5
             Feat_spatial = [np.random.rand(X[0].shape[0], 2)] * 5
             Feat_pattern = [np.random.rand(X[0].shape[0], 2)] * 5

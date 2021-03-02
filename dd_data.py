@@ -57,17 +57,17 @@ def read_and_convert_dd(config, f_name, start, stop):
     dd_df = pd.read_csv(os.path.join(data_dir, 'dd.csv'), index_col=[0], header=[0, 1])
     dd_df.index = pd.to_datetime(dd_df.index)
 
-    dd_df['month'] = dd_df.index.month
+    #dd_df['month'] = dd_df.index.month
     dd_df['weekday'] = dd_df.index.dayofweek
     dd_df['hour'] = dd_df.index.hour
     dd_df['minute'] = dd_df.index.minute
     dd_df = pd.get_dummies(dd_df,
-                            prefix=['month', 'weekday', 'hour', 'minute'],
-                            columns=['month', 'weekday', 'hour', 'minute'])
+                            prefix=['weekday', 'hour', 'minute'],
+                            columns=['weekday', 'hour', 'minute'])
     return dd_df
 
 def gen_pattern_features_(config, df):
-    train_df = df.loc[config['data']['train_start'] : config['data']['train_stop']].iloc[:, :-47]
+    train_df = df.loc[config['data']['train_start'] : config['data']['train_stop']].iloc[:, :-35]
     daily_usage = train_df.groupby([train_df.index.hour, train_df.index.minute]).sum()
     scaler = MinMaxScaler()
     scaled_features = scaler.fit_transform(daily_usage)
@@ -79,7 +79,7 @@ def generate_data_(series, df, pattern_feature, start, stop):
     d = np.expand_dims(series.to_numpy()[start:stop], axis=1)
     idx = series.name
     pattern_feat = pattern_feature[idx].to_numpy()
-    time_feat = df.iloc[:, -47:].to_numpy()[start:stop]
+    time_feat = df.iloc[:, -35:].to_numpy()[start:stop]
     data = np.concatenate([d, time_feat], axis=1)
     return data, pattern_feat
 
@@ -172,7 +172,7 @@ def gen_and_save_(config, df):
     pattern_feature = gen_pattern_features_(config, df)
     print(pattern_feature.shape)
 
-    for series_idx in range(df.shape[1] - 47):  # subtract last 9 time feature columns
+    for series_idx in range(df.shape[1] - 35):  # subtract last 9 time feature columns
         if feat:
             x_train, y_train, x_test, y_test, \
             train_pattern_features, test_pattern_features = split_series_train_test_(config, df.iloc[:, series_idx],
