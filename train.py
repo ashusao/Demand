@@ -110,7 +110,7 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_cs_features, Test_cs_f
         embedding_cs = Embedding(feat_size=Train_cs_features.shape[1], embed_size=embed_size)
         embedding_spatial = Embedding(feat_size=Train_spatial_features.shape[1], embed_size=embed_size)
         embedding_pattern = Embedding(feat_size=Train_pattern_features.shape[1], embed_size=embed_size)
-        embedding = Embedding(feat_size=hidden_size + (2 * embed_size), embed_size=embed_size)
+        embedding = Embedding(feat_size=hidden_size + embed_size, embed_size=embed_size)
         #embedding = Embedding(feat_size=Train_cs_features.shape[1] + hidden_size, embed_size=embed_size)
 
         if decode == 'attention':
@@ -258,7 +258,7 @@ def evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, Te
         embedding_cs = Embedding(feat_size=Test_cs_features.shape[1], embed_size=embed_size)
         embedding_spatial = Embedding(feat_size=Test_spatial_features.shape[1], embed_size=embed_size)
         embedding_pattern = Embedding(feat_size=Test_pattern_features.shape[1], embed_size=embed_size)
-        embedding = Embedding(feat_size=hidden_size + (2 * embed_size), embed_size=embed_size)
+        embedding = Embedding(feat_size=hidden_size + embed_size, embed_size=embed_size)
         #embedding = Embedding(feat_size=Test_cs_features.shape[1] + hidden_size, embed_size=embed_size)
 
         if decode == 'attention':

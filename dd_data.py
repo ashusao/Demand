@@ -14,7 +14,7 @@ def read_and_convert_dd(config, f_name, start, stop):
     # process and save as binary time series
     if not os.path.isfile(os.path.join(data_dir, 'dd.csv')):
         # preprocess
-        df = pd.read_excel(os.path.join(data_dir, f_name))
+        df = pd.read_excel(os.path.join(data_dir, f_name), engine='openpyxl')
         df = df.drop(df[np.where(df["MeterTotal"] == 0, True, False)].index).reset_index(drop=True)
         df = df[(df.StartLocalTime >= start) & (df.EndLocalTime <= stop)].reset_index(drop=True)
 
