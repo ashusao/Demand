@@ -187,6 +187,9 @@ def gen_and_save_(config, df):
         X_test.extend(x_test.tolist())
         Y_test.extend(y_test.tolist())
 
+        print(series_idx, sep=' ', end=' ')
+        sys.stdout.flush()
+
     # shuffle and save the data
     X_train = np.array(X_train)
     Y_train = np.array(Y_train)
