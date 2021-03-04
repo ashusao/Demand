@@ -201,11 +201,11 @@ class Data:
                     if feat:
                         data, cs_feat, spatial_feat, pattern_feat = self.generate_data(series, df, cs_feature, spatial_feature,
                                                                                        pattern_feature, start_ix, i)
-                        X_train.append(data)
+                        X_train.append(data.tolist())
                         #train_features.append(features.tolist())
-                        train_cs_features.append(cs_feat)
-                        train_spatial_features.append(spatial_feat)
-                        train_pattern_features.append(pattern_feat)
+                        train_cs_features.append(cs_feat.tolist())
+                        train_spatial_features.append(spatial_feat.tolist())
+                        train_pattern_features.append(pattern_feat.tolist())
                     else:
                         X_train.append(series.to_numpy()[start_ix:i])
                     Y_train.append(series.to_numpy()[i:(end_ix + 1)])
@@ -217,11 +217,11 @@ class Data:
                 if feat:
                     data, cs_feat, spatial_feat, pattern_feat = self.generate_data(series, df, cs_feature, spatial_feature,
                                                                                    pattern_feature, start_ix, i)
-                    X_test.append(data)
+                    X_test.append(data.tolist())
                     #test_features.append(features.tolist())
-                    test_cs_features.append(cs_feat)
-                    test_spatial_features.append(spatial_feat)
-                    test_pattern_features.append(pattern_feat)
+                    test_cs_features.append(cs_feat.tolist())
+                    test_spatial_features.append(spatial_feat.tolist())
+                    test_pattern_features.append(pattern_feat.tolist())
                 else:
                     X_test.append(series.to_numpy()[start_ix:i])
                 Y_test.append(series.to_numpy()[i:(end_ix + 1)])
@@ -245,6 +245,7 @@ class Data:
                    np.asarray(train_pattern_features), np.asarray(test_pattern_features)
         else:
             return np.asarray(X_train), np.asarray(Y_train), np.asarray(X_test), np.asarray(Y_test)
+
 
     def generate_and_save_aggregated_train_test(self, df, randomize=True):
 
