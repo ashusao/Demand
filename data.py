@@ -207,8 +207,8 @@ class Data:
                         train_spatial_features.append(spatial_feat.tolist())
                         train_pattern_features.append(pattern_feat.tolist())
                     else:
-                        X_train.append(series.to_numpy()[start_ix:i])
-                    Y_train.append(series.to_numpy()[i:(end_ix + 1)])
+                        X_train.append(series.tolist()[start_ix:i])
+                    Y_train.append(series.tolist()[i:(end_ix + 1)])
                     #data, _ = self.generate_data(series, df, feature_df, i, (end_ix + 1))
                     #Y_train.append(data.tolist())
 
@@ -223,8 +223,8 @@ class Data:
                     test_spatial_features.append(spatial_feat.tolist())
                     test_pattern_features.append(pattern_feat.tolist())
                 else:
-                    X_test.append(series.to_numpy()[start_ix:i])
-                Y_test.append(series.to_numpy()[i:(end_ix + 1)])
+                    X_test.append(series.tolist()[start_ix:i])
+                Y_test.append(series.tolist()[i:(end_ix + 1)])
 
         # shuffle
         if randomize:
@@ -239,12 +239,12 @@ class Data:
                 X_test, Y_test = shuffle(X_test, Y_test, random_state=0)
 
         if feat:
-            return np.asarray(X_train), np.asarray(Y_train), np.asarray(X_test), np.asarray(Y_test), \
-                   np.asarray(train_cs_features), np.asarray(test_cs_features), \
-                   np.asarray(train_spatial_features), np.asarray(test_spatial_features), \
-                   np.asarray(train_pattern_features), np.asarray(test_pattern_features)
+            return X_train, Y_train, X_test, Y_test, \
+                   train_cs_features, test_cs_features, \
+                   train_spatial_features, test_spatial_features, \
+                   train_pattern_features, test_pattern_features
         else:
-            return np.asarray(X_train), np.asarray(Y_train), np.asarray(X_test), np.asarray(Y_test)
+            return X_train, Y_train, X_test, Y_test
 
 
     def generate_and_save_aggregated_train_test(self, df, randomize=True):
@@ -288,20 +288,20 @@ class Data:
                                                                                 pattern_feature, randomize=randomize)
                 #Train_features.extend(train_features.tolist())
                 #Test_features.extend(test_features.tolist())
-                Train_cs_features.extend(train_cs_features.tolist())
-                Test_cs_features.extend(test_cs_features.tolist())
-                Train_spatial_features.extend(train_spatial_features.tolist())
-                Test_spatial_features.extend(test_spatial_features.tolist())
-                Train_pattern_features.extend(train_pattern_features.tolist())
-                Test_pattern_features.extend(test_pattern_features.tolist())
+                Train_cs_features.extend(train_cs_features)
+                Test_cs_features.extend(test_cs_features)
+                Train_spatial_features.extend(train_spatial_features)
+                Test_spatial_features.extend(test_spatial_features)
+                Train_pattern_features.extend(train_pattern_features)
+                Test_pattern_features.extend(test_pattern_features)
             else:
                 x_train, y_train, x_test, y_test = self.split_series_train_test(df.iloc[:, series_idx],
                                                                                 df, cs_feature, spatial_feature,
                                                                                 pattern_feature, randomize=randomize)
-            X_train.extend(x_train.tolist())
-            Y_train.extend(y_train.tolist())
-            X_test.extend(x_test.tolist())
-            Y_test.extend(y_test.tolist())
+            X_train.extend(x_train)
+            Y_train.extend(y_train)
+            X_test.extend(x_test)
+            Y_test.extend(y_test)
 
             print(series_idx, sep=' ', end=' ')
             sys.stdout.flush()
