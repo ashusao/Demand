@@ -207,8 +207,8 @@ class Data:
                         train_spatial_features.append(spatial_feat)
                         train_pattern_features.append(pattern_feat)
                     else:
-                        X_train.append(series[start_ix:i])
-                    Y_train.append(series[i:(end_ix + 1)])
+                        X_train.append(series.to_numpy()[start_ix:i])
+                    Y_train.append(series.to_numpy()[i:(end_ix + 1)])
                     #data, _ = self.generate_data(series, df, feature_df, i, (end_ix + 1))
                     #Y_train.append(data.tolist())
 
@@ -223,8 +223,8 @@ class Data:
                     test_spatial_features.append(spatial_feat)
                     test_pattern_features.append(pattern_feat)
                 else:
-                    X_test.append(series[start_ix:i])
-                Y_test.append(series[i:(end_ix + 1)])
+                    X_test.append(series.to_numpy()[start_ix:i])
+                Y_test.append(series.to_numpy()[i:(end_ix + 1)])
 
         # shuffle
         if randomize:
@@ -265,8 +265,6 @@ class Data:
         Y_train = list()
         X_test = list()
         Y_test = list()
-        Train_features = list()
-        Test_features = list()
         Train_cs_features = list()
         Test_cs_features = list()
         Train_spatial_features = list()
@@ -308,21 +306,21 @@ class Data:
             sys.stdout.flush()
 
         # shuffle and save the data
-        X_train = np.array(X_train)
-        Y_train = np.array(Y_train)
-        X_test = np.array(X_test)
-        Y_test = np.array(Y_test)
+        X_train = np.asarray(X_train)
+        Y_train = np.asarray(Y_train)
+        X_test = np.asarray(X_test)
+        Y_test = np.asarray(Y_test)
 
         if randomize:
             if feat:
                 #Train_features = np.array(Train_features)
                 #Test_features = np.array(Test_features)
-                Train_cs_features = np.array(Train_cs_features)
-                Test_cs_features = np.array(Test_cs_features)
-                Train_spatial_features = np.array(Train_spatial_features)
-                Test_spatial_features = np.array(Test_spatial_features)
-                Train_pattern_features = np.array(Train_pattern_features)
-                Test_pattern_features = np.array(Test_pattern_features)
+                Train_cs_features = np.asarray(Train_cs_features)
+                Test_cs_features = np.asarray(Test_cs_features)
+                Train_spatial_features = np.asarray(Train_spatial_features)
+                Test_spatial_features = np.asarray(Test_spatial_features)
+                Train_pattern_features = np.asarray(Train_pattern_features)
+                Test_pattern_features = np.asarray(Test_pattern_features)
 
                 X_train, Y_train, Train_cs_features, Train_spatial_features, \
                 Train_pattern_features = shuffle(X_train, Y_train, Train_cs_features, Train_spatial_features,
