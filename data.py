@@ -239,12 +239,12 @@ class Data:
                 X_test, Y_test = shuffle(X_test, Y_test, random_state=0)
 
         if feat:
-            return np.array(X_train), np.array(Y_train), np.array(X_test), np.array(Y_test), \
-                   np.array(train_cs_features), np.array(test_cs_features), \
-                   np.array(train_spatial_features), np.array(test_spatial_features), \
-                   np.array(train_pattern_features), np.array(test_pattern_features)
+            return np.asarray(X_train), np.asarray(Y_train), np.asarray(X_test), np.asarray(Y_test), \
+                   np.asarray(train_cs_features), np.asarray(test_cs_features), \
+                   np.asarray(train_spatial_features), np.asarray(test_spatial_features), \
+                   np.asarray(train_pattern_features), np.asarray(test_pattern_features)
         else:
-            return np.array(X_train), np.array(Y_train), np.array(X_test), np.array(Y_test)
+            return np.asarray(X_train), np.asarray(Y_train), np.asarray(X_test), np.asarray(Y_test)
 
     def generate_and_save_aggregated_train_test(self, df, randomize=True):
 
