@@ -16,6 +16,7 @@ from mlsmote import apply_mlsmote
 from dd_data import read_and_convert_dd
 from dd_data import split_train_test_
 from dd_test_data import generate_test_set_
+import json
 
 if __name__ == '__main__':
 
@@ -66,73 +67,78 @@ if __name__ == '__main__':
     oversample = config.getboolean('data', 'oversample')
     n_sample = int(config['data']['n_sample'])
 
-    if feat:
-        if dataset == 'demand':
-            X_train, Y_train, X_test, Y_test, \
-            Train_pattern_features, Test_pattern_features = split_train_test_(config, df)
+    horizons = config.get("data", "input_horizons")
+    ip_horizons = json.loads(horizons)
+
+    for ip_horizon in ip_horizons:
+        ip_horizon = int(ip_horizon)
+        if feat:
+            if dataset == 'demand':
+                X_train, Y_train, X_test, Y_test, \
+                Train_pattern_features, Test_pattern_features = split_train_test_(config, df)
+                Train_cs_features = np.random.rand(X_train.shape[0], 2)
+                Test_cs_features = np.random.rand(X_test.shape[0], 2)
+                Train_spatial_features = np.random.rand(X_train.shape[0], 2)
+                Test_spatial_features = np.random.rand(X_test.shape[0], 2)
+            else:
+                X_train, Y_train, X_test, Y_test, Train_cs_features, Test_cs_features, \
+                Train_spatial_features, Test_spatial_features, \
+                Train_pattern_features, Test_pattern_features = data_obj.split_train_test(df, ip_horizon)
+        else:
+            if dataset == 'demand':
+                X_train, Y_train, X_test, Y_test = split_train_test_(config, df)
+            else:
+                X_train, Y_train, X_test, Y_test = data_obj.split_train_test(df, ip_horizon)
             Train_cs_features = np.random.rand(X_train.shape[0], 2)
             Test_cs_features = np.random.rand(X_test.shape[0], 2)
             Train_spatial_features = np.random.rand(X_train.shape[0], 2)
             Test_spatial_features = np.random.rand(X_test.shape[0], 2)
-        else:
-            X_train, Y_train, X_test, Y_test, Train_cs_features, Test_cs_features, \
-            Train_spatial_features, Test_spatial_features, \
-            Train_pattern_features, Test_pattern_features = data_obj.split_train_test(df)
-    else:
-        if dataset == 'demand':
-            X_train, Y_train, X_test, Y_test = split_train_test_(config, df)
-        else:
-            X_train, Y_train, X_test, Y_test = data_obj.split_train_test(df)
-        Train_cs_features = np.random.rand(X_train.shape[0], 2)
-        Test_cs_features = np.random.rand(X_test.shape[0], 2)
-        Train_spatial_features = np.random.rand(X_train.shape[0], 2)
-        Test_spatial_features = np.random.rand(X_test.shape[0], 2)
-        Train_pattern_features = np.random.rand(X_train.shape[0], 2)
-        Test_pattern_features = np.random.rand(X_test.shape[0], 2)
+            Train_pattern_features = np.random.rand(X_train.shape[0], 2)
+            Test_pattern_features = np.random.rand(X_test.shape[0], 2)
 
-    print(X_train.shape, Y_train.shape, X_test.shape, Y_test.shape, Train_cs_features.shape, Test_cs_features.shape,
-          Train_spatial_features.shape, Test_spatial_features.shape, Train_pattern_features.shape,
-          Test_pattern_features.shape)
+        print(X_train.shape, Y_train.shape, X_test.shape, Y_test.shape, Train_cs_features.shape, Test_cs_features.shape,
+              Train_spatial_features.shape, Test_spatial_features.shape, Train_pattern_features.shape,
+              Test_pattern_features.shape)
 
-    if oversample:
-        X_train, Y_train, Train_cs_features, Train_spatial_features = \
-            apply_mlsmote(config, X_train, Y_train, Train_cs_features, Train_spatial_features, n_sample)
+        if oversample:
+            X_train, Y_train, Train_cs_features, Train_spatial_features = \
+                apply_mlsmote(config, X_train, Y_train, Train_cs_features, Train_spatial_features, n_sample)
 
-    print(X_train.shape, Y_train.shape, X_test.shape, Y_test.shape, Train_cs_features.shape, Test_cs_features.shape,
-          Train_spatial_features.shape, Test_spatial_features.shape, Train_pattern_features.shape,
-          Test_pattern_features.shape)
+        print(X_train.shape, Y_train.shape, X_test.shape, Y_test.shape, Train_cs_features.shape, Test_cs_features.shape,
+              Train_spatial_features.shape, Test_spatial_features.shape, Train_pattern_features.shape,
+              Test_pattern_features.shape)
 
-    if train_:
-        train(config, X_train, Y_train, X_test, Y_test, Train_cs_features, Test_cs_features,
-              Train_spatial_features, Test_spatial_features, Train_pattern_features, Test_pattern_features)
+        if train_:
+            train(config, X_train, Y_train, X_test, Y_test, Train_cs_features, Test_cs_features,
+                  Train_spatial_features, Test_spatial_features, Train_pattern_features, Test_pattern_features, ip_horizon)
 
-    if eval_:
-        evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, Test_pattern_features, X_train.shape[0])
+        if eval_:
+            evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, Test_pattern_features, X_train.shape[0], ip_horizon)
 
-    if eval_train:
-        evaluate(config, X_train, Y_train, Train_cs_features, Train_spatial_features, Train_pattern_features, X_train.shape[0])
+        if eval_train:
+            evaluate(config, X_train, Y_train, Train_cs_features, Train_spatial_features, Train_pattern_features, X_train.shape[0], ip_horizon)
 
-    if eval_tests:
-        if feat:
-            if dataset == 'demand':
-                X, Y,  Feat_pattern = generate_test_set_(config)
-                Feat_cs = [np.random.rand(X[0].shape[0], 2)] * 4
-                Feat_spatial = [np.random.rand(X[0].shape[0], 2)] * 4
+        if eval_tests:
+            if feat:
+                if dataset == 'demand':
+                    X, Y,  Feat_pattern = generate_test_set_(config)
+                    Feat_cs = [np.random.rand(X[0].shape[0], 2)] * 4
+                    Feat_spatial = [np.random.rand(X[0].shape[0], 2)] * 4
+                else:
+                    X, Y, Feat_cs, Feat_spatial, Feat_pattern = generate_test_set(config, ip_horizon)
             else:
-                X, Y, Feat_cs, Feat_spatial, Feat_pattern = generate_test_set(config)
-        else:
-            if dataset == 'demand':
-                X, Y = generate_test_set_(config)
-            else:
-                X, Y = generate_test_set(config)
-            Feat_cs = [np.random.rand(X[0].shape[0], 2)] * 5
-            Feat_spatial = [np.random.rand(X[0].shape[0], 2)] * 5
-            Feat_pattern = [np.random.rand(X[0].shape[0], 2)] * 5
+                if dataset == 'demand':
+                    X, Y = generate_test_set_(config)
+                else:
+                    X, Y = generate_test_set(config, ip_horizon)
+                Feat_cs = [np.random.rand(X[0].shape[0], 2)] * 5
+                Feat_spatial = [np.random.rand(X[0].shape[0], 2)] * 5
+                Feat_pattern = [np.random.rand(X[0].shape[0], 2)] * 5
 
-        for i in range(len(X)):
-            print(X[i].shape, Y[i].shape, Feat_cs[i].shape, Feat_spatial[i].shape, Feat_pattern[i].shape)
+            for i in range(len(X)):
+                print(X[i].shape, Y[i].shape, Feat_cs[i].shape, Feat_spatial[i].shape, Feat_pattern[i].shape)
 
-        evaluate_test_set(config, X, Y, Feat_cs, Feat_spatial, Feat_pattern, X_train.shape[0])
+            evaluate_test_set(config, X, Y, Feat_cs, Feat_spatial, Feat_pattern, X_train.shape[0], ip_horizon)
 
 
 

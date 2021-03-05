@@ -64,7 +64,7 @@ def compute_weight_matrix(targets, positive_weight, negative_weight):
     return weights
 
 def train(config, X_train, Y_train, X_test, Y_test, Train_cs_features, Test_cs_features,
-          Train_spatial_features, Test_spatial_features, Train_pattern_features, Test_pattern_features):
+          Train_spatial_features, Test_spatial_features, Train_pattern_features, Test_pattern_features, input_horizon):
 
     Y_train = torch.from_numpy(Y_train).float()
     X_train = torch.from_numpy(X_train).float()
@@ -102,7 +102,7 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_cs_features, Test_cs_f
     decode = config['model']['decoder']
     feat = config.getboolean('data', 'features')
 
-    input_horizon = int(config['data']['input_horizon'])
+    #input_horizon = int(config['data']['input_horizon'])
     f_name = algo + '_' + str(input_horizon) + '.pth.tar'
 
     if algo == 'seq2seq':
@@ -217,7 +217,7 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_cs_features, Test_cs_f
     print('Finished training')
 
 
-def evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, Test_pattern_features, n_train):
+def evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, Test_pattern_features, n_train, input_horizon):
     '''
     :param config:
     :param X_test: one hot transform X_test
@@ -288,7 +288,7 @@ def evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, Te
 
     optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=wd)
 
-    input_horizon = int(config['data']['input_horizon'])
+    #input_horizon = int(config['data']['input_horizon'])
     f_name = algo + '_' + str(input_horizon) + '.pth.tar'
 
     load_checkpoint(config, f_name, model, optimizer)
@@ -336,31 +336,31 @@ def evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, Te
     eval_tests = config.getboolean('data', 'eval_tests')
 
     if not eval_tests:
-        log_plot(config, n_train, n_test, X_test.shape[2], pred, target_)
+        log_plot(config, n_train, n_test, X_test.shape[2], pred, target_, input_horizon)
 
     return pred, target_
 
 
-def log_plot(config, n_train, n_test, n_features, prediction, target):
+def log_plot(config, n_train, n_test, n_features, prediction, target, input_horizon):
 
     prec, rec, th = precision_recall_curve(target.ravel(), prediction.ravel())
     ap = average_precision_score(target.ravel(), prediction.ravel())
     print('threshold: ')
     print(th)
-    show_plot(config, prec, rec, ap, n_features)
+    show_plot(config, prec, rec, ap, n_features, input_horizon)
 
     fscore = (2 * prec * rec) / (prec + rec)
     fscore = np.nan_to_num(fscore)
     ix = np.argmax(fscore)
     print('Best Threshold=%f, F-Score=%.3f' % (th[ix], fscore[ix]))
 
-    log_result(config, n_train, n_test, th[ix], prediction, target)
+    log_result(config, n_train, n_test, th[ix], prediction, target, input_horizon)
 
 
-def log_result(config, n_train, n_test, th, prediction, target):
+def log_result(config, n_train, n_test, th, prediction, target, input_horizon):
 
     result_path = config['result']['path']
-    input_horizon = int(config['data']['input_horizon'])
+    #input_horizon = int(config['data']['input_horizon'])
     output_horizon = int(config['data']['output_horizon'])
     lr = float(config['train']['lr'])
     num_epochs = int(config['train']['num_epochs'])

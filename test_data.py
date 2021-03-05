@@ -13,7 +13,7 @@ from sklearn.metrics import precision_recall_fscore_support
 from sklearn.utils import shuffle
 
 
-def split_test_set(config, data_obj, series, df, cs_feature, spatial_feature, pattern_feature, start_date, stop_date):
+def split_test_set(config, data_obj, series, df, cs_feature, spatial_feature, pattern_feature, start_date, stop_date, n_lag):
 
     X_test = list()
     Y_test = list()
@@ -22,7 +22,7 @@ def split_test_set(config, data_obj, series, df, cs_feature, spatial_feature, pa
     test_features_pattern = list()
 
     test_step = int(config['data']['test_window_size'])
-    n_lag = int(config['data']['input_horizon'])  # *96 when lag value is in days
+    #n_lag = int(config['data']['input_horizon'])  # *96 when lag value is in days
     n_lead = int(config['data']['output_horizon'])  # *96 when lead is in days
     feat = config.getboolean('data', 'features')
 
@@ -60,8 +60,8 @@ def split_test_set(config, data_obj, series, df, cs_feature, spatial_feature, pa
         return np.array(X_test), np.array(Y_test)
 
 
-def generate_and_save(config, folder_list):
-    input_horizon = int(config['data']['input_horizon'])
+def generate_and_save(config, folder_list, input_horizon):
+    #input_horizon = int(config['data']['input_horizon'])
     test_path = config['data']['test_path']
     feat = config.getboolean('data', 'features')
     start = config['test']['start']
@@ -86,13 +86,13 @@ def generate_and_save(config, folder_list):
         for series_idx in range(df.shape[1] - 35):
             if feat:
                 x, y, f_cs, f_spatial, f_pattern = split_test_set(config, data_obj, df.iloc[:, series_idx], df, cs_feature,
-                                                                 spatial_feature, pattern_feature, start_date, stop_date)
+                                                                 spatial_feature, pattern_feature, start_date, stop_date, input_horizon)
                 feat_cs.extend(f_cs)
                 feat_spatial.extend(f_spatial)
                 feat_pattern.extend(f_pattern)
             else:
                 x, y = split_test_set(config, data_obj, df.iloc[:, series_idx], df, cs_feature,
-                                      spatial_feature, pattern_feature, start_date, stop_date)
+                                      spatial_feature, pattern_feature, start_date, stop_date, input_horizon)
 
             X.extend(x)
             Y.extend(y)
@@ -169,9 +169,9 @@ def generate_and_save_new(config, folder_list):
         print('Finished test set ', str(i + 1))
 
 
-def generate_test_set(config):
+def generate_test_set(config, input_horizon):
 
-    input_horizon = int(config['data']['input_horizon'])
+    #input_horizon = int(config['data']['input_horizon'])
     test_path = config['data']['test_path']
     feat = config.getboolean('data', 'features')
 
@@ -203,7 +203,7 @@ def generate_test_set(config):
     else:
         return X, Y
 
-def evaluate_test_set(config, X, Y, Feat_cs, Feat_spatial, Feat_pattern, n_train):
+def evaluate_test_set(config, X, Y, Feat_cs, Feat_spatial, Feat_pattern, n_train, input_horizon):
 
     prec_0 = list()
     prec_1 = list()
@@ -213,13 +213,13 @@ def evaluate_test_set(config, X, Y, Feat_cs, Feat_spatial, Feat_pattern, n_train
     f1_1 = list()
 
     result_path = config['result']['path']
-    input_horizon = int(config['data']['input_horizon'])
+    #input_horizon = int(config['data']['input_horizon'])
     comment = config['result']['comment']
     output_horizon = int(config['data']['output_horizon'])
 
 
     for i in range(len(X)):
-        pred, target = evaluate(config, X[i], Y[i], Feat_cs[i], Feat_spatial[i], Feat_pattern[i], n_train)
+        pred, target = evaluate(config, X[i], Y[i], Feat_cs[i], Feat_spatial[i], Feat_pattern[i], n_train. input_horizon)
         prec, rec, th = precision_recall_curve(target.ravel(), pred.ravel())
         print('threshold: ')
         print(th)

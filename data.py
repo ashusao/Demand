@@ -156,7 +156,7 @@ class Data:
         return data, cs_feat, spatial_feat, pattern_feat
 
     # @refrence: https://machinelearningmastery.com/how-to-develop-machine-learning-models-for-multivariate-multi-step-air-pollution-time-series-forecasting/
-    def split_series_train_test(self, series, df, cs_feature, spatial_feature, pattern_feature, randomize=True):
+    def split_series_train_test(self, series, df, cs_feature, spatial_feature, pattern_feature, n_lag, randomize=True):
         '''
         :param series: pandas series containing Time series data
         :param randomize: if true shuffle the data
@@ -181,7 +181,7 @@ class Data:
         split_time = self._config['data']['train_stop']
         train_step = int(self._config['data']['train_window_size'])
         test_step = int(self._config['data']['test_window_size'])
-        n_lag = int(self._config['data']['input_horizon'])  # *96 when lag value is in days
+        #n_lag = int(self._config['data']['input_horizon'])  # *96 when lag value is in days
         n_lead = int(self._config['data']['output_horizon']) # *96 when lead is in days
         feat = self._config.getboolean('data', 'features')
 
@@ -247,7 +247,7 @@ class Data:
             return X_train, Y_train, X_test, Y_test
 
 
-    def generate_and_save_aggregated_train_test(self, df, randomize=True):
+    def generate_and_save_aggregated_train_test(self, df, input_horizon, randomize=True):
 
         '''
         Generates the train and test data by aggregating the data of all the series and save the data as npy file
@@ -258,7 +258,8 @@ class Data:
 
         train_dir = self._config['data']['train_path']
         val_dir = self._config['data']['val_path']
-        n_lag_days = int(self._config['data']['input_horizon'])
+        #n_lag_days = int(self._config['data']['input_horizon'])
+        n_lag_days = input_horizon
         n_lead_days = int(self._config['data']['output_horizon'])
         feat = self._config.getboolean('data', 'features')
 
@@ -285,7 +286,7 @@ class Data:
                 train_spatial_features, test_spatial_features, \
                 train_pattern_features, test_pattern_features = self.split_series_train_test(df.iloc[:, series_idx],
                                                                                 df, cs_feature, spatial_feature,
-                                                                                pattern_feature, randomize=randomize)
+                                                                                pattern_feature, n_lag_days, randomize=randomize)
                 #Train_features.extend(train_features.tolist())
                 #Test_features.extend(test_features.tolist())
                 Train_cs_features.extend(train_cs_features)
@@ -297,7 +298,7 @@ class Data:
             else:
                 x_train, y_train, x_test, y_test = self.split_series_train_test(df.iloc[:, series_idx],
                                                                                 df, cs_feature, spatial_feature,
-                                                                                pattern_feature, randomize=randomize)
+                                                                                pattern_feature, n_lag_days, randomize=randomize)
             X_train.extend(x_train)
             Y_train.extend(y_train)
             X_test.extend(x_test)
@@ -466,7 +467,7 @@ class Data:
                              '_day_test_step_' + str(test_step) + '.npy'), y_test)
 
 
-    def split_train_test(self, df, randomize=True):
+    def split_train_test(self, df, input_horizon, randomize=True):
 
         '''
         :param df: Dataframe containing all time series
@@ -476,7 +477,7 @@ class Data:
         :return: Train/Test split of data as numpy array
         '''
 
-        input_horizon = int(self._config['data']['input_horizon'])
+        #input_horizon = int(self._config['data']['input_horizon'])
         output_horizon = int(self._config['data']['output_horizon'])
 
         train_step = self._config['data']['train_window_size']
@@ -489,7 +490,7 @@ class Data:
                                                      '_day_lead_' + str(output_horizon) +
                                                      '_day_train_step_' + str(train_step) +
                                                      '_day_test_step_' + str(test_step) + '.npy')):
-            self.generate_and_save_aggregated_train_test(df=df, randomize=randomize)
+            self.generate_and_save_aggregated_train_test(df=df, input_horizon=input_horizon, randomize=randomize)
             #self.gen_and_save_new_data(df)
 
         X_train = np.load(os.path.join(train_path, 'X_train_lag_' + str(input_horizon) +
