@@ -6,7 +6,7 @@ import pickle
 plt.switch_backend('agg')
 import matplotlib.ticker as ticker
 
-device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 torch.manual_seed(0)
 #torch.set_deterministic(True)
 
@@ -37,21 +37,21 @@ def load_checkpoint(config, filename, model, optimizer):
     optimizer.load_state_dict(checkpoint["optimizer"])
 
 
-def save_loss(config, train_loss, test_loss, f_name):
+def save_loss(config, train_loss, f_name):
     algo = config['train']['algo']
 
     if algo == 'seq2seq':
         train_loss_dir = config['result']['seq2seq_train_loss_path']
-        test_loss_dir = config['result']['seq2seq_test_loss_path']
+        #test_loss_dir = config['result']['seq2seq_test_loss_path']
     elif algo == 'baseline':
         train_loss_dir = config['result']['baseline_train_loss_path']
-        test_loss_dir = config['result']['baseline_test_loss_path']
+        #test_loss_dir = config['result']['baseline_test_loss_path']
 
     with open(os.path.join(train_loss_dir, f_name), 'wb') as f:
         pickle.dump(train_loss, f)
 
-    with open(os.path.join(test_loss_dir, f_name), 'wb') as f:
-        pickle.dump(test_loss, f)
+    #with open(os.path.join(test_loss_dir, f_name), 'wb') as f:
+    #    pickle.dump(test_loss, f)
 
 
 def show_plot(config, precision, recall, ap, n_features, input_horizon):

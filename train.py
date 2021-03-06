@@ -27,7 +27,7 @@ import sys
 from utils import save_loss
 from utils import show_plot
 
-device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 torch.manual_seed(0)
 #torch.set_deterministic(True) # type: ignore
 
@@ -63,27 +63,26 @@ def compute_weight_matrix(targets, positive_weight, negative_weight):
 
     return weights
 
-def train(config, X_train, Y_train, X_test, Y_test, Train_cs_features, Test_cs_features,
-          Train_spatial_features, Test_spatial_features, Train_pattern_features, Test_pattern_features, input_horizon):
+def train(config, X_train, Y_train, Train_cs_features, Train_spatial_features, Train_pattern_features, input_horizon):
 
     Y_train = torch.from_numpy(Y_train).float()
     X_train = torch.from_numpy(X_train).float()
 
     Train_cs_features = torch.from_numpy(Train_cs_features).float()
-    Test_cs_features = torch.from_numpy(Test_cs_features).float()
+    #Test_cs_features = torch.from_numpy(Test_cs_features).float()
 
     Train_spatial_features = torch.from_numpy(Train_spatial_features).float()
-    Test_spatial_features = torch.from_numpy(Test_spatial_features).float()
+    #Test_spatial_features = torch.from_numpy(Test_spatial_features).float()
 
     Train_pattern_features = torch.from_numpy(Train_pattern_features).float()
-    Test_pattern_features = torch.from_numpy(Test_pattern_features).float()
+    #Test_pattern_features = torch.from_numpy(Test_pattern_features).float()
 
-    Y_test = torch.from_numpy(Y_test).float()
-    X_test = torch.from_numpy(X_test).float()
+    #Y_test = torch.from_numpy(Y_test).float()
+    #X_test = torch.from_numpy(X_test).float()
 
     if len(X_train.shape) == 2: # if 2d make it 3d
         X_train = X_train.unsqueeze(2)  # add 3rd dimesion when not one hot enocded or no additional features
-        X_test = X_test.unsqueeze(2)
+        #X_test = X_test.unsqueeze(2)
 
     input_size = X_train.shape[2] # 1 or additional attributes
     output_size = 1
@@ -148,13 +147,13 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_cs_features, Test_cs_f
     print('Total trainable Params: ', pytorch_total_params)
 
     n_batches_train = int(X_train.shape[0] / batch_size)
-    n_batches_test = int(X_test.shape[0] / batch_size)
-    print(n_batches_train, n_batches_test)
+    #n_batches_test = int(X_test.shape[0] / batch_size)
+    print(n_batches_train)
     #positive_wt, negative_wt = compute_weights(Y_train)
 
     train_loss = []
-    test_loss = []
-    phases = ['train', 'test']
+    #test_loss = []
+    #phases = ['train', 'test']
 
     for epoch in range(num_epochs):
 
@@ -163,57 +162,58 @@ def train(config, X_train, Y_train, X_test, Y_test, Train_cs_features, Test_cs_f
         for b in range(n_batches_train):
 
             b = b*batch_size
-            for phase in phases:
+            #for phase in phases:
 
-                if phase == 'train':
-                    input_batch = X_train[b: b + batch_size, :, :].to(device)
-                    target_label = Y_train[b: b + batch_size, :].to(device)   # here
-                    #target_label = Y_train[b: b + batch_size, :, :].to(device)  # here
-                    features_cs = Train_cs_features[b: b + batch_size, :].to(device)
-                    features_spatial = Train_spatial_features[b: b + batch_size, :].to(device)
-                    features_pattern = Train_pattern_features[b: b + batch_size, :].to(device)
-                    #positive_wt, negative_wt = compute_weights(target_label)
-                    model.train()
-                else:
-                    input_batch = X_test[b % X_test.shape[0]: ((b % X_test.shape[0]) + batch_size), :, :].to(device)
-                    target_label = Y_test[b % Y_test.shape[0]: ((b % Y_test.shape[0]) + batch_size), :].to(device)  # here
-                    #target_label = Y_test[b % Y_test.shape[0]: ((b % Y_test.shape[0]) + batch_size), :, :].to(device)  # here
-                    features_cs = Test_cs_features[b % Test_cs_features.shape[0]: ((b % Test_cs_features.shape[0]) + batch_size), :].to(device)
-                    features_spatial = Test_spatial_features[b % Test_spatial_features.shape[0]: ((b % Test_spatial_features.shape[0]) + batch_size), :].to(device)
-                    features_pattern = Test_pattern_features[b % Test_pattern_features.shape[0]: ((b % Test_pattern_features.shape[0]) + batch_size), :].to(device)
-                    #positive_wt, negative_wt = compute_weights(target_label)
-                    model.eval()
+            #if phase == 'train':
+            input_batch = X_train[b: b + batch_size, :, :].to(device)
+            target_label = Y_train[b: b + batch_size, :].to(device)   # here
+            #target_label = Y_train[b: b + batch_size, :, :].to(device)  # here
+            features_cs = Train_cs_features[b: b + batch_size, :].to(device)
+            features_spatial = Train_spatial_features[b: b + batch_size, :].to(device)
+            features_pattern = Train_pattern_features[b: b + batch_size, :].to(device)
+            #positive_wt, negative_wt = compute_weights(target_label)
+            model.train()
+            '''else:
+                input_batch = X_test[b % X_test.shape[0]: ((b % X_test.shape[0]) + batch_size), :, :].to(device)
+                target_label = Y_test[b % Y_test.shape[0]: ((b % Y_test.shape[0]) + batch_size), :].to(device)  # here
+                #target_label = Y_test[b % Y_test.shape[0]: ((b % Y_test.shape[0]) + batch_size), :, :].to(device)  # here
+                features_cs = Test_cs_features[b % Test_cs_features.shape[0]: ((b % Test_cs_features.shape[0]) + batch_size), :].to(device)
+                features_spatial = Test_spatial_features[b % Test_spatial_features.shape[0]: ((b % Test_spatial_features.shape[0]) + batch_size), :].to(device)
+                features_pattern = Test_pattern_features[b % Test_pattern_features.shape[0]: ((b % Test_pattern_features.shape[0]) + batch_size), :].to(device)
+                #positive_wt, negative_wt = compute_weights(target_label)
+                model.eval()'''
 
-                optimizer.zero_grad()
+            optimizer.zero_grad()
 
-                with torch.set_grad_enabled(phase == 'train'):
-                    if algo == 'seq2seq':
-                        outputs = model(input_batch, target_label, features_cs, features_spatial, features_pattern, 0.0) # no teacher force
-                    elif algo == 'baseline':
-                        hidden = model.init_hidden(batch_size).to(device)
-                        outputs = model(input_batch, hidden)
+            #with torch.set_grad_enabled(phase == 'train'):
+            if algo == 'seq2seq':
+                outputs = model(input_batch, target_label, features_cs, features_spatial, features_pattern, 0.0) # no teacher force
+            elif algo == 'baseline':
+                hidden = model.init_hidden(batch_size).to(device)
+                outputs = model(input_batch, hidden)
 
-                    #print(target_label.shape, outputs.shape)
+            #print(target_label.shape, outputs.shape)
 
-                    #weights = compute_weight_matrix(target_label, positive_wt, negative_wt)
-                    #criterion.weight = weights
+            #weights = compute_weight_matrix(target_label, positive_wt, negative_wt)
+            #criterion.weight = weights
 
-                    loss = criterion(outputs, target_label)  # here
-                    print(loss)
+            loss = criterion(outputs, target_label)  # here
+            print(loss)
 
-                    if phase == 'train':
-                        loss.backward()
-                        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1)
-                        optimizer.step()
-                        train_loss.append(loss.item())
-                    else:
-                        test_loss.append(loss.item())
+            #if phase == 'train':
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1)
+            optimizer.step()
+            train_loss.append(loss.item())
+            #else:
+            #    test_loss.append(loss.item())
 
         checkpoint = {'state_dict': model.state_dict(), 'optimizer': optimizer.state_dict()}
         save_checkpoint(checkpoint, config, filename=f_name)
 
     loss_file = algo + '_' + str(input_horizon) + '.pkl'
-    save_loss(config, train_loss, test_loss, loss_file)
+    #save_loss(config, train_loss, test_loss, loss_file)
+    save_loss(config, train_loss, loss_file)
     print('Finished training')
 
 

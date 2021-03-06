@@ -43,7 +43,8 @@ def split_test_set(config, data_obj, series, df, cs_feature, spatial_feature, pa
                 X_test.append(data.tolist())
                 test_features_cs.append(features_cs.tolist())
                 test_features_spatial.append(features_spatial.tolist())
-                test_features_pattern.append(features_pattern.tolist())
+                #test_features_pattern.append(features_pattern.tolist())
+                test_features_pattern.append(data_obj.gen_pattern_slices(series, pattern_feature, i, (end_ix + 1)))
             else:
                 X_test.append(series.tolist()[start_ix:i])
             Y_test.append(series.tolist()[i:(end_ix + 1)])
@@ -191,13 +192,13 @@ def generate_test_set(config, input_horizon):
 
     # loop thorugh folder, load npy and appent to X list
     for i, val in enumerate(folder_list):
-        X.append(np.load(os.path.join(test_path, folder_list[i], 'X_lag_' + str(input_horizon) + '.npy')))
-        Y.append(np.load(os.path.join(test_path, folder_list[i], 'Y_lag_' + str(input_horizon) + '.npy')))
+        X.append(np.load(os.path.join(test_path, folder_list[i], 'X_lag_' + str(input_horizon) + '.npy'), mmap_mode='r'))
+        Y.append(np.load(os.path.join(test_path, folder_list[i], 'Y_lag_' + str(input_horizon) + '.npy'), mmap_mode='r'))
 
         if feat:
-            Feat_cs.append(np.load(os.path.join(test_path, folder_list[i], 'Cs_lag_' + str(input_horizon) + '.npy')))
-            Feat_spatial.append(np.load(os.path.join(test_path, folder_list[i], 'Spatial_lag_' + str(input_horizon) + '.npy')))
-            Feat_pattern.append(np.load(os.path.join(test_path, folder_list[i], 'Pattern_lag_' + str(input_horizon) + '.npy')))
+            Feat_cs.append(np.load(os.path.join(test_path, folder_list[i], 'Cs_lag_' + str(input_horizon) + '.npy'), mmap_mode='r'))
+            Feat_spatial.append(np.load(os.path.join(test_path, folder_list[i], 'Spatial_lag_' + str(input_horizon) + '.npy'), mmap_mode='r'))
+            Feat_pattern.append(np.load(os.path.join(test_path, folder_list[i], 'Pattern_lag_' + str(input_horizon) + '.npy'), mmap_mode='r'))
     if feat:
         return X, Y, Feat_cs, Feat_spatial, Feat_pattern
     else:

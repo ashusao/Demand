@@ -62,7 +62,7 @@ if __name__ == '__main__':
     feat = config.getboolean('data', 'features')
     eval_train = config.getboolean('data', 'eval_train')
     train_ = config.getboolean('data', 'train')
-    eval_ = config.getboolean('data', 'eval')
+    #eval_ = config.getboolean('data', 'eval')
     eval_tests = config.getboolean('data', 'eval_tests')
     oversample = config.getboolean('data', 'oversample')
     n_sample = int(config['data']['n_sample'])
@@ -81,39 +81,37 @@ if __name__ == '__main__':
                 Train_spatial_features = np.random.rand(X_train.shape[0], 2)
                 Test_spatial_features = np.random.rand(X_test.shape[0], 2)
             else:
-                X_train, Y_train, X_test, Y_test, Train_cs_features, Test_cs_features, \
-                Train_spatial_features, Test_spatial_features, \
-                Train_pattern_features, Test_pattern_features = data_obj.split_train_test(df, ip_horizon)
+                X_train, Y_train, Train_cs_features, Train_spatial_features, Train_pattern_features = \
+                    data_obj.split_train_test(df, ip_horizon)
         else:
             if dataset == 'demand':
                 X_train, Y_train, X_test, Y_test = split_train_test_(config, df)
             else:
-                X_train, Y_train, X_test, Y_test = data_obj.split_train_test(df, ip_horizon)
+                X_train, Y_train = data_obj.split_train_test(df, ip_horizon)
             Train_cs_features = np.random.rand(X_train.shape[0], 2)
-            Test_cs_features = np.random.rand(X_test.shape[0], 2)
+            #Test_cs_features = np.random.rand(X_test.shape[0], 2)
             Train_spatial_features = np.random.rand(X_train.shape[0], 2)
-            Test_spatial_features = np.random.rand(X_test.shape[0], 2)
+            #Test_spatial_features = np.random.rand(X_test.shape[0], 2)
             Train_pattern_features = np.random.rand(X_train.shape[0], 2)
-            Test_pattern_features = np.random.rand(X_test.shape[0], 2)
+            #Test_pattern_features = np.random.rand(X_test.shape[0], 2)
 
-        print(X_train.shape, Y_train.shape, X_test.shape, Y_test.shape, Train_cs_features.shape, Test_cs_features.shape,
-              Train_spatial_features.shape, Test_spatial_features.shape, Train_pattern_features.shape,
-              Test_pattern_features.shape)
+        print(X_train.shape, Y_train.shape, Train_cs_features.shape,
+              Train_spatial_features.shape, Train_pattern_features.shape)
 
         if oversample:
             X_train, Y_train, Train_cs_features, Train_spatial_features = \
                 apply_mlsmote(config, X_train, Y_train, Train_cs_features, Train_spatial_features, n_sample)
 
-        print(X_train.shape, Y_train.shape, X_test.shape, Y_test.shape, Train_cs_features.shape, Test_cs_features.shape,
-              Train_spatial_features.shape, Test_spatial_features.shape, Train_pattern_features.shape,
-              Test_pattern_features.shape)
+        print(X_train.shape, Y_train.shape, Train_cs_features.shape,
+              Train_spatial_features.shape, Train_pattern_features.shape)
 
         if train_:
-            train(config, X_train, Y_train, X_test, Y_test, Train_cs_features, Test_cs_features,
-                  Train_spatial_features, Test_spatial_features, Train_pattern_features, Test_pattern_features, ip_horizon)
+            train(config, X_train, Y_train, Train_cs_features, Train_spatial_features, Train_pattern_features, ip_horizon)
+            #train(config, X_train, Y_train, X_test, Y_test, Train_cs_features, Test_cs_features,
+            #      Train_spatial_features, Test_spatial_features, Train_pattern_features, Test_pattern_features, ip_horizon)
 
-        if eval_:
-            evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, Test_pattern_features, X_train.shape[0], ip_horizon)
+        #if eval_:
+        #    evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, Test_pattern_features, X_train.shape[0], ip_horizon)
 
         if eval_train:
             evaluate(config, X_train, Y_train, Train_cs_features, Train_spatial_features, Train_pattern_features, X_train.shape[0], ip_horizon)
