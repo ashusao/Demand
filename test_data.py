@@ -203,6 +203,7 @@ def generate_test_set(config, input_horizon):
     else:
         return X, Y
 
+
 def evaluate_test_set(config, X, Y, Feat_cs, Feat_spatial, Feat_pattern, n_train, input_horizon):
 
     prec_0 = list()
@@ -219,7 +220,7 @@ def evaluate_test_set(config, X, Y, Feat_cs, Feat_spatial, Feat_pattern, n_train
 
 
     for i in range(len(X)):
-        pred, target = evaluate(config, X[i], Y[i], Feat_cs[i], Feat_spatial[i], Feat_pattern[i], n_train. input_horizon)
+        pred, target = evaluate(config, X[i], Y[i], Feat_cs[i], Feat_spatial[i], Feat_pattern[i], n_train, input_horizon)
         prec, rec, th = precision_recall_curve(target.ravel(), pred.ravel())
         print('threshold: ')
         print(th)
