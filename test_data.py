@@ -187,7 +187,7 @@ def generate_test_set(config, input_horizon):
         folder_list = ['test1_data', 'test2_data', 'test3_data', 'test4_data', 'test5_data']
 
     if not os.path.isfile(os.path.join(test_path, folder_list[0], 'X_lag_' + str(input_horizon) + '.npy')):
-        generate_and_save(config, folder_list)
+        generate_and_save(config, folder_list, input_horizon)
 
     # loop thorugh folder, load npy and appent to X list
     for i, val in enumerate(folder_list):
