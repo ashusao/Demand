@@ -154,7 +154,7 @@ class Data:
     def gen_weekday_weekend_slices(self, series, weekday_feature, weekend_feature, start, stop):
         pattern_feat = list()
         for i in range(start, stop):
-            if (series.index[i].dayofweek >= 0) & (series.index[i].dayofweek <= 4):
+            if (series.index[i].dayofweek >= 0) and (series.index[i].dayofweek <= 4):
                 pattern_feat.append(weekday_feature[series.name].loc[(series.index[i].hour, series.index[i].minute)])
             else:
                 pattern_feat.append(weekend_feature[series.name].loc[(series.index[i].hour, series.index[i].minute)])
