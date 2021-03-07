@@ -155,8 +155,10 @@ class Data:
         pattern_feat = list()
         for i in range(start, stop):
             if (series.index[i].dayofweek >= 0) and (series.index[i].dayofweek <= 4):
+                #print('*', sep=' ', end=' ')
                 pattern_feat.append(weekday_feature[series.name].loc[(series.index[i].hour, series.index[i].minute)])
             else:
+                #print('=', sep='', end='')
                 pattern_feat.append(weekend_feature[series.name].loc[(series.index[i].hour, series.index[i].minute)])
         return pattern_feat
 
@@ -268,7 +270,8 @@ class Data:
         pattern_feature, weekday_feature, weekend_feature = self.gen_pattern_features(df)
         print(pattern_feature.shape, weekday_feature.shape, weekend_feature.shape)
 
-        for series_idx in range(df.shape[1] - 35): # subtract last 35 time feature columns
+        #for series_idx in range(df.shape[1] - 35): # subtract last 35 time feature columns
+        for series_idx in range(5):
             if feat:
                 x_train, y_train, train_cs_features, train_spatial_features, train_pattern_features = \
                     self.split_series_train_test(df.iloc[:, series_idx], df, cs_feature, spatial_feature,
