@@ -13,7 +13,8 @@ from sklearn.metrics import precision_recall_fscore_support
 from sklearn.utils import shuffle
 
 
-def split_test_set(config, data_obj, series, df, cs_feature, spatial_feature, pattern_feature, start_date, stop_date, n_lag):
+def split_test_set(config, data_obj, series, df, cs_feature, spatial_feature, pattern_feature,
+                   weekday_feature, weekend_feature, start_date, stop_date, n_lag):
 
     X_test = list()
     Y_test = list()
@@ -39,17 +40,16 @@ def split_test_set(config, data_obj, series, df, cs_feature, spatial_feature, pa
 
             if feat:
                 data, features_cs, features_spatial, features_pattern = data_obj.generate_data(series, df, cs_feature,
-                                                                             spatial_feature, pattern_feature, start_ix, i)
+                                                                             spatial_feature, pattern_feature,
+                                                                             weekday_feature, weekend_feature,
+                                                                                start_ix, i, i, (end_ix + 1))
                 X_test.append(data.tolist())
                 test_features_cs.append(features_cs.tolist())
                 test_features_spatial.append(features_spatial.tolist())
-                #test_features_pattern.append(features_pattern.tolist())
-                test_features_pattern.append(data_obj.gen_pattern_slices(series, pattern_feature, i, (end_ix + 1)))
+                test_features_pattern.append(features_pattern)
             else:
                 X_test.append(series.tolist()[start_ix:i])
             Y_test.append(series.tolist()[i:(end_ix + 1)])
-            # data, _ = self.generate_data(series, df, feature_df, i, (end_ix + 1))
-            # Y_train.append(data.tolist())
 
     if feat:
         X_test, Y_test, test_features_cs, test_features_spatial, test_features_pattern = \
@@ -67,13 +67,11 @@ def generate_and_save(config, folder_list, input_horizon):
     feat = config.getboolean('data', 'features')
     start = config['test']['start']
     stop = config['test']['test5_stop']
-    train_start = config['data']['train_start']
-    train_stop = config['data']['train_stop']
 
     data_obj = Data()
     df = data_obj.read_tsv('aug_dec_no_filter.tsv', start, stop)
     cs_feature, spatial_feature = data_obj.read_and_process_features()
-    pattern_feature = data_obj.gen_pattern_features(df=data_obj.read_tsv('aug_dec_no_filter.tsv', train_start, train_stop))
+    pattern_feature, weekday_feature, weekend_feature = data_obj.gen_pattern_features(df=df)
 
     for i, val in enumerate(folder_list):
         X = list()
@@ -87,13 +85,15 @@ def generate_and_save(config, folder_list, input_horizon):
         for series_idx in range(df.shape[1] - 35):
             if feat:
                 x, y, f_cs, f_spatial, f_pattern = split_test_set(config, data_obj, df.iloc[:, series_idx], df, cs_feature,
-                                                                 spatial_feature, pattern_feature, start_date, stop_date, input_horizon)
+                                                                 spatial_feature, pattern_feature, weekday_feature, weekend_feature,
+                                                                  start_date, stop_date, input_horizon)
                 feat_cs.extend(f_cs)
                 feat_spatial.extend(f_spatial)
                 feat_pattern.extend(f_pattern)
             else:
                 x, y = split_test_set(config, data_obj, df.iloc[:, series_idx], df, cs_feature,
-                                      spatial_feature, pattern_feature, start_date, stop_date, input_horizon)
+                                      spatial_feature, pattern_feature, weekday_feature, weekend_feature,
+                                      start_date, stop_date, input_horizon)
 
             X.extend(x)
             Y.extend(y)

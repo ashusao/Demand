@@ -119,49 +119,70 @@ class Data:
 
         return cs_feature, spatial_feature
 
-    def gen_pattern_features(self, df):
-        train_df = df.loc[self._config['data']['train_start'] : self._config['data']['train_stop']].iloc[:, :-35]
-        daily_usage = train_df.groupby([train_df.index.hour, train_df.index.minute]).sum()
+    def group_and_scale_pattern_feat(self, df):
+        daily_usage = df.groupby([df.index.hour, df.index.minute]).sum()
         scaler = MinMaxScaler()
         scaled_features = scaler.fit_transform(daily_usage)
         scaled_df = pd.DataFrame(scaled_features, index=daily_usage.index, columns=daily_usage.columns)
         return scaled_df
 
-    def generate_features(self, series, cs_feature, spatial_feature, pattern_feature):
+    def gen_pattern_features(self, df):
+        train_df = df.loc[self._config['data']['train_start'] : self._config['data']['train_stop']].iloc[:, :-35]
+        scaled_df = self.group_and_scale_pattern_feat(train_df)
+
+        weekday_df = train_df.loc[(train_df.index.dayofweek >= 0) & (train_df.index.dayofweek <= 4)]
+        weekend_df = train_df.loc[(train_df.index.dayofweek >= 5) & (train_df.index.dayofweek <= 6)]
+        scaled_weekday = self.group_and_scale_pattern_feat(weekday_df)
+        scaled_weekend = self.group_and_scale_pattern_feat(weekend_df)
+
+        return scaled_df, scaled_weekday, scaled_weekend
+
+    def generate_features(self, series, cs_feature, spatial_feature):
         idx = series.name
         cs_feat = cs_feature[(cs_feature['identifier'] == idx[0]) &
                               (cs_feature['anschluss'] == idx[1])].iloc[0, 2:]
         spatial_feat = spatial_feature[(spatial_feature['identifier'] == idx[0]) &
                              (spatial_feature['anschluss'] == idx[1])].iloc[0, 2:]
-        pattern_feat = pattern_feature[idx]
 
-        return cs_feat, spatial_feat, pattern_feat
+        return cs_feat, spatial_feat
 
     def gen_pattern_slices(self, series, pattern_feature, start, stop):
         hour = series.index.hour[start:stop].tolist()
         minute = series.index.minute[start:stop].tolist()
         return pattern_feature.loc[list(zip(hour, minute))][series.name].tolist()
 
-    def generate_data(self, series, df, cs_feature, spatial_feature, pattern_feature, start, stop):
+    def gen_weekday_weekend_slices(self, series, weekday_feature, weekend_feature, start, stop):
+        pattern_feat = list()
+        for i in range(start, stop):
+            if (series.index[i].dayofweek >= 0) & (series.index[i].dayofweek <= 4):
+                pattern_feat.append(weekday_feature[series.name].loc[(series.index[i].hour, series.index[i].minute)])
+            else:
+                pattern_feat.append(weekend_feature[series.name].loc[(series.index[i].hour, series.index[i].minute)])
+        return pattern_feat
+
+
+    def generate_data(self, series, df, cs_feature, spatial_feature, pattern_feature,
+                      weekday_feature, weekend_feature, start, stop, start_y, stop_y):
 
         d = np.expand_dims(series.to_numpy()[start:stop], axis=1)
-        '''weekday_sin = np.expand_dims(df['weekday_sin'].to_numpy()[start:stop], axis=1)
-        weekday_cos = np.expand_dims(df['weekday_cos'].to_numpy()[start:stop], axis=1)
-        hour_sin = np.expand_dims(df['hour_sin'].to_numpy()[start:stop], axis=1)
-        hour_cos = np.expand_dims(df['hour_cos'].to_numpy()[start:stop], axis=1)
-        minute_sin = np.expand_dims(df['minute_sin'].to_numpy()[start:stop], axis=1)
-        minute_cos = np.expand_dims(df['minute_cos'].to_numpy()[start:stop], axis=1)'''
 
-        # genertate station specific features
-        cs_feat, spatial_feat, pattern_feat = self.generate_features(series, cs_feature, spatial_feature, pattern_feature)
-        '''data = np.concatenate([d, weekday_sin, weekday_cos, hour_sin, hour_cos, 
-                               minute_sin, minute_cos], axis=1)'''
+        # genertate station and spatial features
+        cs_feat, spatial_feat = self.generate_features(series, cs_feature, spatial_feature)
+
+        # 1 day series pattern
+        #pattern_feat = pattern_df[series.name]
+
+        # pattern slices of y values
+        #pattern_feat = self.gen_pattern_slices(series, pattern_feature, start_y, stop_y)
+        pattern_feat = self.gen_weekday_weekend_slices(series, weekday_feature, weekend_feature, start_y, stop_y)
+
         time_feat = df.iloc[:, -35:].to_numpy()[start:stop]
         data = np.concatenate([d, time_feat], axis=1)
         return data, cs_feat, spatial_feat, pattern_feat
 
     # @refrence: https://machinelearningmastery.com/how-to-develop-machine-learning-models-for-multivariate-multi-step-air-pollution-time-series-forecasting/
-    def split_series_train_test(self, series, df, cs_feature, spatial_feature, pattern_feature, n_lag, randomize=True):
+    def split_series_train_test(self, series, df, cs_feature, spatial_feature, pattern_feature,
+                                weekday_feature, weekend_feature, n_lag, randomize=True):
         '''
         :param series: pandas series containing Time series data
         :param randomize: if true shuffle the data
@@ -172,21 +193,14 @@ class Data:
             Y_test - output pattern for validation data
         '''
         X_train = list()
-        #X_test = list()
         Y_train = list()
-        #Y_test = list()
         train_cs_features = list()
         train_spatial_features = list()
         train_pattern_features = list()
-        #test_cs_features = list()
-        #test_spatial_features = list()
-        #test_pattern_features = list()
 
         start_time = self._config['data']['train_start']
         split_time = self._config['data']['train_stop']
         train_step = int(self._config['data']['train_window_size'])
-        test_step = int(self._config['data']['test_window_size'])
-        #n_lag = int(self._config['data']['input_horizon'])  # *96 when lag value is in days
         n_lead = int(self._config['data']['output_horizon']) # *96 when lead is in days
         feat = self._config.getboolean('data', 'features')
 
@@ -204,35 +218,18 @@ class Data:
                         (datetime.datetime.strptime(start_time, '%Y-%m-%d %H:%M:%S') + datetime.timedelta(days=8)):
 
                     if feat:
-                        data, cs_feat, spatial_feat, pattern_feat = self.generate_data(series, df, cs_feature, spatial_feature,
-                                                                                       pattern_feature, start_ix, i)
+                        data, cs_feat, spatial_feat, pattern_feat = self.generate_data(series, df, cs_feature,
+                                                                                       spatial_feature, pattern_feature,
+                                                                                       weekday_feature, weekend_feature,
+                                                                                       start_ix, i,
+                                                                                       i, (end_ix + 1))
                         X_train.append(data.tolist())
-                        #train_features.append(features.tolist())
                         train_cs_features.append(cs_feat.tolist())
                         train_spatial_features.append(spatial_feat.tolist())
-                        #train_pattern_features.append(pattern_feat.tolist())
-                        # pattern features of output slices
-                        train_pattern_features.append(self.gen_pattern_slices(series, pattern_feature,
-                                                                              i, (end_ix + 1)))
+                        train_pattern_features.append(pattern_feat)
                     else:
                         X_train.append(series.tolist()[start_ix:i])
                     Y_train.append(series.tolist()[i:(end_ix + 1)])
-                    #data, _ = self.generate_data(series, df, feature_df, i, (end_ix + 1))
-                    #Y_train.append(data.tolist())
-
-            '''elif i%test_step == 0:
-
-                if feat:
-                    data, cs_feat, spatial_feat, pattern_feat = self.generate_data(series, df, cs_feature, spatial_feature,
-                                                                                   pattern_feature, start_ix, i)
-                    X_test.append(data.tolist())
-                    #test_features.append(features.tolist())
-                    test_cs_features.append(cs_feat.tolist())
-                    test_spatial_features.append(spatial_feat.tolist())
-                    test_pattern_features.append(pattern_feat.tolist())
-                else:
-                    X_test.append(series.tolist()[start_ix:i])
-                Y_test.append(series.tolist()[i:(end_ix + 1)])'''
 
         # shuffle
         if randomize:
@@ -240,11 +237,8 @@ class Data:
             if feat:
                 X_train, Y_train, train_cs_features, train_spatial_features, train_pattern_features = \
                     shuffle(X_train, Y_train, train_cs_features, train_spatial_features, train_pattern_features, random_state=0)
-                '''X_test, Y_test, test_cs_features, test_spatial_features, test_pattern_features = \
-                    shuffle(X_test, Y_test, test_cs_features, test_spatial_features, test_pattern_features, random_state=0)'''
             else:
                 X_train, Y_train = shuffle(X_train, Y_train, random_state=0)
-                #X_test, Y_test = shuffle(X_test, Y_test, random_state=0)
 
         if feat:
             return X_train, Y_train, train_cs_features, train_spatial_features, train_pattern_features
@@ -261,50 +255,35 @@ class Data:
         :return:
         '''
 
-        train_dir = self._config['data']['train_path']
-        #val_dir = self._config['data']['val_path']
-        #n_lag_days = int(self._config['data']['input_horizon'])
         n_lag_days = input_horizon
-        n_lead_days = int(self._config['data']['output_horizon'])
         feat = self._config.getboolean('data', 'features')
 
         X_train = list()
         Y_train = list()
-        #X_test = list()
-        #Y_test = list()
         Train_cs_features = list()
-        #Test_cs_features = list()
         Train_spatial_features = list()
-        #Test_spatial_features = list()
         Train_pattern_features = list()
-        #Test_pattern_features = list()
 
         cs_feature, spatial_feature = self.read_and_process_features()
-        print(df.shape)
-        pattern_feature = self.gen_pattern_features(df)
-        print(pattern_feature.shape)
+        pattern_feature, weekday_feature, weekend_feature = self.gen_pattern_features(df)
+        print(pattern_feature.shape, weekday_feature.shape, weekend_feature.shape)
 
         for series_idx in range(df.shape[1] - 35): # subtract last 35 time feature columns
             if feat:
                 x_train, y_train, train_cs_features, train_spatial_features, train_pattern_features = \
                     self.split_series_train_test(df.iloc[:, series_idx], df, cs_feature, spatial_feature,
-                                                 pattern_feature, n_lag_days, randomize=randomize)
-                #Train_features.extend(train_features.tolist())
-                #Test_features.extend(test_features.tolist())
+                                                 pattern_feature, weekday_feature, weekend_feature,
+                                                 n_lag_days, randomize=randomize)
                 Train_cs_features.extend(train_cs_features)
-                #Test_cs_features.extend(test_cs_features)
                 Train_spatial_features.extend(train_spatial_features)
-                #Test_spatial_features.extend(test_spatial_features)
                 Train_pattern_features.extend(train_pattern_features)
-                #Test_pattern_features.extend(test_pattern_features)
             else:
                 x_train, y_train = self.split_series_train_test(df.iloc[:, series_idx],
-                                                                                df, cs_feature, spatial_feature,
-                                                                                pattern_feature, n_lag_days, randomize=randomize)
+                                                                df, cs_feature, spatial_feature, pattern_feature,
+                                                                weekday_feature, weekend_feature,
+                                                                n_lag_days, randomize=randomize)
             X_train.extend(x_train)
             Y_train.extend(y_train)
-            #X_test.extend(x_test)
-            #Y_test.extend(y_test)
 
             print(series_idx, sep=' ', end=' ')
             sys.stdout.flush()
@@ -312,85 +291,26 @@ class Data:
         # shuffle and save the data
         X_train = np.asarray(X_train)
         Y_train = np.asarray(Y_train)
-        #X_test = np.asarray(X_test)
-        #Y_test = np.asarray(Y_test)
 
         if randomize:
             if feat:
                 Train_cs_features = np.asarray(Train_cs_features)
-                #Test_cs_features = np.asarray(Test_cs_features)
                 Train_spatial_features = np.asarray(Train_spatial_features)
-                #Test_spatial_features = np.asarray(Test_spatial_features)
                 Train_pattern_features = np.asarray(Train_pattern_features)
-                #Test_pattern_features = np.asarray(Test_pattern_features)
 
                 X_train, Y_train, Train_cs_features, Train_spatial_features, \
                 Train_pattern_features = shuffle(X_train, Y_train, Train_cs_features, Train_spatial_features,
                                                  Train_pattern_features, random_state=0)
-
-                '''X_test, Y_test, Test_cs_features, Test_spatial_features, \
-                Test_pattern_features = shuffle(X_test, Y_test, Test_cs_features, Test_spatial_features,
-                                                Test_pattern_features, random_state=0)'''
             else:
                 X_train, Y_train = shuffle(X_train, Y_train, random_state=0)
-                #X_test, Y_test = shuffle(X_test, Y_test, random_state=0)
-
-        train_step = self._config['data']['train_window_size']
-        test_step = self._config['data']['test_window_size']
-
-        np.save(os.path.join(train_dir, 'X_train_lag_' + str(n_lag_days) +
-                             '_day_lead_' + str(n_lead_days) +
-                             '_day_train_step_' + str(train_step) +
-                             '_day_test_step_' + str(test_step) + '.npy'), X_train)
-
-        np.save(os.path.join(train_dir, 'Y_train_lag_' + str(n_lag_days) +
-                             '_day_lead_' + str(n_lead_days) +
-                             '_day_train_step_' + str(train_step) +
-                             '_day_test_step_' + str(test_step) + '.npy'), Y_train)
-
-        '''np.save(os.path.join(val_dir, 'X_test_lag_' + str(n_lag_days) +
-                             '_day_lead_' + str(n_lead_days) +
-                             '_day_train_step_' + str(train_step) +
-                             '_day_test_step_' + str(test_step) + '.npy'), X_test)
-
-        np.save(os.path.join(val_dir, 'Y_test_lag_' + str(n_lag_days) +
-                             '_day_lead_' + str(n_lead_days) +
-                             '_day_train_step_' + str(train_step) +
-                             '_day_test_step_' + str(test_step) + '.npy'), Y_test)'''
-
-        if feat:
-            np.save(os.path.join(train_dir, 'Train_cs_features_lag_' + str(n_lag_days) +
-                                 '_day_lead_' + str(n_lead_days) +
-                                 '_day_train_step_' + str(train_step) +
-                                 '_day_test_step_' + str(test_step) + '.npy'), Train_cs_features)
-
-            np.save(os.path.join(train_dir, 'Train_spatial_features_lag_' + str(n_lag_days) +
-                                 '_day_lead_' + str(n_lead_days) +
-                                 '_day_train_step_' + str(train_step) +
-                                 '_day_test_step_' + str(test_step) + '.npy'), Train_spatial_features)
-
-            np.save(os.path.join(train_dir, 'Train_pattern_features_lag_' + str(n_lag_days) +
-                                 '_day_lead_' + str(n_lead_days) +
-                                 '_day_train_step_' + str(train_step) +
-                                 '_day_test_step_' + str(test_step) + '.npy'), Train_pattern_features)
-
-            '''np.save(os.path.join(val_dir, 'Test_cs_features_lag_' + str(n_lag_days) +
-                                 '_day_lead_' + str(n_lead_days) +
-                                 '_day_train_step_' + str(train_step) +
-                                 '_day_test_step_' + str(test_step) + '.npy'), Test_cs_features)
-
-            np.save(os.path.join(val_dir, 'Test_spatial_features_lag_' + str(n_lag_days) +
-                                 '_day_lead_' + str(n_lead_days) +
-                                 '_day_train_step_' + str(train_step) +
-                                 '_day_test_step_' + str(test_step) + '.npy'), Test_spatial_features)
-
-            np.save(os.path.join(val_dir, 'Test_pattern_features_lag_' + str(n_lag_days) +
-                                 '_day_lead_' + str(n_lead_days) +
-                                 '_day_train_step_' + str(train_step) +
-                                 '_day_test_step_' + str(test_step) + '.npy'), Test_pattern_features)'''
 
         print('Finished Generating : ', str(n_lag_days))
         sys.stdout.flush()
+
+        if feat:
+            return X_train, Y_train, Train_cs_features, Train_spatial_features, Train_pattern_features
+        else:
+            return X_train, Y_train
 
     def generate_new_data(self, df, start, mid, stop):
 
@@ -477,76 +397,15 @@ class Data:
         :return: Train/Test split of data as numpy array
         '''
 
-        #input_horizon = int(self._config['data']['input_horizon'])
-        output_horizon = int(self._config['data']['output_horizon'])
-
-        train_step = self._config['data']['train_window_size']
-        test_step = self._config['data']['test_window_size']
-        train_path = self._config['data']['train_path']
-        #val_path = self._config['data']['val_path']
         feat = self._config.getboolean('data', 'features')
 
-        if not os.path.isfile(os.path.join(train_path, 'X_train_lag_' + str(input_horizon) +
-                                                     '_day_lead_' + str(output_horizon) +
-                                                     '_day_train_step_' + str(train_step) +
-                                                     '_day_test_step_' + str(test_step) + '.npy')):
-            self.generate_and_save_aggregated_train_test(df=df, input_horizon=input_horizon, randomize=randomize)
-            #self.gen_and_save_new_data(df)
-
-        X_train = np.load(os.path.join(train_path, 'X_train_lag_' + str(input_horizon) +
-                             '_day_lead_' + str(output_horizon) +
-                             '_day_train_step_' + str(train_step) +
-                             '_day_test_step_' + str(test_step) + '.npy'), mmap_mode='r')
-
-        Y_train = np.load(os.path.join(train_path, 'Y_train_lag_' + str(input_horizon) +
-                             '_day_lead_' + str(output_horizon) +
-                             '_day_train_step_' + str(train_step) +
-                             '_day_test_step_' + str(test_step) + '.npy'), mmap_mode='r')
-
-        '''X_test = np.load(os.path.join(val_path, 'X_test_lag_' + str(input_horizon) +
-                             '_day_lead_' + str(output_horizon) +
-                             '_day_train_step_' + str(train_step) +
-                             '_day_test_step_' + str(test_step) + '.npy'))
-
-        Y_test = np.load(os.path.join(val_path, 'Y_test_lag_' + str(input_horizon) +
-                             '_day_lead_' + str(output_horizon) +
-                             '_day_train_step_' + str(train_step) +
-                             '_day_test_step_' + str(test_step) + '.npy'))'''
-
         if feat:
-
-            Train_cs_features = np.load(os.path.join(train_path, 'Train_cs_features_lag_' + str(input_horizon) +
-                                                  '_day_lead_' + str(output_horizon) +
-                                                  '_day_train_step_' + str(train_step) +
-                                                  '_day_test_step_' + str(test_step) + '.npy'), mmap_mode='r')
-
-            Train_spatial_features = np.load(os.path.join(train_path, 'Train_spatial_features_lag_' + str(input_horizon) +
-                                                  '_day_lead_' + str(output_horizon) +
-                                                  '_day_train_step_' + str(train_step) +
-                                                  '_day_test_step_' + str(test_step) + '.npy'), mmap_mode='r')
-
-            Train_pattern_features = np.load(os.path.join(train_path, 'Train_pattern_features_lag_' + str(input_horizon) +
-                                                 '_day_lead_' + str(output_horizon) +
-                                                 '_day_train_step_' + str(train_step) +
-                                                 '_day_test_step_' + str(test_step) + '.npy'), mmap_mode='r')
-
-            '''Test_cs_features = np.load(os.path.join(val_path, 'Test_cs_features_lag_' + str(input_horizon) +
-                                                 '_day_lead_' + str(output_horizon) +
-                                                 '_day_train_step_' + str(train_step) +
-                                                 '_day_test_step_' + str(test_step) + '.npy'))
-
-            Test_spatial_features = np.load(os.path.join(val_path, 'Test_spatial_features_lag_' + str(input_horizon) +
-                                                 '_day_lead_' + str(output_horizon) +
-                                                 '_day_train_step_' + str(train_step) +
-                                                 '_day_test_step_' + str(test_step) + '.npy'))
-
-            Test_pattern_features = np.load(os.path.join(val_path, 'Test_pattern_features_lag_' + str(input_horizon) +
-                                                         '_day_lead_' + str(output_horizon) +
-                                                         '_day_train_step_' + str(train_step) +
-                                                         '_day_test_step_' + str(test_step) + '.npy'))'''
-
+            X_train, Y_train, Train_cs_features, Train_spatial_features, Train_pattern_features = \
+                self.generate_and_save_aggregated_train_test(df=df, input_horizon=input_horizon, randomize=randomize)
             return X_train, Y_train, Train_cs_features, Train_spatial_features, Train_pattern_features
         else:
+            X_train, Y_train = self.generate_and_save_aggregated_train_test(df=df, input_horizon=input_horizon,
+                                                                            randomize=randomize)
             return X_train, Y_train
 
 
