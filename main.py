@@ -81,7 +81,8 @@ if __name__ == '__main__':
                 Train_spatial_features = np.random.rand(X_train.shape[0], 2)
                 Test_spatial_features = np.random.rand(X_test.shape[0], 2)
             else:
-                X_train, Y_train, Train_cs_features, Train_spatial_features, Train_pattern_features = \
+                X_train, Y_train, Train_cs_features, Train_spatial_features, Train_pattern_features, \
+                Train_median_features, Train_q25_features, Train_q75_features = \
                     data_obj.split_train_test(df, ip_horizon)
         else:
             if dataset == 'demand':
@@ -89,24 +90,25 @@ if __name__ == '__main__':
             else:
                 X_train, Y_train = data_obj.split_train_test(df, ip_horizon)
             Train_cs_features = np.random.rand(X_train.shape[0], 2)
-            #Test_cs_features = np.random.rand(X_test.shape[0], 2)
             Train_spatial_features = np.random.rand(X_train.shape[0], 2)
-            #Test_spatial_features = np.random.rand(X_test.shape[0], 2)
             Train_pattern_features = np.random.rand(X_train.shape[0], 2)
-            #Test_pattern_features = np.random.rand(X_test.shape[0], 2)
+            Train_median_features = np.random.rand(X_train.shape[0], 2)
+            Train_q25_features = np.random.rand(X_train.shape[0], 2)
+            Train_q75_features = np.random.rand(X_train.shape[0], 2)
 
-        print(X_train.shape, Y_train.shape, Train_cs_features.shape,
-              Train_spatial_features.shape, Train_pattern_features.shape)
+        '''print(X_train.shape, Y_train.shape, Train_cs_features.shape,
+              Train_spatial_features.shape, Train_pattern_features.shape)'''
 
         if oversample:
             X_train, Y_train, Train_cs_features, Train_spatial_features = \
                 apply_mlsmote(config, X_train, Y_train, Train_cs_features, Train_spatial_features, n_sample)
 
-        print(X_train.shape, Y_train.shape, Train_cs_features.shape,
-              Train_spatial_features.shape, Train_pattern_features.shape)
+        '''print(X_train.shape, Y_train.shape, Train_cs_features.shape,
+              Train_spatial_features.shape, Train_pattern_features.shape)'''
 
         if train_:
-            train(config, X_train, Y_train, Train_cs_features, Train_spatial_features, Train_pattern_features, ip_horizon)
+            train(config, X_train, Y_train, Train_cs_features, Train_spatial_features, Train_pattern_features,
+                  Train_median_features, Train_q25_features, Train_q75_features, ip_horizon)
             #train(config, X_train, Y_train, X_test, Y_test, Train_cs_features, Test_cs_features,
             #      Train_spatial_features, Test_spatial_features, Train_pattern_features, Test_pattern_features, ip_horizon)
 
@@ -123,7 +125,8 @@ if __name__ == '__main__':
                     Feat_cs = [np.random.rand(X[0].shape[0], 2)] * 4
                     Feat_spatial = [np.random.rand(X[0].shape[0], 2)] * 4
                 else:
-                    X, Y, Feat_cs, Feat_spatial, Feat_pattern = generate_test_set(config, ip_horizon)
+                    X, Y, Feat_cs, Feat_spatial, Feat_pattern, Feat_median, Feat_q25, Feat_q75 = \
+                        generate_test_set(config, ip_horizon)
             else:
                 if dataset == 'demand':
                     X, Y = generate_test_set_(config)
@@ -132,11 +135,16 @@ if __name__ == '__main__':
                 Feat_cs = [np.random.rand(X[0].shape[0], 2)] * 5
                 Feat_spatial = [np.random.rand(X[0].shape[0], 2)] * 5
                 Feat_pattern = [np.random.rand(X[0].shape[0], 2)] * 5
+                Feat_median = [np.random.rand(X[0].shape[0], 2)] * 5
+                Feat_q25 = [np.random.rand(X[0].shape[0], 2)] * 5
+                Feat_q75 = [np.random.rand(X[0].shape[0], 2)] * 5
 
             for i in range(len(X)):
-                print(X[i].shape, Y[i].shape, Feat_cs[i].shape, Feat_spatial[i].shape, Feat_pattern[i].shape)
+                print(X[i].shape, Y[i].shape, Feat_cs[i].shape, Feat_spatial[i].shape, Feat_pattern[i].shape,
+                      Feat_median[i].shape, Feat_q25[i].shape, Feat_q75[i].shape)
 
-            evaluate_test_set(config, X, Y, Feat_cs, Feat_spatial, Feat_pattern, X_train.shape[0], ip_horizon)
+            evaluate_test_set(config, X, Y, Feat_cs, Feat_spatial, Feat_pattern, Feat_median, Feat_q25,
+                              Feat_q75, len(X_train), ip_horizon)
 
 
 

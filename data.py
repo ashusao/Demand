@@ -119,8 +119,7 @@ class Data:
 
         return cs_feature, spatial_feature
 
-    def group_and_scale_pattern_feat(self, df):
-        daily_usage = df.groupby([df.index.hour, df.index.minute]).sum()
+    def scale_pattern_feat(self, daily_usage):
         scaler = MinMaxScaler()
         scaled_features = scaler.fit_transform(daily_usage)
         scaled_df = pd.DataFrame(scaled_features, index=daily_usage.index, columns=daily_usage.columns)
@@ -128,14 +127,18 @@ class Data:
 
     def gen_pattern_features(self, df):
         train_df = df.loc[self._config['data']['train_start'] : self._config['data']['train_stop']].iloc[:, :-35]
-        scaled_df = self.group_and_scale_pattern_feat(train_df)
+        scaled_df = self.scale_pattern_feat(train_df.groupby([train_df.index.hour, train_df.index.minute]).sum())
 
         weekday_df = train_df.loc[(train_df.index.dayofweek >= 0) & (train_df.index.dayofweek <= 4)]
         weekend_df = train_df.loc[(train_df.index.dayofweek >= 5) & (train_df.index.dayofweek <= 6)]
-        scaled_weekday = self.group_and_scale_pattern_feat(weekday_df)
-        scaled_weekend = self.group_and_scale_pattern_feat(weekend_df)
+        scaled_weekday = self.scale_pattern_feat(weekday_df.groupby([weekday_df.index.hour, weekday_df.index.minute]).sum())
+        scaled_weekend = self.scale_pattern_feat(weekend_df.groupby([weekend_df.index.hour, weekend_df.index.minute]).sum())
 
-        return scaled_df, scaled_weekday, scaled_weekend
+        median_df = train_df.groupby([train_df.index.hour, train_df.index.minute]).median()
+        quant_25_df = train_df.groupby([train_df.index.hour, train_df.index.minute]).quantile(0.25)
+        quant_75_df = train_df.groupby([train_df.index.hour, train_df.index.minute]).quantile(0.75)
+
+        return scaled_df, scaled_weekday, scaled_weekend, median_df, quant_25_df, quant_75_df
 
     def generate_features(self, series, cs_feature, spatial_feature):
         idx = series.name
@@ -163,8 +166,8 @@ class Data:
         return pattern_feat
 
 
-    def generate_data(self, series, df, cs_feature, spatial_feature, pattern_feature,
-                      weekday_feature, weekend_feature, start, stop, start_y, stop_y):
+    def generate_data(self, series, df, cs_feature, spatial_feature, pattern_feature, weekday_feature, weekend_feature,
+                      median_feature, quant_25_feature, quant_75_feature, start, stop, start_y, stop_y):
 
         d = np.expand_dims(series.to_numpy()[start:stop], axis=1)
 
@@ -175,16 +178,20 @@ class Data:
         #pattern_feat = pattern_df[series.name]
 
         # pattern slices of y values
-        #pattern_feat = self.gen_pattern_slices(series, pattern_feature, start_y, stop_y)
-        pattern_feat = self.gen_weekday_weekend_slices(series, weekday_feature, weekend_feature, start_y, stop_y)
+        pattern_feat = self.gen_pattern_slices(series, pattern_feature, start_y, stop_y)
+        median_feat = self.gen_pattern_slices(series, median_feature, start_y, stop_y)
+        quant_25_feat = self.gen_pattern_slices(series, quant_25_feature, start_y, stop_y)
+        quant_75_feat = self.gen_pattern_slices(series, quant_75_feature, start_y, stop_y)
+        #pattern_feat = self.gen_weekday_weekend_slices(series, weekday_feature, weekend_feature, start_y, stop_y)
 
         time_feat = df.iloc[:, -35:].to_numpy()[start:stop]
         data = np.concatenate([d, time_feat], axis=1)
-        return data, cs_feat, spatial_feat, pattern_feat
+        return data, cs_feat, spatial_feat, pattern_feat, median_feat, quant_25_feat, quant_75_feat
 
     # @refrence: https://machinelearningmastery.com/how-to-develop-machine-learning-models-for-multivariate-multi-step-air-pollution-time-series-forecasting/
     def split_series_train_test(self, series, df, cs_feature, spatial_feature, pattern_feature,
-                                weekday_feature, weekend_feature, n_lag, randomize=True):
+                                weekday_feature, weekend_feature, median_feature, quant_25_feature,
+                                quant_75_feature, n_lag, randomize=True):
         '''
         :param series: pandas series containing Time series data
         :param randomize: if true shuffle the data
@@ -199,6 +206,9 @@ class Data:
         train_cs_features = list()
         train_spatial_features = list()
         train_pattern_features = list()
+        train_median_features = list()
+        train_quant_25_features = list()
+        train_quant_75_features = list()
 
         start_time = self._config['data']['train_start']
         split_time = self._config['data']['train_stop']
@@ -220,15 +230,17 @@ class Data:
                         (datetime.datetime.strptime(start_time, '%Y-%m-%d %H:%M:%S') + datetime.timedelta(days=8)):
 
                     if feat:
-                        data, cs_feat, spatial_feat, pattern_feat = self.generate_data(series, df, cs_feature,
-                                                                                       spatial_feature, pattern_feature,
-                                                                                       weekday_feature, weekend_feature,
-                                                                                       start_ix, i,
-                                                                                       i, (end_ix + 1))
+                        data, cs_feat, spatial_feat, pattern_feat, median_feat, quant_25_feat, quant_75_feat = \
+                            self.generate_data(series, df, cs_feature, spatial_feature, pattern_feature,
+                                                           weekday_feature, weekend_feature, median_feature,
+                                                           quant_25_feature, quant_75_feature, start_ix, i, i, (end_ix + 1))
                         X_train.append(data.tolist())
                         train_cs_features.append(cs_feat.tolist())
                         train_spatial_features.append(spatial_feat.tolist())
                         train_pattern_features.append(pattern_feat)
+                        train_median_features.append(median_feat)
+                        train_quant_25_features.append(quant_25_feat)
+                        train_quant_75_features.append(quant_75_feat)
                     else:
                         X_train.append(series.tolist()[start_ix:i])
                     Y_train.append(series.tolist()[i:(end_ix + 1)])
@@ -237,13 +249,16 @@ class Data:
         if randomize:
 
             if feat:
-                X_train, Y_train, train_cs_features, train_spatial_features, train_pattern_features = \
-                    shuffle(X_train, Y_train, train_cs_features, train_spatial_features, train_pattern_features, random_state=0)
+                X_train, Y_train, train_cs_features, train_spatial_features, train_pattern_features, \
+                train_median_features, train_quant_25_features, train_quant_75_features = \
+                    shuffle(X_train, Y_train, train_cs_features, train_spatial_features, train_pattern_features,
+                            train_median_features, train_quant_25_features, train_quant_75_features, random_state=0)
             else:
                 X_train, Y_train = shuffle(X_train, Y_train, random_state=0)
 
         if feat:
-            return X_train, Y_train, train_cs_features, train_spatial_features, train_pattern_features
+            return X_train, Y_train, train_cs_features, train_spatial_features, train_pattern_features, \
+                   train_median_features, train_quant_25_features, train_quant_75_features
         else:
             return X_train, Y_train
 
@@ -265,25 +280,36 @@ class Data:
         Train_cs_features = list()
         Train_spatial_features = list()
         Train_pattern_features = list()
+        Train_median_features = list()
+        Train_quant_25_features = list()
+        Train_quant_75_features = list()
+
 
         cs_feature, spatial_feature = self.read_and_process_features()
-        pattern_feature, weekday_feature, weekend_feature = self.gen_pattern_features(df)
+        pattern_feature, weekday_feature, weekend_feature, median_feature, \
+        quant_25_feature, quant_75_feature = self.gen_pattern_features(df)
         print(pattern_feature.shape, weekday_feature.shape, weekend_feature.shape)
 
         for series_idx in range(df.shape[1] - 35): # subtract last 35 time feature columns
         #for series_idx in range(5):
             if feat:
-                x_train, y_train, train_cs_features, train_spatial_features, train_pattern_features = \
+                x_train, y_train, train_cs_features, train_spatial_features, train_pattern_features, \
+                train_median_features, train_q25_features, train_q75_features = \
                     self.split_series_train_test(df.iloc[:, series_idx], df, cs_feature, spatial_feature,
-                                                 pattern_feature, weekday_feature, weekend_feature,
+                                                 pattern_feature, weekday_feature, weekend_feature, median_feature,
+                                                 quant_25_feature, quant_75_feature,
                                                  n_lag_days, randomize=randomize)
                 Train_cs_features.extend(train_cs_features)
                 Train_spatial_features.extend(train_spatial_features)
                 Train_pattern_features.extend(train_pattern_features)
+                Train_median_features.extend(train_median_features)
+                Train_quant_25_features.extend(train_q25_features)
+                Train_quant_75_features.extend(train_q75_features)
             else:
                 x_train, y_train = self.split_series_train_test(df.iloc[:, series_idx],
                                                                 df, cs_feature, spatial_feature, pattern_feature,
-                                                                weekday_feature, weekend_feature,
+                                                                weekday_feature, weekend_feature, median_feature,
+                                                                quant_25_feature, quant_75_feature,
                                                                 n_lag_days, randomize=randomize)
             X_train.extend(x_train)
             Y_train.extend(y_train)
@@ -292,18 +318,22 @@ class Data:
             sys.stdout.flush()
 
         # shuffle and save the data
-        X_train = np.asarray(X_train)
-        Y_train = np.asarray(Y_train)
+        #X_train = np.asarray(X_train)
+        #Y_train = np.asarray(Y_train)
 
         if randomize:
             if feat:
-                Train_cs_features = np.asarray(Train_cs_features)
-                Train_spatial_features = np.asarray(Train_spatial_features)
-                Train_pattern_features = np.asarray(Train_pattern_features)
+                #Train_cs_features = np.asarray(Train_cs_features)
+                #Train_spatial_features = np.asarray(Train_spatial_features)
+                #Train_pattern_features = np.asarray(Train_pattern_features)
+                #Train_median_features = np.asarray(Train_median_features)
+                #Train_quant_25_features = np.asarray(Train_quant_25_features)
+                #Train_quant_75_features = np.asarray(Train_quant_75_features)
 
-                X_train, Y_train, Train_cs_features, Train_spatial_features, \
-                Train_pattern_features = shuffle(X_train, Y_train, Train_cs_features, Train_spatial_features,
-                                                 Train_pattern_features, random_state=0)
+                X_train, Y_train, Train_cs_features, Train_spatial_features, Train_pattern_features, \
+                Train_median_features, Train_quant_25_features, Train_quant_75_features = \
+                    shuffle(X_train, Y_train, Train_cs_features, Train_spatial_features,Train_pattern_features,
+                            Train_median_features, Train_quant_25_features, Train_quant_75_features, random_state=0)
             else:
                 X_train, Y_train = shuffle(X_train, Y_train, random_state=0)
 
@@ -311,7 +341,8 @@ class Data:
         sys.stdout.flush()
 
         if feat:
-            return X_train, Y_train, Train_cs_features, Train_spatial_features, Train_pattern_features
+            return X_train, Y_train, Train_cs_features, Train_spatial_features, Train_pattern_features, \
+                   Train_median_features, Train_quant_25_features, Train_quant_75_features
         else:
             return X_train, Y_train
 
@@ -403,9 +434,11 @@ class Data:
         feat = self._config.getboolean('data', 'features')
 
         if feat:
-            X_train, Y_train, Train_cs_features, Train_spatial_features, Train_pattern_features = \
+            X_train, Y_train, Train_cs_features, Train_spatial_features, Train_pattern_features, Train_median_features,\
+            Train_quant_25_features, Train_quant_75_features = \
                 self.generate_and_save_aggregated_train_test(df=df, input_horizon=input_horizon, randomize=randomize)
-            return X_train, Y_train, Train_cs_features, Train_spatial_features, Train_pattern_features
+            return X_train, Y_train, Train_cs_features, Train_spatial_features, Train_pattern_features, \
+                   Train_median_features, Train_quant_25_features, Train_quant_75_features
         else:
             X_train, Y_train = self.generate_and_save_aggregated_train_test(df=df, input_horizon=input_horizon,
                                                                             randomize=randomize)

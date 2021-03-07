@@ -13,14 +13,17 @@ from sklearn.metrics import precision_recall_fscore_support
 from sklearn.utils import shuffle
 
 
-def split_test_set(config, data_obj, series, df, cs_feature, spatial_feature, pattern_feature,
-                   weekday_feature, weekend_feature, start_date, stop_date, n_lag):
+def split_test_set(config, data_obj, series, df, cs_feature, spatial_feature, pattern_feature, weekday_feature,
+                   weekend_feature, median_feature, q25_feature, q75_feature, start_date, stop_date, n_lag):
 
     X_test = list()
     Y_test = list()
     test_features_cs = list()
     test_features_spatial = list()
     test_features_pattern = list()
+    test_features_median = list()
+    test_features_q25 = list()
+    test_features_q75 = list()
 
     test_step = int(config['data']['test_window_size'])
     #n_lag = int(config['data']['input_horizon'])  # *96 when lag value is in days
@@ -39,23 +42,29 @@ def split_test_set(config, data_obj, series, df, cs_feature, spatial_feature, pa
                 (series.index[end_ix] <= datetime.datetime.strptime(stop_date, '%Y-%m-%d %H:%M:%S')):
 
             if feat:
-                data, features_cs, features_spatial, features_pattern = data_obj.generate_data(series, df, cs_feature,
-                                                                             spatial_feature, pattern_feature,
-                                                                             weekday_feature, weekend_feature,
-                                                                                start_ix, i, i, (end_ix + 1))
+                data, features_cs, features_spatial, features_pattern, features_median, features_q25, features_q75 = \
+                    data_obj.generate_data(series, df, cs_feature, spatial_feature, pattern_feature,
+                                           weekday_feature, weekend_feature, median_feature, q25_feature, q75_feature,
+                                           start_ix, i, i, (end_ix + 1))
                 X_test.append(data.tolist())
                 test_features_cs.append(features_cs.tolist())
                 test_features_spatial.append(features_spatial.tolist())
                 test_features_pattern.append(features_pattern)
+                test_features_median.append(features_median)
+                test_features_q25.append(features_q25)
+                test_features_q75.append(features_q75)
             else:
                 X_test.append(series.tolist()[start_ix:i])
             Y_test.append(series.tolist()[i:(end_ix + 1)])
 
     if feat:
-        X_test, Y_test, test_features_cs, test_features_spatial, test_features_pattern = \
-            shuffle(X_test, Y_test, test_features_cs, test_features_spatial, test_features_pattern, random_state=0)
+        X_test, Y_test, test_features_cs, test_features_spatial, test_features_pattern, test_features_median,\
+            test_features_q25, test_features_q75 = \
+            shuffle(X_test, Y_test, test_features_cs, test_features_spatial, test_features_pattern,
+                    test_features_median, test_features_q25, test_features_q75, random_state=0)
         return np.array(X_test), np.array(Y_test), np.array(test_features_cs), \
-               np.array(test_features_spatial), np.array(test_features_pattern)
+               np.array(test_features_spatial), np.array(test_features_pattern), np.array(test_features_median), \
+               np.array(test_features_q25), np.array(test_features_q75)
     else:
         X_test, Y_test = shuffle(X_test, Y_test, random_state=0)
         return np.array(X_test), np.array(Y_test)
@@ -71,7 +80,8 @@ def generate_and_save(config, folder_list, input_horizon):
     data_obj = Data()
     df = data_obj.read_tsv('aug_dec_no_filter.tsv', start, stop)
     cs_feature, spatial_feature = data_obj.read_and_process_features()
-    pattern_feature, weekday_feature, weekend_feature = data_obj.gen_pattern_features(df=df)
+    pattern_feature, weekday_feature, weekend_feature, median_feature, \
+    quant_25_feature, quant_75_feature = data_obj.gen_pattern_features(df=df)
 
     for i, val in enumerate(folder_list):
         X = list()
@@ -79,20 +89,29 @@ def generate_and_save(config, folder_list, input_horizon):
         feat_cs = list()
         feat_spatial = list()
         feat_pattern = list()
+        feat_median = list()
+        feat_q25 = list()
+        feat_q75 = list()
         start_date = config['test']['test' + str(i+1) + '_start']
         stop_date = config['test']['test' + str(i+1) + '_stop']
 
         for series_idx in range(df.shape[1] - 35):
+        #for series_idx in range(5):
             if feat:
-                x, y, f_cs, f_spatial, f_pattern = split_test_set(config, data_obj, df.iloc[:, series_idx], df, cs_feature,
-                                                                 spatial_feature, pattern_feature, weekday_feature, weekend_feature,
+                x, y, f_cs, f_spatial, f_pattern, f_median, f_q25, f_q75 = split_test_set(config, data_obj, df.iloc[:, series_idx], df, cs_feature,
+                                                                 spatial_feature, pattern_feature, weekday_feature, weekend_feature, median_feature,
+                                                                 quant_25_feature, quant_75_feature,
                                                                   start_date, stop_date, input_horizon)
                 feat_cs.extend(f_cs)
                 feat_spatial.extend(f_spatial)
                 feat_pattern.extend(f_pattern)
+                feat_median.extend(f_median)
+                feat_q25.extend(f_q25)
+                feat_q75.extend(f_q75)
             else:
                 x, y = split_test_set(config, data_obj, df.iloc[:, series_idx], df, cs_feature,
                                       spatial_feature, pattern_feature, weekday_feature, weekend_feature,
+                                      median_feature, quant_25_feature, quant_75_feature,
                                       start_date, stop_date, input_horizon)
 
             X.extend(x)
@@ -108,6 +127,9 @@ def generate_and_save(config, folder_list, input_horizon):
             np.save(os.path.join(test_path, folder_list[i], 'Cs_lag_' + str(input_horizon) + '.npy'), np.array(feat_cs))
             np.save(os.path.join(test_path, folder_list[i], 'Spatial_lag_' + str(input_horizon) + '.npy'), np.array(feat_spatial))
             np.save(os.path.join(test_path, folder_list[i], 'Pattern_lag_' + str(input_horizon) + '.npy'), np.array(feat_pattern))
+            np.save(os.path.join(test_path, folder_list[i], 'Median_lag_' + str(input_horizon) + '.npy'), np.array(feat_median))
+            np.save(os.path.join(test_path, folder_list[i], 'Q25_lag_' + str(input_horizon) + '.npy'), np.array(feat_q25))
+            np.save(os.path.join(test_path, folder_list[i], 'Q75_lag_' + str(input_horizon) + '.npy'), np.array(feat_q75))
 
         print('Finished test set ', str(i+1))
 
@@ -181,6 +203,9 @@ def generate_test_set(config, input_horizon):
     Feat_cs = list()
     Feat_spatial = list()
     Feat_pattern = list()
+    Feat_median = list()
+    Feat_q25 = list()
+    Feat_q75 = list()
 
     if feat:
         folder_list = ['test1_data_time', 'test2_data_time', 'test3_data_time', 'test4_data_time', 'test5_data_time']
@@ -199,13 +224,16 @@ def generate_test_set(config, input_horizon):
             Feat_cs.append(np.load(os.path.join(test_path, folder_list[i], 'Cs_lag_' + str(input_horizon) + '.npy'), mmap_mode='r'))
             Feat_spatial.append(np.load(os.path.join(test_path, folder_list[i], 'Spatial_lag_' + str(input_horizon) + '.npy'), mmap_mode='r'))
             Feat_pattern.append(np.load(os.path.join(test_path, folder_list[i], 'Pattern_lag_' + str(input_horizon) + '.npy'), mmap_mode='r'))
+            Feat_median.append(np.load(os.path.join(test_path, folder_list[i], 'Median_lag_' + str(input_horizon) + '.npy'), mmap_mode='r'))
+            Feat_q25.append(np.load(os.path.join(test_path, folder_list[i], 'Q25_lag_' + str(input_horizon) + '.npy'), mmap_mode='r'))
+            Feat_q75.append(np.load(os.path.join(test_path, folder_list[i], 'Q75_lag_' + str(input_horizon) + '.npy'), mmap_mode='r'))
     if feat:
-        return X, Y, Feat_cs, Feat_spatial, Feat_pattern
+        return X, Y, Feat_cs, Feat_spatial, Feat_pattern, Feat_median, Feat_q25, Feat_q75
     else:
         return X, Y
 
 
-def evaluate_test_set(config, X, Y, Feat_cs, Feat_spatial, Feat_pattern, n_train, input_horizon):
+def evaluate_test_set(config, X, Y, Feat_cs, Feat_spatial, Feat_pattern, Feat_median, Feat_q25, Feat_q75, n_train, input_horizon):
 
     prec_0 = list()
     prec_1 = list()
@@ -221,7 +249,8 @@ def evaluate_test_set(config, X, Y, Feat_cs, Feat_spatial, Feat_pattern, n_train
 
 
     for i in range(len(X)):
-        pred, target = evaluate(config, X[i], Y[i], Feat_cs[i], Feat_spatial[i], Feat_pattern[i], n_train, input_horizon)
+        pred, target = evaluate(config, X[i], Y[i], Feat_cs[i], Feat_spatial[i], Feat_pattern[i], Feat_median[i],
+                                Feat_q25[i], Feat_q75[i], n_train, input_horizon)
         prec, rec, th = precision_recall_curve(target.ravel(), pred.ravel())
         print('threshold: ')
         print(th)
