@@ -270,8 +270,8 @@ class Data:
         pattern_feature, weekday_feature, weekend_feature = self.gen_pattern_features(df)
         print(pattern_feature.shape, weekday_feature.shape, weekend_feature.shape)
 
-        #for series_idx in range(df.shape[1] - 35): # subtract last 35 time feature columns
-        for series_idx in range(5):
+        for series_idx in range(df.shape[1] - 35): # subtract last 35 time feature columns
+        #for series_idx in range(5):
             if feat:
                 x_train, y_train, train_cs_features, train_spatial_features, train_pattern_features = \
                     self.split_series_train_test(df.iloc[:, series_idx], df, cs_feature, spatial_feature,
