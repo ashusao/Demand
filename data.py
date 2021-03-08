@@ -175,7 +175,7 @@ class Data:
         d = np.expand_dims(series.to_numpy()[start:stop], axis=1)
 
         # genertate station and spatial features
-        cs_feat, spatial_feat = self.generate_features(series, cs_feature, spatial_feature)
+        #cs_feat, spatial_feat = self.generate_features(series, cs_feature, spatial_feature)
 
         # 1 day series pattern
         #pattern_feat = pattern_df[series.name]
@@ -189,7 +189,7 @@ class Data:
 
         time_feat = df.iloc[:, -35:].to_numpy()[start:stop]
         data = np.concatenate([d, time_feat], axis=1)
-        return data, cs_feat, spatial_feat, pattern_feat, median_feat, quant_25_feat, quant_75_feat
+        return data, pattern_feat, median_feat, quant_25_feat, quant_75_feat
 
     # @refrence: https://machinelearningmastery.com/how-to-develop-machine-learning-models-for-multivariate-multi-step-air-pollution-time-series-forecasting/
     def split_series_train_test(self, idx, df, cs_feature, spatial_feature, pattern_feature,
@@ -235,7 +235,7 @@ class Data:
                         (datetime.datetime.strptime(start_time, '%Y-%m-%d %H:%M:%S') + datetime.timedelta(days=8)):
 
                     if feat:
-                        data, cs_feat, spatial_feat, pattern_feat, median_feat, quant_25_feat, quant_75_feat = \
+                        data, pattern_feat, median_feat, quant_25_feat, quant_75_feat = \
                             self.generate_data(series, df, cs_feature, spatial_feature, pattern_feature,
                                                            weekday_feature, weekend_feature, median_feature,
                                                            quant_25_feature, quant_75_feature, start_ix, i, i, (end_ix + 1))

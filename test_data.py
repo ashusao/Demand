@@ -45,7 +45,7 @@ def split_test_set(idx, config, data_obj, df, cs_feature, spatial_feature, patte
                 (series.index[end_ix] <= datetime.datetime.strptime(stop_date, '%Y-%m-%d %H:%M:%S')):
 
             if feat:
-                data, features_cs, features_spatial, features_pattern, features_median, features_q25, features_q75 = \
+                data, features_pattern, features_median, features_q25, features_q75 = \
                     data_obj.generate_data(series, df, cs_feature, spatial_feature, pattern_feature,
                                            weekday_feature, weekend_feature, median_feature, q25_feature, q75_feature,
                                            start_ix, i, i, (end_ix + 1))
