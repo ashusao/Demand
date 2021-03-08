@@ -224,14 +224,23 @@ def evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, Te
     :return:
     '''
 
-    Y_test = torch.from_numpy(Y_test).float()
+    '''Y_test = torch.from_numpy(Y_test).float()
     X_test = torch.from_numpy(X_test).float()
     Test_cs_features = torch.from_numpy(Test_cs_features).float()
     Test_spatial_features = torch.from_numpy(Test_spatial_features).float()
     Test_pattern_features = torch.from_numpy(Test_pattern_features).float()
     Test_median_features = torch.from_numpy(Test_median_features).float()
     Test_q25_features = torch.from_numpy(Test_q25_features).float()
-    Test_q75_features = torch.from_numpy(Test_q75_features).float()
+    Test_q75_features = torch.from_numpy(Test_q75_features).float()'''
+
+    Y_test = torch.Tensor(Y_test)
+    X_test = torch.Tensor(X_test)
+    Test_cs_features = torch.Tensor(Test_cs_features)
+    Test_spatial_features = torch.Tensor(Test_spatial_features)
+    Test_pattern_features = torch.Tensor(Test_pattern_features)
+    Test_median_features = torch.Tensor(Test_median_features)
+    Test_q25_features = torch.Tensor(Test_q25_features)
+    Test_q75_features = torch.Tensor(Test_q75_features)
 
     if len(X_test.shape) == 2:
         X_test = X_test.unsqueeze(2)  # add 3rd dimension when not one hot encoded and no additional features

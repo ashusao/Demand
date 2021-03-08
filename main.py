@@ -139,9 +139,9 @@ if __name__ == '__main__':
                 Feat_q25 = [np.random.rand(X[0].shape[0], 2)] * 5
                 Feat_q75 = [np.random.rand(X[0].shape[0], 2)] * 5
 
-            for i in range(len(X)):
+            '''for i in range(len(X)):
                 print(X[i].shape, Y[i].shape, Feat_cs[i].shape, Feat_spatial[i].shape, Feat_pattern[i].shape,
-                      Feat_median[i].shape, Feat_q25[i].shape, Feat_q75[i].shape)
+                      Feat_median[i].shape, Feat_q25[i].shape, Feat_q75[i].shape)'''
 
             evaluate_test_set(config, X, Y, Feat_cs, Feat_spatial, Feat_pattern, Feat_median, Feat_q25,
                               Feat_q75, len(X_train), ip_horizon)

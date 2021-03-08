@@ -70,70 +70,65 @@ def split_test_set(config, data_obj, series, df, cs_feature, spatial_feature, pa
         return np.array(X_test), np.array(Y_test)
 
 
-def generate_and_save(config, folder_list, input_horizon):
+def generate_and_save(config, i, data_obj,  df, cs_feature, spatial_feature, pattern_feature, weekday_feature,
+                      weekend_feature, median_feature, quant_25_feature, quant_75_feature, input_horizon):
     #input_horizon = int(config['data']['input_horizon'])
     test_path = config['data']['test_path']
     feat = config.getboolean('data', 'features')
-    start = config['test']['start']
-    stop = config['test']['test5_stop']
 
-    data_obj = Data()
-    df = data_obj.read_tsv('aug_dec_no_filter.tsv', start, stop)
-    cs_feature, spatial_feature = data_obj.read_and_process_features()
-    pattern_feature, weekday_feature, weekend_feature, median_feature, \
-    quant_25_feature, quant_75_feature = data_obj.gen_pattern_features(df=df)
+    #for i, val in enumerate(folder_list):
+    X = list()
+    Y = list()
+    feat_cs = list()
+    feat_spatial = list()
+    feat_pattern = list()
+    feat_median = list()
+    feat_q25 = list()
+    feat_q75 = list()
+    start_date = config['test']['test' + str(i+1) + '_start']
+    stop_date = config['test']['test' + str(i+1) + '_stop']
 
-    for i, val in enumerate(folder_list):
-        X = list()
-        Y = list()
-        feat_cs = list()
-        feat_spatial = list()
-        feat_pattern = list()
-        feat_median = list()
-        feat_q25 = list()
-        feat_q75 = list()
-        start_date = config['test']['test' + str(i+1) + '_start']
-        stop_date = config['test']['test' + str(i+1) + '_stop']
-
-        for series_idx in range(df.shape[1] - 35):
-        #for series_idx in range(5):
-            if feat:
-                x, y, f_cs, f_spatial, f_pattern, f_median, f_q25, f_q75 = split_test_set(config, data_obj, df.iloc[:, series_idx], df, cs_feature,
-                                                                 spatial_feature, pattern_feature, weekday_feature, weekend_feature, median_feature,
-                                                                 quant_25_feature, quant_75_feature,
-                                                                  start_date, stop_date, input_horizon)
-                feat_cs.extend(f_cs)
-                feat_spatial.extend(f_spatial)
-                feat_pattern.extend(f_pattern)
-                feat_median.extend(f_median)
-                feat_q25.extend(f_q25)
-                feat_q75.extend(f_q75)
-            else:
-                x, y = split_test_set(config, data_obj, df.iloc[:, series_idx], df, cs_feature,
-                                      spatial_feature, pattern_feature, weekday_feature, weekend_feature,
-                                      median_feature, quant_25_feature, quant_75_feature,
-                                      start_date, stop_date, input_horizon)
-
-            X.extend(x)
-            Y.extend(y)
-
-            print(series_idx, sep=' ', end=' ')
-            sys.stdout.flush()
-
-        np.save(os.path.join(test_path, folder_list[i], 'X_lag_' + str(input_horizon) + '.npy'), np.array(X))
-        np.save(os.path.join(test_path, folder_list[i], 'Y_lag_' + str(input_horizon) + '.npy'), np.array(Y))
-
+    for series_idx in range(df.shape[1] - 35):
+    #for series_idx in range(5):
         if feat:
-            np.save(os.path.join(test_path, folder_list[i], 'Cs_lag_' + str(input_horizon) + '.npy'), np.array(feat_cs))
-            np.save(os.path.join(test_path, folder_list[i], 'Spatial_lag_' + str(input_horizon) + '.npy'), np.array(feat_spatial))
-            np.save(os.path.join(test_path, folder_list[i], 'Pattern_lag_' + str(input_horizon) + '.npy'), np.array(feat_pattern))
-            np.save(os.path.join(test_path, folder_list[i], 'Median_lag_' + str(input_horizon) + '.npy'), np.array(feat_median))
-            np.save(os.path.join(test_path, folder_list[i], 'Q25_lag_' + str(input_horizon) + '.npy'), np.array(feat_q25))
-            np.save(os.path.join(test_path, folder_list[i], 'Q75_lag_' + str(input_horizon) + '.npy'), np.array(feat_q75))
+            x, y, f_cs, f_spatial, f_pattern, f_median, f_q25, f_q75 = split_test_set(config, data_obj, df.iloc[:, series_idx], df, cs_feature,
+                                                             spatial_feature, pattern_feature, weekday_feature, weekend_feature, median_feature,
+                                                             quant_25_feature, quant_75_feature,
+                                                              start_date, stop_date, input_horizon)
+            feat_cs.extend(f_cs)
+            feat_spatial.extend(f_spatial)
+            feat_pattern.extend(f_pattern)
+            feat_median.extend(f_median)
+            feat_q25.extend(f_q25)
+            feat_q75.extend(f_q75)
+        else:
+            x, y = split_test_set(config, data_obj, df.iloc[:, series_idx], df, cs_feature,
+                                  spatial_feature, pattern_feature, weekday_feature, weekend_feature,
+                                  median_feature, quant_25_feature, quant_75_feature,
+                                  start_date, stop_date, input_horizon)
 
-        print('Finished test set ', str(i+1))
+        X.extend(x)
+        Y.extend(y)
 
-    print('Finished Lag:', str(input_horizon))
+        print(series_idx, sep=' ', end=' ')
+        sys.stdout.flush()
+
+    '''np.save(os.path.join(test_path, folder_list[i], 'X_lag_' + str(input_horizon) + '.npy'), np.array(X))
+    np.save(os.path.join(test_path, folder_list[i], 'Y_lag_' + str(input_horizon) + '.npy'), np.array(Y))
+
+    if feat:
+        np.save(os.path.join(test_path, folder_list[i], 'Cs_lag_' + str(input_horizon) + '.npy'), np.array(feat_cs))
+        np.save(os.path.join(test_path, folder_list[i], 'Spatial_lag_' + str(input_horizon) + '.npy'), np.array(feat_spatial))
+        np.save(os.path.join(test_path, folder_list[i], 'Pattern_lag_' + str(input_horizon) + '.npy'), np.array(feat_pattern))
+        np.save(os.path.join(test_path, folder_list[i], 'Median_lag_' + str(input_horizon) + '.npy'), np.array(feat_median))
+        np.save(os.path.join(test_path, folder_list[i], 'Q25_lag_' + str(input_horizon) + '.npy'), np.array(feat_q25))
+        np.save(os.path.join(test_path, folder_list[i], 'Q75_lag_' + str(input_horizon) + '.npy'), np.array(feat_q75))'''
+
+    print('Finished test set ', str(i+1))
+    if feat:
+        return X, Y, feat_cs, feat_spatial, feat_pattern, feat_median, feat_q25, feat_q75
+    else:
+        return X, Y
 
 
 def generate_new_data(df, start, mid, stop):
@@ -197,6 +192,14 @@ def generate_test_set(config, input_horizon):
     #input_horizon = int(config['data']['input_horizon'])
     test_path = config['data']['test_path']
     feat = config.getboolean('data', 'features')
+    start = config['test']['start']
+    stop = config['test']['test5_stop']
+
+    data_obj = Data()
+    df = data_obj.read_tsv('aug_dec_no_filter.tsv', start, stop)
+    cs_feature, spatial_feature = data_obj.read_and_process_features()
+    pattern_feature, weekday_feature, weekend_feature, median_feature, \
+    quant_25_feature, quant_75_feature = data_obj.gen_pattern_features(df=df)
 
     X = list()
     Y = list()
@@ -212,7 +215,7 @@ def generate_test_set(config, input_horizon):
     else:
         folder_list = ['test1_data', 'test2_data', 'test3_data', 'test4_data', 'test5_data']
 
-    if not os.path.isfile(os.path.join(test_path, folder_list[0], 'X_lag_' + str(input_horizon) + '.npy')):
+    '''if not os.path.isfile(os.path.join(test_path, folder_list[0], 'X_lag_' + str(input_horizon) + '.npy')):
         generate_and_save(config, folder_list, input_horizon)
 
     # loop thorugh folder, load npy and appent to X list
@@ -226,7 +229,32 @@ def generate_test_set(config, input_horizon):
             Feat_pattern.append(np.load(os.path.join(test_path, folder_list[i], 'Pattern_lag_' + str(input_horizon) + '.npy'), mmap_mode='r'))
             Feat_median.append(np.load(os.path.join(test_path, folder_list[i], 'Median_lag_' + str(input_horizon) + '.npy'), mmap_mode='r'))
             Feat_q25.append(np.load(os.path.join(test_path, folder_list[i], 'Q25_lag_' + str(input_horizon) + '.npy'), mmap_mode='r'))
-            Feat_q75.append(np.load(os.path.join(test_path, folder_list[i], 'Q75_lag_' + str(input_horizon) + '.npy'), mmap_mode='r'))
+            Feat_q75.append(np.load(os.path.join(test_path, folder_list[i], 'Q75_lag_' + str(input_horizon) + '.npy'), mmap_mode='r'))'''
+
+    for i, val in enumerate(folder_list):
+        if feat:
+            X_, Y_, cs, spatial, pattern, median, q25, q75 = generate_and_save(config, i, data_obj,  df, cs_feature,
+                                                                               spatial_feature, pattern_feature,
+                                                                               weekday_feature,
+                                                                               weekend_feature, median_feature,
+                                                                               quant_25_feature, quant_75_feature,
+                                                                               input_horizon)
+            X.append(X_)
+            Y.append(Y_)
+            Feat_cs.append(cs)
+            Feat_spatial.append(spatial)
+            Feat_pattern.append(pattern)
+            Feat_median.append(median)
+            Feat_q25.append(q25)
+            Feat_q75.append(q75)
+        else:
+            X_, Y_= generate_and_save(config, i, data_obj, df, cs_feature, spatial_feature, pattern_feature,
+                                      weekday_feature, weekend_feature, median_feature,
+                                      quant_25_feature, quant_75_feature, input_horizon)
+            X.append(X_)
+            Y.append(Y_)
+
+    print('Finished Lag:', str(input_horizon))
     if feat:
         return X, Y, Feat_cs, Feat_spatial, Feat_pattern, Feat_median, Feat_q25, Feat_q75
     else:
@@ -271,7 +299,7 @@ def evaluate_test_set(config, X, Y, Feat_cs, Feat_spatial, Feat_pattern, Feat_me
         f1_0.append(f1[0])
         f1_1.append(f1[1])
 
-        result_row = [n_train, X[i].shape[0], input_horizon, output_horizon, th[ix],
+        result_row = [n_train, len(X[i]), input_horizon, output_horizon, th[ix],
                       precision[0], precision[1], recall[0], recall[1], f1[0], f1[1], comment]
 
         result_file = os.path.join(result_path, 'test_set_' + str(i+1) + '.csv')
@@ -298,7 +326,7 @@ def evaluate_test_set(config, X, Y, Feat_cs, Feat_spatial, Feat_pattern, Feat_me
     f1_0 = np.array(f1_0)
     f1_1 = np.array(f1_1)
 
-    result_row = [n_train, X[i].shape[0], input_horizon, output_horizon, np.mean(prec_0), np.mean(prec_1),
+    result_row = [n_train, len(X[i]), input_horizon, output_horizon, np.mean(prec_0), np.mean(prec_1),
                   np.mean(rec_0), np.mean(rec_1), np.mean(f1_0), np.mean(f1_1), comment]
 
     if not os.path.isfile(result_file):
