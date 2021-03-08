@@ -6,6 +6,9 @@ import sys
 from configparser import ConfigParser
 from sklearn.utils import shuffle
 from sklearn.preprocessing import MinMaxScaler
+import multiprocessing
+from functools import partial
+import time
 
 class Data:
 
@@ -189,7 +192,7 @@ class Data:
         return data, cs_feat, spatial_feat, pattern_feat, median_feat, quant_25_feat, quant_75_feat
 
     # @refrence: https://machinelearningmastery.com/how-to-develop-machine-learning-models-for-multivariate-multi-step-air-pollution-time-series-forecasting/
-    def split_series_train_test(self, series, df, cs_feature, spatial_feature, pattern_feature,
+    def split_series_train_test(self, idx, df, cs_feature, spatial_feature, pattern_feature,
                                 weekday_feature, weekend_feature, median_feature, quant_25_feature,
                                 quant_75_feature, n_lag, randomize=True):
         '''
@@ -215,6 +218,8 @@ class Data:
         train_step = int(self._config['data']['train_window_size'])
         n_lead = int(self._config['data']['output_horizon']) # *96 when lead is in days
         feat = self._config.getboolean('data', 'features')
+
+        series = df.iloc[:, idx]
 
         for i in range(n_lag, series.size):
             end_ix = i + (n_lead - 1)
@@ -256,6 +261,9 @@ class Data:
             else:
                 X_train, Y_train = shuffle(X_train, Y_train, random_state=0)
 
+        print(idx, sep=' ', end=' ')
+        sys.stdout.flush()
+
         if feat:
             return X_train, Y_train, train_cs_features, train_spatial_features, train_pattern_features, \
                    train_median_features, train_quant_25_features, train_quant_75_features
@@ -274,6 +282,7 @@ class Data:
 
         n_lag_days = input_horizon
         feat = self._config.getboolean('data', 'features')
+        n_core = int(self._config['data']['n_core'])
 
         X_train = list()
         Y_train = list()
@@ -284,52 +293,38 @@ class Data:
         Train_quant_25_features = list()
         Train_quant_75_features = list()
 
-
         cs_feature, spatial_feature = self.read_and_process_features()
         pattern_feature, weekday_feature, weekend_feature, median_feature, \
         quant_25_feature, quant_75_feature = self.gen_pattern_features(df)
         print(pattern_feature.shape, weekday_feature.shape, weekend_feature.shape)
 
-        for series_idx in range(df.shape[1] - 35): # subtract last 35 time feature columns
-        #for series_idx in range(5):
+        #series_param = range(10)
+        series_param = range(df.shape[1] - 35)
+        pool = multiprocessing.Pool(processes=n_core)
+        multi_func = partial(self.split_series_train_test, df=df, cs_feature=cs_feature, spatial_feature=spatial_feature,
+                             pattern_feature=pattern_feature, weekday_feature=weekday_feature, weekend_feature=weekend_feature,
+                             median_feature=median_feature, quant_25_feature=quant_25_feature, quant_75_feature=quant_75_feature,
+                             n_lag=n_lag_days, randomize=randomize)
+        result_list = pool.map(multi_func, series_param)
+        pool.close()
+        pool.join()
+        #print(len(result_list[0]), len(result_list[0][0]), len(result_list[0][2][0]))
+
+        for i in range(len(result_list)):
+            x_train = result_list[i][0]
+            y_train = result_list[i][1]
             if feat:
-                x_train, y_train, train_cs_features, train_spatial_features, train_pattern_features, \
-                train_median_features, train_q25_features, train_q75_features = \
-                    self.split_series_train_test(df.iloc[:, series_idx], df, cs_feature, spatial_feature,
-                                                 pattern_feature, weekday_feature, weekend_feature, median_feature,
-                                                 quant_25_feature, quant_75_feature,
-                                                 n_lag_days, randomize=randomize)
-                Train_cs_features.extend(train_cs_features)
-                Train_spatial_features.extend(train_spatial_features)
-                Train_pattern_features.extend(train_pattern_features)
-                Train_median_features.extend(train_median_features)
-                Train_quant_25_features.extend(train_q25_features)
-                Train_quant_75_features.extend(train_q75_features)
-            else:
-                x_train, y_train = self.split_series_train_test(df.iloc[:, series_idx],
-                                                                df, cs_feature, spatial_feature, pattern_feature,
-                                                                weekday_feature, weekend_feature, median_feature,
-                                                                quant_25_feature, quant_75_feature,
-                                                                n_lag_days, randomize=randomize)
+                Train_cs_features.extend(result_list[i][2])
+                Train_spatial_features.extend(result_list[i][3])
+                Train_pattern_features.extend(result_list[i][4])
+                Train_median_features.extend(result_list[i][5])
+                Train_quant_25_features.extend(result_list[i][6])
+                Train_quant_75_features.extend(result_list[i][7])
             X_train.extend(x_train)
             Y_train.extend(y_train)
 
-            print(series_idx, sep=' ', end=' ')
-            sys.stdout.flush()
-
-        # shuffle and save the data
-        #X_train = np.asarray(X_train)
-        #Y_train = np.asarray(Y_train)
-
         if randomize:
             if feat:
-                #Train_cs_features = np.asarray(Train_cs_features)
-                #Train_spatial_features = np.asarray(Train_spatial_features)
-                #Train_pattern_features = np.asarray(Train_pattern_features)
-                #Train_median_features = np.asarray(Train_median_features)
-                #Train_quant_25_features = np.asarray(Train_quant_25_features)
-                #Train_quant_75_features = np.asarray(Train_quant_75_features)
-
                 X_train, Y_train, Train_cs_features, Train_spatial_features, Train_pattern_features, \
                 Train_median_features, Train_quant_25_features, Train_quant_75_features = \
                     shuffle(X_train, Y_train, Train_cs_features, Train_spatial_features,Train_pattern_features,
