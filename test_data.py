@@ -20,8 +20,8 @@ def split_test_set(idx, config, data_obj, df, cs_feature, spatial_feature, patte
 
     X_test = list()
     Y_test = list()
-    test_features_cs = list()
-    test_features_spatial = list()
+    #test_features_cs = list()
+    #test_features_spatial = list()
     test_features_pattern = list()
     test_features_median = list()
     test_features_q25 = list()
@@ -50,8 +50,8 @@ def split_test_set(idx, config, data_obj, df, cs_feature, spatial_feature, patte
                                            weekday_feature, weekend_feature, median_feature, q25_feature, q75_feature,
                                            start_ix, i, i, (end_ix + 1))
                 X_test.append(data.tolist())
-                test_features_cs.append(features_cs.tolist())
-                test_features_spatial.append(features_spatial.tolist())
+                #test_features_cs.append(features_cs.tolist())
+                #test_features_spatial.append(features_spatial.tolist())
                 test_features_pattern.append(features_pattern)
                 test_features_median.append(features_median)
                 test_features_q25.append(features_q25)
@@ -64,12 +64,11 @@ def split_test_set(idx, config, data_obj, df, cs_feature, spatial_feature, patte
     sys.stdout.flush()
 
     if feat:
-        X_test, Y_test, test_features_cs, test_features_spatial, test_features_pattern, test_features_median,\
+        X_test, Y_test, test_features_pattern, test_features_median,\
             test_features_q25, test_features_q75 = \
-            shuffle(X_test, Y_test, test_features_cs, test_features_spatial, test_features_pattern,
+            shuffle(X_test, Y_test, test_features_pattern,
                     test_features_median, test_features_q25, test_features_q75, random_state=0)
-        return np.array(X_test), np.array(Y_test), np.array(test_features_cs), \
-               np.array(test_features_spatial), np.array(test_features_pattern), np.array(test_features_median), \
+        return np.array(X_test), np.array(Y_test), np.array(test_features_pattern), np.array(test_features_median), \
                np.array(test_features_q25), np.array(test_features_q75)
     else:
         X_test, Y_test = shuffle(X_test, Y_test, random_state=0)
@@ -86,8 +85,8 @@ def generate_and_save(config, test_idx, data_obj,  df, cs_feature, spatial_featu
     #for i, val in enumerate(folder_list):
     X = list()
     Y = list()
-    feat_cs = list()
-    feat_spatial = list()
+    #feat_cs = list()
+    #feat_spatial = list()
     feat_pattern = list()
     feat_median = list()
     feat_q25 = list()
@@ -113,18 +112,18 @@ def generate_and_save(config, test_idx, data_obj,  df, cs_feature, spatial_featu
         x = result_list[i][0]
         y = result_list[i][1]
         if feat:
-            feat_cs.extend(result_list[i][2])
-            feat_spatial.extend(result_list[i][3])
-            feat_pattern.extend(result_list[i][4])
-            feat_median.extend(result_list[i][5])
-            feat_q25.extend(result_list[i][6])
-            feat_q75.extend(result_list[i][7])
+            #feat_cs.extend(result_list[i][2])
+            #feat_spatial.extend(result_list[i][3])
+            feat_pattern.extend(result_list[i][2])
+            feat_median.extend(result_list[i][3])
+            feat_q25.extend(result_list[i][4])
+            feat_q75.extend(result_list[i][5])
         X.extend(x)
         Y.extend(y)
 
     print('Finished test set ', str(test_idx+1))
     if feat:
-        return X, Y, feat_cs, feat_spatial, feat_pattern, feat_median, feat_q25, feat_q75
+        return X, Y, feat_pattern, feat_median, feat_q25, feat_q75
     else:
         return X, Y
 
@@ -201,8 +200,8 @@ def generate_test_set(config, input_horizon):
 
     X = list()
     Y = list()
-    Feat_cs = list()
-    Feat_spatial = list()
+    #Feat_cs = list()
+    #Feat_spatial = list()
     Feat_pattern = list()
     Feat_median = list()
     Feat_q25 = list()
@@ -215,7 +214,7 @@ def generate_test_set(config, input_horizon):
 
     for i, val in enumerate(folder_list):
         if feat:
-            X_, Y_, cs, spatial, pattern, median, q25, q75 = generate_and_save(config, i, data_obj,  df, cs_feature,
+            X_, Y_,  pattern, median, q25, q75 = generate_and_save(config, i, data_obj,  df, cs_feature,
                                                                                spatial_feature, pattern_feature,
                                                                                weekday_feature,
                                                                                weekend_feature, median_feature,
@@ -223,8 +222,8 @@ def generate_test_set(config, input_horizon):
                                                                                input_horizon)
             X.append(X_)
             Y.append(Y_)
-            Feat_cs.append(cs)
-            Feat_spatial.append(spatial)
+            #Feat_cs.append(cs)
+            #Feat_spatial.append(spatial)
             Feat_pattern.append(pattern)
             Feat_median.append(median)
             Feat_q25.append(q25)
@@ -238,12 +237,12 @@ def generate_test_set(config, input_horizon):
 
     print('Finished Lag:', str(input_horizon))
     if feat:
-        return X, Y, Feat_cs, Feat_spatial, Feat_pattern, Feat_median, Feat_q25, Feat_q75
+        return X, Y, Feat_pattern, Feat_median, Feat_q25, Feat_q75
     else:
         return X, Y
 
 
-def evaluate_test_set(config, X, Y, Feat_cs, Feat_spatial, Feat_pattern, Feat_median, Feat_q25, Feat_q75, n_train, input_horizon):
+def evaluate_test_set(config, X, Y,  Feat_pattern, Feat_median, Feat_q25, Feat_q75, n_train, input_horizon):
 
     prec_0 = list()
     prec_1 = list()
@@ -259,7 +258,7 @@ def evaluate_test_set(config, X, Y, Feat_cs, Feat_spatial, Feat_pattern, Feat_me
 
 
     for i in range(len(X)):
-        pred, target = evaluate(config, X[i], Y[i], Feat_cs[i], Feat_spatial[i], Feat_pattern[i], Feat_median[i],
+        pred, target = evaluate(config, X[i], Y[i],  Feat_pattern[i], Feat_median[i],
                                 Feat_q25[i], Feat_q75[i], n_train, input_horizon)
         prec, rec, th = precision_recall_curve(target.ravel(), pred.ravel())
         print('threshold: ')

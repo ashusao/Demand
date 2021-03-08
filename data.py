@@ -206,8 +206,8 @@ class Data:
         '''
         X_train = list()
         Y_train = list()
-        train_cs_features = list()
-        train_spatial_features = list()
+        #train_cs_features = list()
+        #train_spatial_features = list()
         train_pattern_features = list()
         train_median_features = list()
         train_quant_25_features = list()
@@ -240,8 +240,8 @@ class Data:
                                                            weekday_feature, weekend_feature, median_feature,
                                                            quant_25_feature, quant_75_feature, start_ix, i, i, (end_ix + 1))
                         X_train.append(data.tolist())
-                        train_cs_features.append(cs_feat.tolist())
-                        train_spatial_features.append(spatial_feat.tolist())
+                        #train_cs_features.append(cs_feat.tolist())
+                        #train_spatial_features.append(spatial_feat.tolist())
                         train_pattern_features.append(pattern_feat)
                         train_median_features.append(median_feat)
                         train_quant_25_features.append(quant_25_feat)
@@ -254,9 +254,9 @@ class Data:
         if randomize:
 
             if feat:
-                X_train, Y_train, train_cs_features, train_spatial_features, train_pattern_features, \
+                X_train, Y_train, train_pattern_features, \
                 train_median_features, train_quant_25_features, train_quant_75_features = \
-                    shuffle(X_train, Y_train, train_cs_features, train_spatial_features, train_pattern_features,
+                    shuffle(X_train, Y_train,  train_pattern_features,
                             train_median_features, train_quant_25_features, train_quant_75_features, random_state=0)
             else:
                 X_train, Y_train = shuffle(X_train, Y_train, random_state=0)
@@ -265,7 +265,7 @@ class Data:
         sys.stdout.flush()
 
         if feat:
-            return X_train, Y_train, train_cs_features, train_spatial_features, train_pattern_features, \
+            return X_train, Y_train, train_pattern_features, \
                    train_median_features, train_quant_25_features, train_quant_75_features
         else:
             return X_train, Y_train
@@ -286,8 +286,8 @@ class Data:
 
         X_train = list()
         Y_train = list()
-        Train_cs_features = list()
-        Train_spatial_features = list()
+        #Train_cs_features = list()
+        #Train_spatial_features = list()
         Train_pattern_features = list()
         Train_median_features = list()
         Train_quant_25_features = list()
@@ -314,20 +314,20 @@ class Data:
             x_train = result_list[i][0]
             y_train = result_list[i][1]
             if feat:
-                Train_cs_features.extend(result_list[i][2])
-                Train_spatial_features.extend(result_list[i][3])
-                Train_pattern_features.extend(result_list[i][4])
-                Train_median_features.extend(result_list[i][5])
-                Train_quant_25_features.extend(result_list[i][6])
-                Train_quant_75_features.extend(result_list[i][7])
+                #Train_cs_features.extend(result_list[i][2])
+                #Train_spatial_features.extend(result_list[i][3])
+                Train_pattern_features.extend(result_list[i][2])
+                Train_median_features.extend(result_list[i][3])
+                Train_quant_25_features.extend(result_list[i][4])
+                Train_quant_75_features.extend(result_list[i][5])
             X_train.extend(x_train)
             Y_train.extend(y_train)
 
         if randomize:
             if feat:
-                X_train, Y_train, Train_cs_features, Train_spatial_features, Train_pattern_features, \
+                X_train, Y_train, Train_pattern_features, \
                 Train_median_features, Train_quant_25_features, Train_quant_75_features = \
-                    shuffle(X_train, Y_train, Train_cs_features, Train_spatial_features,Train_pattern_features,
+                    shuffle(X_train, Y_train, Train_pattern_features,
                             Train_median_features, Train_quant_25_features, Train_quant_75_features, random_state=0)
             else:
                 X_train, Y_train = shuffle(X_train, Y_train, random_state=0)
@@ -336,7 +336,7 @@ class Data:
         sys.stdout.flush()
 
         if feat:
-            return X_train, Y_train, Train_cs_features, Train_spatial_features, Train_pattern_features, \
+            return X_train, Y_train, Train_pattern_features, \
                    Train_median_features, Train_quant_25_features, Train_quant_75_features
         else:
             return X_train, Y_train
@@ -429,10 +429,10 @@ class Data:
         feat = self._config.getboolean('data', 'features')
 
         if feat:
-            X_train, Y_train, Train_cs_features, Train_spatial_features, Train_pattern_features, Train_median_features,\
+            X_train, Y_train, Train_pattern_features, Train_median_features,\
             Train_quant_25_features, Train_quant_75_features = \
                 self.generate_and_save_aggregated_train_test(df=df, input_horizon=input_horizon, randomize=randomize)
-            return X_train, Y_train, Train_cs_features, Train_spatial_features, Train_pattern_features, \
+            return X_train, Y_train, Train_pattern_features, \
                    Train_median_features, Train_quant_25_features, Train_quant_75_features
         else:
             X_train, Y_train = self.generate_and_save_aggregated_train_test(df=df, input_horizon=input_horizon,

@@ -63,7 +63,7 @@ def compute_weight_matrix(targets, positive_weight, negative_weight):
 
     return weights
 
-def train(config, X_train, Y_train, Train_cs_features, Train_spatial_features, Train_pattern_features,
+def train(config, X_train, Y_train, Train_pattern_features,
           Train_median_features, Train_q25_features, Train_q75_features, input_horizon):
 
     '''Y_train = torch.from_numpy(Y_train).float()
@@ -79,8 +79,8 @@ def train(config, X_train, Y_train, Train_cs_features, Train_spatial_features, T
     Y_train = torch.Tensor(Y_train)
     X_train = torch.Tensor(X_train)
 
-    Train_cs_features = torch.Tensor(Train_cs_features)
-    Train_spatial_features = torch.Tensor(Train_spatial_features)
+    #Train_cs_features = torch.Tensor(Train_cs_features)
+    #Train_spatial_features = torch.Tensor(Train_spatial_features)
     Train_pattern_features = torch.Tensor(Train_pattern_features)
     Train_median_features = torch.Tensor(Train_median_features)
     Train_q25_features = torch.Tensor(Train_q25_features)
@@ -111,8 +111,8 @@ def train(config, X_train, Y_train, Train_cs_features, Train_spatial_features, T
 
     if algo == 'seq2seq':
         encoder = Encoder(input_size=input_size, hidden_size=hidden_size, dropout=dropout, num_layers=num_layers).to(device)
-        embedding_cs = Embedding(feat_size=Train_cs_features.shape[1], embed_size=embed_size)
-        embedding_spatial = Embedding(feat_size=Train_spatial_features.shape[1], embed_size=embed_size)
+        #embedding_cs = Embedding(feat_size=Train_cs_features.shape[1], embed_size=embed_size)
+        #embedding_spatial = Embedding(feat_size=Train_spatial_features.shape[1], embed_size=embed_size)
         embedding_pattern = Embedding(feat_size=Train_pattern_features.shape[1], embed_size=embed_size)
         embedding_median = Embedding(feat_size=Train_median_features.shape[1], embed_size=embed_size)
         embedding_q25 = Embedding(feat_size=Train_q25_features.shape[1], embed_size=embed_size)
@@ -126,7 +126,7 @@ def train(config, X_train, Y_train, Train_cs_features, Train_spatial_features, T
 
         if decode == 'decoder':
             decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size,
-                              feat_size_cs=Train_cs_features.shape[1], feat_size_spatial=Train_spatial_features.shape[1],
+                              #feat_size_cs=Train_cs_features.shape[1], feat_size_spatial=Train_spatial_features.shape[1],
                               dropout=dropout, num_layers=num_layers).to(device)
             '''decoder = Decoder(input_size=X_train.shape[2], hidden_size=hidden_size, output_size=output_size,
                               feat_size_cs=Train_cs_features.shape[1],
@@ -135,13 +135,13 @@ def train(config, X_train, Y_train, Train_cs_features, Train_spatial_features, T
 
         if decode == 'features':
             decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size,
-                              feat_size_cs=Train_cs_features.shape[1], feat_size_spatial=Train_spatial_features.shape[1],
+                              #feat_size_cs=Train_cs_features.shape[1], feat_size_spatial=Train_spatial_features.shape[1],
                               dropout=dropout, num_layers=num_layers).to(device)
             '''decoder = Decoder(input_size=1, hidden_size=hidden_size + Train_pattern_features.shape[1], output_size=output_size, feat_size_cs=Train_cs_features.shape[1],
                               feat_size_spatial=Train_spatial_features.shape[1],
                               dropout=dropout, num_layers=num_layers).to(device)'''
 
-        model = Seq2Seq(encoder, decoder, embedding_cs, embedding_spatial, embedding_pattern, embedding_median,
+        model = Seq2Seq(encoder, decoder, embedding_pattern, embedding_median,
                         embedding_q25, embedding_q75, embedding, config).to(device)
     elif algo == 'baseline':
         # ouput size = seq length
@@ -173,8 +173,8 @@ def train(config, X_train, Y_train, Train_cs_features, Train_spatial_features, T
             input_batch = X_train[b: b + batch_size, :, :].to(device)
             target_label = Y_train[b: b + batch_size, :].to(device)   # here
             #target_label = Y_train[b: b + batch_size, :, :].to(device)  # here
-            features_cs = Train_cs_features[b: b + batch_size, :].to(device)
-            features_spatial = Train_spatial_features[b: b + batch_size, :].to(device)
+            #features_cs = Train_cs_features[b: b + batch_size, :].to(device)
+            #features_spatial = Train_spatial_features[b: b + batch_size, :].to(device)
             features_pattern = Train_pattern_features[b: b + batch_size, :].to(device)
             features_median = Train_median_features[b: b + batch_size, :].to(device)
             features_q25 = Train_q25_features[b: b + batch_size, :].to(device)
@@ -186,7 +186,7 @@ def train(config, X_train, Y_train, Train_cs_features, Train_spatial_features, T
 
             #with torch.set_grad_enabled(phase == 'train'):
             if algo == 'seq2seq':
-                outputs = model(input_batch, target_label, features_cs, features_spatial, features_pattern,
+                outputs = model(input_batch, target_label,  features_pattern,
                                 features_median, features_q25, features_q75, 0.0) # no teacher force
             elif algo == 'baseline':
                 hidden = model.init_hidden(batch_size).to(device)
@@ -214,7 +214,7 @@ def train(config, X_train, Y_train, Train_cs_features, Train_spatial_features, T
     print('Finished training')
 
 
-def evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, Test_pattern_features,
+def evaluate(config, X_test, Y_test, Test_pattern_features,
              Test_median_features, Test_q25_features, Test_q75_features, n_train, input_horizon):
     '''
     :param config:
@@ -235,8 +235,8 @@ def evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, Te
 
     Y_test = torch.Tensor(Y_test)
     X_test = torch.Tensor(X_test)
-    Test_cs_features = torch.Tensor(Test_cs_features)
-    Test_spatial_features = torch.Tensor(Test_spatial_features)
+    #Test_cs_features = torch.Tensor(Test_cs_features)
+    #Test_spatial_features = torch.Tensor(Test_spatial_features)
     Test_pattern_features = torch.Tensor(Test_pattern_features)
     Test_median_features = torch.Tensor(Test_median_features)
     Test_q25_features = torch.Tensor(Test_q25_features)
@@ -265,8 +265,8 @@ def evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, Te
 
     if algo == 'seq2seq':
         encoder = Encoder(input_size=input_size, hidden_size=hidden_size, dropout=dropout, num_layers=num_layers).to(device)
-        embedding_cs = Embedding(feat_size=Test_cs_features.shape[1], embed_size=embed_size)
-        embedding_spatial = Embedding(feat_size=Test_spatial_features.shape[1], embed_size=embed_size)
+        #embedding_cs = Embedding(feat_size=Test_cs_features.shape[1], embed_size=embed_size)
+        #embedding_spatial = Embedding(feat_size=Test_spatial_features.shape[1], embed_size=embed_size)
         embedding_pattern = Embedding(feat_size=Test_pattern_features.shape[1], embed_size=embed_size)
         embedding_median = Embedding(feat_size=Test_median_features.shape[1], embed_size=embed_size)
         embedding_q25 = Embedding(feat_size=Test_q25_features.shape[1], embed_size=embed_size)
@@ -281,7 +281,7 @@ def evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, Te
 
         if decode == 'decoder':
             decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size,
-                              feat_size_cs=Test_cs_features.shape[1],  feat_size_spatial=Test_spatial_features.shape[1],
+                              #feat_size_cs=Test_cs_features.shape[1],  feat_size_spatial=Test_spatial_features.shape[1],
                               dropout=dropout, num_layers=num_layers).to(device)
             '''decoder = Decoder(input_size=X_test.shape[2], hidden_size=hidden_size, output_size=output_size,
                               feat_size_cs=Test_cs_features.shape[1], feat_size_spatial=Test_spatial_features.shape[1],
@@ -289,13 +289,13 @@ def evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, Te
 
         if decode == 'features':
             decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size,
-                              feat_size_cs=Test_cs_features.shape[1],  feat_size_spatial=Test_spatial_features.shape[1],
+                              #feat_size_cs=Test_cs_features.shape[1],  feat_size_spatial=Test_spatial_features.shape[1],
                               dropout=dropout, num_layers=num_layers).to(device)
             '''decoder = Decoder(input_size=1, hidden_size=hidden_size + Test_pattern_features.shape[1], output_size=output_size, feat_size_cs=Test_cs_features.shape[1],
                               feat_size_spatial=Test_spatial_features.shape[1],
                               dropout=dropout, num_layers=num_layers).to(device)'''
 
-        model = Seq2Seq(encoder, decoder, embedding_cs, embedding_spatial, embedding_pattern, embedding_median,
+        model = Seq2Seq(encoder, decoder, embedding_pattern, embedding_median,
                         embedding_q25, embedding_q75, embedding, config).to(device)
     elif algo == 'baseline':
         model = DeepBaseline(input_size=input_size, hidden_size=hidden_size, output_size=Y_test.shape[1]).to(device)
@@ -323,8 +323,8 @@ def evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, Te
         input_batch = X_test[b: b + batch_size, :, :].to(device)
         target_label = Y_test[b: b + batch_size, :].to(device)  #here
         #target_label = Y_test[b: b + batch_size, :, :].to(device)  # here
-        features_cs = Test_cs_features[b: b + batch_size, :].to(device)
-        features_spatial = Test_spatial_features[b: b + batch_size, :].to(device)
+        #features_cs = Test_cs_features[b: b + batch_size, :].to(device)
+        #features_spatial = Test_spatial_features[b: b + batch_size, :].to(device)
         features_pattern = Test_pattern_features[b: b + batch_size, :].to(device)
         features_median = Test_median_features[b: b + batch_size, :].to(device)
         features_q25 = Test_q25_features[b: b + batch_size, :].to(device)
@@ -332,7 +332,7 @@ def evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, Te
 
         if algo == 'seq2seq':
             # prediction is sigmoid activation
-            prediction = model(input_batch, target_label, features_cs, features_spatial, features_pattern,
+            prediction = model(input_batch, target_label, features_pattern,
                                features_median, features_q25, features_q75, 0.0)
             pred.append(prediction.detach().cpu().numpy())
         elif algo == 'baseline':

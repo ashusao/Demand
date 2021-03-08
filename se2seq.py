@@ -44,7 +44,7 @@ class Encoder(nn.Module):
 
 class Decoder(nn.Module):
 
-    def __init__(self, input_size, hidden_size, output_size, feat_size_cs, feat_size_spatial, dropout, num_layers=1):
+    def __init__(self, input_size, hidden_size, output_size, dropout, num_layers=1):
         '''
 
         :param input_size:              number of features in input
@@ -56,11 +56,11 @@ class Decoder(nn.Module):
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.num_layers = num_layers
-        self.feat_size_cs = feat_size_cs
-        self.feat_size_spatial = feat_size_spatial
+        #self.feat_size_cs = feat_size_cs
+        #self.feat_size_spatial = feat_size_spatial
         self.gru = nn.GRU(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers, batch_first=True)
         self.dropout = nn.Dropout(p=dropout)
-        self.linear1 = nn.Linear(hidden_size + feat_size_cs + feat_size_spatial, hidden_size)
+        #self.linear1 = nn.Linear(hidden_size + feat_size_cs + feat_size_spatial, hidden_size)
         #self.linear3 = nn.Linear(256, hidden_size)
         self.linear = nn.Linear(hidden_size, output_size)
 
@@ -163,7 +163,7 @@ class Embedding(nn.Module):
 
 class Seq2Seq(nn.Module):
 
-    def __init__(self, encoder, decoder, embedding_cs, embedding_spatial, embedding_pattern, embedding_median,
+    def __init__(self, encoder, decoder, embedding_pattern, embedding_median,
                  embedding_q25, embedding_q75, embedding, config):
         super(Seq2Seq, self).__init__()
         self.encoder = encoder
@@ -180,7 +180,7 @@ class Seq2Seq(nn.Module):
             self.embedding = embedding
         self.data_obj = Data()
 
-    def forward(self, source, target, features_cs, features_spatial, features_pattern, features_median,
+    def forward(self, source, target, features_pattern, features_median,
                 features_q25, features_q75, teacher_force_ratio=0.5):
         batch_size = source.shape[0]
         target_len = target.shape[1]
@@ -207,15 +207,15 @@ class Seq2Seq(nn.Module):
             #features = features.repeat(num_layers, 1, 1)
             #hidden[:, :, :features.shape[2]] = features  # fill intial hidden with avail features
 
-            features_cs = features_cs.unsqueeze(0)  # add extra dimensino for num_layers
-            features_spatial = features_spatial.unsqueeze(0)
+            #features_cs = features_cs.unsqueeze(0)  # add extra dimensino for num_layers
+            #features_spatial = features_spatial.unsqueeze(0)
             features_pattern = features_pattern.unsqueeze(0)
             features_median = features_median.unsqueeze(0)
             features_q25 = features_q25.unsqueeze(0)
             features_q75 = features_q75.unsqueeze(0)
 
-            features_cs = features_cs.repeat(hidden.shape[0], 1, 1)  # copy features to each layers (num_layers, batch, hidden_size)
-            features_spatial = features_spatial.repeat(hidden.shape[0], 1, 1)
+            #features_cs = features_cs.repeat(hidden.shape[0], 1, 1)  # copy features to each layers (num_layers, batch, hidden_size)
+            #features_spatial = features_spatial.repeat(hidden.shape[0], 1, 1)
             features_pattern = features_pattern.repeat(hidden.shape[0], 1, 1)
             features_median = features_median.repeat(hidden.shape[0], 1, 1)
             features_q25 = features_q25.repeat(hidden.shape[0], 1, 1)
