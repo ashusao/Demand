@@ -174,9 +174,9 @@ class Seq2Seq(nn.Module):
             #self.embedding_cs = embedding_cs
             #self.embedding_spatial = embedding_spatial
             self.embedding_pattern = embedding_pattern
-            self.embedding_median = embedding_median
-            self.embedding_q25 = embedding_q25
-            self.embedding_q75 = embedding_q75
+            #self.embedding_median = embedding_median
+            #self.embedding_q25 = embedding_q25
+            #self.embedding_q75 = embedding_q75
             self.embedding = embedding
         self.data_obj = Data()
 
@@ -210,26 +210,26 @@ class Seq2Seq(nn.Module):
             #features_cs = features_cs.unsqueeze(0)  # add extra dimensino for num_layers
             #features_spatial = features_spatial.unsqueeze(0)
             features_pattern = features_pattern.unsqueeze(0)
-            features_median = features_median.unsqueeze(0)
-            features_q25 = features_q25.unsqueeze(0)
-            features_q75 = features_q75.unsqueeze(0)
+            #features_median = features_median.unsqueeze(0)
+            #features_q25 = features_q25.unsqueeze(0)
+            #features_q75 = features_q75.unsqueeze(0)
 
             #features_cs = features_cs.repeat(hidden.shape[0], 1, 1)  # copy features to each layers (num_layers, batch, hidden_size)
             #features_spatial = features_spatial.repeat(hidden.shape[0], 1, 1)
             features_pattern = features_pattern.repeat(hidden.shape[0], 1, 1)
-            features_median = features_median.repeat(hidden.shape[0], 1, 1)
-            features_q25 = features_q25.repeat(hidden.shape[0], 1, 1)
-            features_q75 = features_q75.repeat(hidden.shape[0], 1, 1)
+            #features_median = features_median.repeat(hidden.shape[0], 1, 1)
+            #features_q25 = features_q25.repeat(hidden.shape[0], 1, 1)
+            #features_q75 = features_q75.repeat(hidden.shape[0], 1, 1)
 
             #features_cs = self.embedding_cs(features_cs)
             features_pattern = self.embedding_pattern(features_pattern)
             #features_spatial = self.embedding_spatial(features_spatial)
-            features_median = self.embedding_median(features_median)
-            features_q25 = self.embedding_q25(features_q25)
-            features_q75 = self.embedding_q75(features_q75)
+            #features_median = self.embedding_median(features_median)
+            #features_q25 = self.embedding_q25(features_q25)
+            #features_q75 = self.embedding_q75(features_q75)
 
             #concat = torch.cat((hidden, features_cs, features_spatial), 2)  # (num_layers, batch, hidden_size + feat_size)
-            concat = torch.cat((hidden, features_pattern, features_median, features_q25, features_q75), 2)  # (num_layers, batch, hidden_size + feat_size)
+            concat = torch.cat((hidden, features_pattern), 2)  # (num_layers, batch, hidden_size + feat_size)
             #hidden = concat
             hidden = self.embedding(concat)
 
