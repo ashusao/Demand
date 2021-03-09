@@ -91,10 +91,10 @@ if __name__ == '__main__':
                 X_train, Y_train = data_obj.split_train_test(df, ip_horizon)
             #Train_cs_features = np.random.rand(X_train.shape[0], 2)
             #Train_spatial_features = np.random.rand(X_train.shape[0], 2)
-            Train_pattern_features = np.random.rand(X_train.shape[0], 2)
-            Train_median_features = np.random.rand(X_train.shape[0], 2)
-            Train_q25_features = np.random.rand(X_train.shape[0], 2)
-            Train_q75_features = np.random.rand(X_train.shape[0], 2)
+            Train_pattern_features = np.random.rand(len(X_train), 2)
+            Train_median_features = np.random.rand(len(X_train), 2)
+            Train_q25_features = np.random.rand(len(X_train), 2)
+            Train_q75_features = np.random.rand(len(X_train), 2)
 
         '''print(X_train.shape, Y_train.shape, Train_cs_features.shape,
               Train_spatial_features.shape, Train_pattern_features.shape)'''
@@ -134,10 +134,10 @@ if __name__ == '__main__':
                     X, Y = generate_test_set(config, ip_horizon)
                 #Feat_cs = [np.random.rand(X[0].shape[0], 2)] * 5
                 #Feat_spatial = [np.random.rand(X[0].shape[0], 2)] * 5
-                Feat_pattern = [np.random.rand(X[0].shape[0], 2)] * 5
-                Feat_median = [np.random.rand(X[0].shape[0], 2)] * 5
-                Feat_q25 = [np.random.rand(X[0].shape[0], 2)] * 5
-                Feat_q75 = [np.random.rand(X[0].shape[0], 2)] * 5
+                Feat_pattern = [np.random.rand(len(X[0]), 2)] * 5
+                Feat_median = [np.random.rand(len(X[0]), 2)] * 5
+                Feat_q25 = [np.random.rand(len(X[0]), 2)] * 5
+                Feat_q75 = [np.random.rand(len(X[0]), 2)] * 5
 
             '''for i in range(len(X)):
                 print(X[i].shape, Y[i].shape, Feat_cs[i].shape, Feat_spatial[i].shape, Feat_pattern[i].shape,
