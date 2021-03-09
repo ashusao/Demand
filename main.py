@@ -81,7 +81,7 @@ if __name__ == '__main__':
                 Train_spatial_features = np.random.rand(X_train.shape[0], 2)
                 Test_spatial_features = np.random.rand(X_test.shape[0], 2)
             else:
-                X_train, Y_train, Train_pattern_features, \
+                X_train, Y_train, Train_cs_features, Train_spatial_features, Train_pattern_features, \
                 Train_median_features, Train_q25_features, Train_q75_features = \
                     data_obj.split_train_test(df, ip_horizon)
         else:
@@ -89,8 +89,8 @@ if __name__ == '__main__':
                 X_train, Y_train, X_test, Y_test = split_train_test_(config, df)
             else:
                 X_train, Y_train = data_obj.split_train_test(df, ip_horizon)
-            #Train_cs_features = np.random.rand(X_train.shape[0], 2)
-            #Train_spatial_features = np.random.rand(X_train.shape[0], 2)
+            Train_cs_features = np.random.rand(X_train.shape[0], 2)
+            Train_spatial_features = np.random.rand(X_train.shape[0], 2)
             Train_pattern_features = np.random.rand(len(X_train), 2)
             Train_median_features = np.random.rand(len(X_train), 2)
             Train_q25_features = np.random.rand(len(X_train), 2)
@@ -107,7 +107,7 @@ if __name__ == '__main__':
               Train_spatial_features.shape, Train_pattern_features.shape)'''
 
         if train_:
-            train(config, X_train, Y_train, Train_pattern_features,
+            train(config, X_train, Y_train, Train_cs_features, Train_spatial_features, Train_pattern_features,
                   Train_median_features, Train_q25_features, Train_q75_features, ip_horizon)
             #train(config, X_train, Y_train, X_test, Y_test, Train_cs_features, Test_cs_features,
             #      Train_spatial_features, Test_spatial_features, Train_pattern_features, Test_pattern_features, ip_horizon)
@@ -121,19 +121,19 @@ if __name__ == '__main__':
         if eval_tests:
             if feat:
                 if dataset == 'demand':
-                    X, Y,  Feat_pattern = generate_test_set_(config)
+                    X, Y, Feat_pattern = generate_test_set_(config)
                     Feat_cs = [np.random.rand(X[0].shape[0], 2)] * 4
                     Feat_spatial = [np.random.rand(X[0].shape[0], 2)] * 4
                 else:
-                    X, Y, Feat_pattern, Feat_median, Feat_q25, Feat_q75 = \
+                    X, Y, Feat_cs, Feat_spatial, Feat_pattern, Feat_median, Feat_q25, Feat_q75 = \
                         generate_test_set(config, ip_horizon)
             else:
                 if dataset == 'demand':
                     X, Y = generate_test_set_(config)
                 else:
                     X, Y = generate_test_set(config, ip_horizon)
-                #Feat_cs = [np.random.rand(X[0].shape[0], 2)] * 5
-                #Feat_spatial = [np.random.rand(X[0].shape[0], 2)] * 5
+                Feat_cs = [np.random.rand(X[0].shape[0], 2)] * 5
+                Feat_spatial = [np.random.rand(X[0].shape[0], 2)] * 5
                 Feat_pattern = [np.random.rand(len(X[0]), 2)] * 5
                 Feat_median = [np.random.rand(len(X[0]), 2)] * 5
                 Feat_q25 = [np.random.rand(len(X[0]), 2)] * 5
@@ -143,7 +143,7 @@ if __name__ == '__main__':
                 print(X[i].shape, Y[i].shape, Feat_cs[i].shape, Feat_spatial[i].shape, Feat_pattern[i].shape,
                       Feat_median[i].shape, Feat_q25[i].shape, Feat_q75[i].shape)'''
 
-            evaluate_test_set(config, X, Y, Feat_pattern, Feat_median, Feat_q25,
+            evaluate_test_set(config, X, Y, Feat_cs, Feat_spatial, Feat_pattern, Feat_median, Feat_q25,
                               Feat_q75, len(X_train), ip_horizon)
 
 
