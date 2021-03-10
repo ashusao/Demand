@@ -106,7 +106,7 @@ def generate_and_save(config, test_idx, data_obj,  df, cs_feature, spatial_featu
     result_list = pool.map(multi_func, series_param)
     pool.close()
     pool.join()
-    print(len(result_list[0]), len(result_list[0][0]), len(result_list[0][2][0]))
+    print(len(result_list[0]), len(result_list[0][0]), len(result_list[0][6][0]))
 
     for i in range(len(result_list)):
         x = result_list[i][0]

@@ -179,12 +179,15 @@ class Data:
 
         # 1 day series pattern
         pattern_feat = pattern_feature[series.name].tolist()
+        median_feat = median_feature[series.name].tolist()
+        quant_25_feat = quant_25_feature[series.name].tolist()
+        quant_75_feat = quant_75_feature[series.name].tolist()
 
         # pattern slices of y values
         #pattern_feat = self.gen_pattern_slices(series, pattern_feature, start_y, stop_y)
-        median_feat = self.gen_pattern_slices(series, median_feature, start_y, stop_y)
-        quant_25_feat = self.gen_pattern_slices(series, quant_25_feature, start_y, stop_y)
-        quant_75_feat = self.gen_pattern_slices(series, quant_75_feature, start_y, stop_y)
+        #median_feat = self.gen_pattern_slices(series, median_feature, start_y, stop_y)
+        #quant_25_feat = self.gen_pattern_slices(series, quant_25_feature, start_y, stop_y)
+        #quant_75_feat = self.gen_pattern_slices(series, quant_75_feature, start_y, stop_y)
         #pattern_feat = self.gen_weekday_weekend_slices(series, weekday_feature, weekend_feature, start_y, stop_y)
 
         time_feat = df.iloc[:, -35:].to_numpy()[start:stop]
