@@ -178,13 +178,13 @@ class Data:
         cs_feat, spatial_feat = self.generate_features(series, cs_feature, spatial_feature)
 
         # 1 day series pattern
-        pattern_feat = pattern_feature[series.name].tolist()
+        #pattern_feat = pattern_feature[series.name].tolist()
         median_feat = median_feature[series.name].tolist()
         quant_25_feat = quant_25_feature[series.name].tolist()
         quant_75_feat = quant_75_feature[series.name].tolist()
 
         # pattern slices of y values
-        #pattern_feat = self.gen_pattern_slices(series, pattern_feature, start_y, stop_y)
+        pattern_feat = self.gen_pattern_slices(series, pattern_feature, start_y, stop_y)
         #median_feat = self.gen_pattern_slices(series, median_feature, start_y, stop_y)
         #quant_25_feat = self.gen_pattern_slices(series, quant_25_feature, start_y, stop_y)
         #quant_75_feat = self.gen_pattern_slices(series, quant_75_feature, start_y, stop_y)
