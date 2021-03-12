@@ -117,7 +117,7 @@ def train(config, X_train, Y_train, Train_cs_features, Train_spatial_features, T
         embedding_median = Embedding(feat_size=Train_median_features.shape[1], embed_size=embed_size)
         embedding_q25 = Embedding(feat_size=Train_q25_features.shape[1], embed_size=embed_size)
         embedding_q75 = Embedding(feat_size=Train_q75_features.shape[1], embed_size=embed_size)
-        embedding = Embedding(feat_size=hidden_size + (4 * embed_size), embed_size=embed_size)
+        embedding = Embedding(feat_size=hidden_size + embed_size, embed_size=embed_size)
 
         if decode == 'attention':
             decoder = AttnDecoder(input_size=1, hidden_size=hidden_size, output_size=output_size, input_len=X_train.shape[1],
@@ -271,7 +271,7 @@ def evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, Te
         embedding_median = Embedding(feat_size=Test_median_features.shape[1], embed_size=embed_size)
         embedding_q25 = Embedding(feat_size=Test_q25_features.shape[1], embed_size=embed_size)
         embedding_q75 = Embedding(feat_size=Test_q75_features.shape[1], embed_size=embed_size)
-        embedding = Embedding(feat_size=hidden_size + (4 * embed_size), embed_size=embed_size)
+        embedding = Embedding(feat_size=hidden_size + embed_size, embed_size=embed_size)
         #embedding = Embedding(feat_size=Test_cs_features.shape[1] + hidden_size, embed_size=embed_size)
 
         if decode == 'attention':
