@@ -75,7 +75,7 @@ if __name__ == '__main__':
             X_train, Y_train, Train_cs_features, Train_spatial_features = \
                 apply_mlsmote(config, X_train, Y_train, Train_cs_features, Train_spatial_features, n_sample)
 
-        print(len(X_train[0]), len(X_train[0][0]))
+        print(len(X_train[0]), len(Y_train[0]))
 
         if train_:
 
