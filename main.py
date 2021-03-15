@@ -83,8 +83,8 @@ if __name__ == '__main__':
                 baseline_approach.nearest_neighbour(X_train, Y_train, ip_horizon)
             elif algo == 'rf':
                 baseline_approach.random_forest(X_train, Y_train, ip_horizon)
-            elif algo == 'svm':
-                baseline_approach.support_vector_classifier(X_train, Y_train, ip_horizon)
+            elif algo == 'lr':
+                baseline_approach.logistic_regression_classifier(X_train, Y_train, ip_horizon)
             elif algo == 'ha':
                 pass
             else:

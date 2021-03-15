@@ -2,8 +2,7 @@ import numpy as np
 from configparser import ConfigParser
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.svm import SVC
-from sklearn.ensemble import BaggingClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.metrics import precision_recall_fscore_support
 
@@ -48,15 +47,15 @@ class Baseline:
 
         print('Training Finished for lag :', input_horizon)
 
-    def support_vector_classifier(self, X_train, Y_train, input_horizon):
+    def logistic_regression_classifier(self, X_train, Y_train, input_horizon):
 
-        model_path = self._config['model']['svm_path']
+        model_path = self._config['model']['lr_path']
         n_core = int(self._config['data']['n_core'])
         output_horizon = self._output_horizon
 
         loaded = False
 
-        model_file = os.path.join(model_path, 'svm_complte_lag_' + str(input_horizon) +
+        model_file = os.path.join(model_path, 'lr_complte_lag_' + str(input_horizon) +
                                              '_lead_' + str(output_horizon) +
                                              '_train_step_' + str(self._config['data']['train_window_size']) +
                                              '_est_step_' + str(self._config['data']['test_window_size']) +
@@ -66,7 +65,7 @@ class Baseline:
             loaded = True
 
         if not loaded:
-            clf = OneVsRestClassifier(SVC(kernel='linear', gamma='scale'), n_jobs=n_core)
+            clf = OneVsRestClassifier(LogisticRegression(solver='sag'), n_jobs=n_core)
             clf.fit(X_train, Y_train)
 
         if not loaded:
@@ -135,9 +134,9 @@ class Baseline:
                                       '_est_step_' + str(self._config['data']['test_window_size']) +
                                       '.pkl')
             clf = pickle.load(open(model_file, 'rb'))
-        elif algo == 'svm':
-            model_path = self._config['model']['svm_path']
-            model_file = os.path.join(model_path, 'svm_complte_lag_' + str(input_horizon) +
+        elif algo == 'lr':
+            model_path = self._config['model']['lr_path']
+            model_file = os.path.join(model_path, 'lr_complte_lag_' + str(input_horizon) +
                                       '_lead_' + str(self._output_horizon) +
                                       '_train_step_' + str(self._config['data']['train_window_size']) +
                                       '_est_step_' + str(self._config['data']['test_window_size']) +
