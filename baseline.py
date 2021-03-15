@@ -65,7 +65,7 @@ class Baseline:
             loaded = True
 
         if not loaded:
-            clf = OneVsRestClassifier(LogisticRegression(solver='sag'), n_jobs=n_core)
+            clf = OneVsRestClassifier(LogisticRegression(solver='sag', n_jobs=n_core))
             clf.fit(X_train, Y_train)
 
         if not loaded:
