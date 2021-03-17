@@ -173,8 +173,8 @@ class Seq2Seq(nn.Module):
         if feat and self.config['model']['decoder'] == 'features':
             #self.embedding_cs = embedding_cs
             #self.embedding_spatial = embedding_spatial
-            #self.embedding_pattern = embedding_pattern
-            self.embedding_median = embedding_median
+            self.embedding_pattern = embedding_pattern
+            #self.embedding_median = embedding_median
             self.embedding_q25 = embedding_q25
             self.embedding_q75 = embedding_q75
             self.embedding = embedding
