@@ -114,6 +114,24 @@ class Baseline:
         print('Training Finished for lag :', input_horizon)
         return precision, recall, f1
 
+    def ha(self, df, idx):
+        train_df = df.loc[self._config['data']['train_start']:self._config['data']['train_stop']]
+        g_train_df = train_df.groupby([train_df.index.dayofweek, train_df.index.hour, train_df.index.minute]).mean()
+        g_train_df[g_train_df >= 0.75] = 1
+        g_train_df[g_train_df < 0.75] = 0
+
+        test_df = df.loc[self._config['test']['test' + str(idx + 1) + '_start']:
+                         self._config['test']['test' + str(idx + 1) +'_stop']]
+
+        print(g_train_df.T.to_numpy().shape, test_df.T.to_numpy().shape)
+
+        precision, recall, f1, _ = precision_recall_fscore_support(test_df.T.to_numpy().ravel(),
+                                                                   g_train_df.T.to_numpy().ravel(), average=None)
+
+        print('Training Finished for test :', (idx + 1))
+        return precision, recall, f1
+
+
 
     def load_model(self, algo, input_horizon):
 
@@ -160,7 +178,7 @@ class Baseline:
                 csv_writer = csv.writer(f, delimiter=',')
                 csv_writer.writerow(row)
 
-    def eval_test_set(self, n_train, X, Y, input_horizon):
+    def eval_test_set(self, n_train, X, Y, input_horizon, df):
 
         prec_0 = list()
         prec_1 = list()
@@ -182,7 +200,7 @@ class Baseline:
         for i in range(len(X)):
 
             if algo == 'ha':
-                precision, recall, f1 = self.historical_average(X[i], Y[i], input_horizon)
+                precision, recall, f1 = self.ha(df.iloc[:, :-35], i)
             else:
                 pred = clf.predict(X[i])
                 precision, recall, f1, _ = precision_recall_fscore_support(Y[i].ravel(), pred.ravel(), average=None)

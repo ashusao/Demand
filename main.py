@@ -116,7 +116,7 @@ if __name__ == '__main__':
                 Feat_q75 = [np.random.rand(len(X[0]), 2)] * 5
 
             if algo == 'knn' or algo == 'rf' or algo == 'ha' or algo == 'lr':
-                baseline_approach.eval_test_set(len(X_train), X, Y, ip_horizon)
+                baseline_approach.eval_test_set(len(X_train), X, Y, ip_horizon, df)
             else:
                 evaluate_test_set(config, X, Y, Feat_cs, Feat_spatial, Feat_pattern, Feat_median, Feat_q25,
                                   Feat_q75, len(X_train), ip_horizon)
