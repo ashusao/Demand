@@ -52,14 +52,14 @@ class Data:
         # adding time features
 
         new_df['weekday'] = new_df.index.dayofweek
-        #new_df['hour'] = new_df.index.hour
-        #new_df['minute'] = new_df.index.minute
+        new_df['hour'] = new_df.index.hour
+        new_df['minute'] = new_df.index.minute
         #new_df = self.encode_time(new_df, 'weekday')
         #new_df = self.encode_time(new_df, 'hour')
         #new_df = self.encode_time(new_df, 'minute')
         new_df = pd.get_dummies(new_df,
-                                prefix=['weekday'],
-                                columns=['weekday'])
+                                prefix=['weekday', 'hour', 'minute'],
+                                columns=['weekday', 'hour', 'minute'])
 
         return new_df
 
@@ -129,7 +129,7 @@ class Data:
         return scaled_df
 
     def gen_pattern_features(self, df):
-        train_df = df.loc[self._config['data']['train_start'] : self._config['data']['train_stop']].iloc[:, :-7]
+        train_df = df.loc[self._config['data']['train_start'] : self._config['data']['train_stop']].iloc[:, :-35]
         scaled_df = self.scale_pattern_feat(train_df.groupby([train_df.index.hour, train_df.index.minute]).sum())
 
         weekday_df = train_df.loc[(train_df.index.dayofweek >= 0) & (train_df.index.dayofweek <= 4)]
@@ -190,7 +190,7 @@ class Data:
         quant_75_feat = self.gen_pattern_slices(series, quant_75_feature, start_y, stop_y)
         #pattern_feat = self.gen_weekday_weekend_slices(series, weekday_feature, weekend_feature, start_y, stop_y)
 
-        time_feat = df.iloc[:, -7:].to_numpy()[start:stop]
+        time_feat = df.iloc[:, -35:].to_numpy()[start:stop]
         data = np.concatenate([d, time_feat], axis=1)
         return data, cs_feat, spatial_feat, pattern_feat, median_feat, quant_25_feat, quant_75_feat
 
@@ -302,7 +302,7 @@ class Data:
         print(pattern_feature.shape, weekday_feature.shape, weekend_feature.shape)
 
         #series_param = range(5)
-        series_param = range(df.shape[1] - 7)
+        series_param = range(df.shape[1] - 35)
         pool = multiprocessing.Pool(processes=n_core)
         multi_func = partial(self.split_series_train_test, df=df, cs_feature=cs_feature, spatial_feature=spatial_feature,
                              pattern_feature=pattern_feature, weekday_feature=weekday_feature, weekend_feature=weekend_feature,

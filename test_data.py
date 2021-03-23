@@ -95,7 +95,7 @@ def generate_and_save(config, test_idx, data_obj,  df, cs_feature, spatial_featu
     stop_date = config['test']['test' + str(test_idx+1) + '_stop']
 
     #series_param = range(5)
-    series_param = range(df.shape[1] - 7)
+    series_param = range(df.shape[1] - 35)
     pool = multiprocessing.Pool(processes=n_core)
     multi_func = partial(split_test_set, config=config, data_obj=data_obj, df=df, cs_feature=cs_feature, spatial_feature=spatial_feature,
                          pattern_feature=pattern_feature, weekday_feature=weekday_feature,
