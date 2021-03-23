@@ -117,8 +117,8 @@ class Baseline:
     def ha(self, df, idx):
         train_df = df.loc[self._config['data']['train_start']:self._config['data']['train_stop']]
         g_train_df = train_df.groupby([train_df.index.dayofweek, train_df.index.hour, train_df.index.minute]).mean()
-        g_train_df[g_train_df >= 0.75] = 1
-        g_train_df[g_train_df < 0.75] = 0
+        g_train_df[g_train_df >= 0.5] = 1
+        g_train_df[g_train_df < 0.5] = 0
 
         test_df = df.loc[self._config['test']['test' + str(idx + 1) + '_start']:
                          self._config['test']['test' + str(idx + 1) +'_stop']]
