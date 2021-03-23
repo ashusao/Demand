@@ -190,7 +190,7 @@ class Data:
         quant_75_feat = self.gen_pattern_slices(series, quant_75_feature, start_y, stop_y)
         #pattern_feat = self.gen_weekday_weekend_slices(series, weekday_feature, weekend_feature, start_y, stop_y)
 
-        time_feat = df.iloc[:, -35:].to_numpy()[start:stop]
+        time_feat = df.iloc[:, -28:].to_numpy()[start:stop]
         data = np.concatenate([d, time_feat], axis=1)
         return data, cs_feat, spatial_feat, pattern_feat, median_feat, quant_25_feat, quant_75_feat
 
