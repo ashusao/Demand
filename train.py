@@ -79,10 +79,6 @@ def train(config, X_train, Y_train, Train_cs_features, Train_spatial_features, T
     Y_train = torch.Tensor(Y_train)
     X_train = torch.Tensor(X_train)
 
-    print(X_train.shape)
-    X_train = X_train[:,:,1:] # leave occupation
-    print(X_train.shape)
-
     Train_cs_features = torch.Tensor(Train_cs_features)
     Train_spatial_features = torch.Tensor(Train_spatial_features)
     Train_pattern_features = torch.Tensor(Train_pattern_features)
@@ -239,10 +235,6 @@ def evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, Te
 
     Y_test = torch.Tensor(Y_test)
     X_test = torch.Tensor(X_test)
-
-    print(X_test.shape)
-    X_test = X_test[:,:,1:]
-    print(X_test.shape)
 
     Test_cs_features = torch.Tensor(Test_cs_features)
     Test_spatial_features = torch.Tensor(Test_spatial_features)

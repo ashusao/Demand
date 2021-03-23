@@ -51,15 +51,15 @@ class Data:
 
         # adding time features
 
-        new_df['weekday'] = new_df.index.dayofweek
+        #new_df['weekday'] = new_df.index.dayofweek
         new_df['hour'] = new_df.index.hour
         new_df['minute'] = new_df.index.minute
         #new_df = self.encode_time(new_df, 'weekday')
         #new_df = self.encode_time(new_df, 'hour')
         #new_df = self.encode_time(new_df, 'minute')
         new_df = pd.get_dummies(new_df,
-                                prefix=['weekday', 'hour', 'minute'],
-                                columns=['weekday', 'hour', 'minute'])
+                                prefix=['hour', 'minute'],
+                                columns=['hour', 'minute'])
 
         return new_df
 
@@ -302,7 +302,7 @@ class Data:
         print(pattern_feature.shape, weekday_feature.shape, weekend_feature.shape)
 
         #series_param = range(5)
-        series_param = range(df.shape[1] - 35)
+        series_param = range(df.shape[1] - 28)
         pool = multiprocessing.Pool(processes=n_core)
         multi_func = partial(self.split_series_train_test, df=df, cs_feature=cs_feature, spatial_feature=spatial_feature,
                              pattern_feature=pattern_feature, weekday_feature=weekday_feature, weekend_feature=weekend_feature,
