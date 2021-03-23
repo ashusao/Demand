@@ -129,7 +129,7 @@ class Data:
         return scaled_df
 
     def gen_pattern_features(self, df):
-        train_df = df.loc[self._config['data']['train_start'] : self._config['data']['train_stop']].iloc[:, :-35]
+        train_df = df.loc[self._config['data']['train_start'] : self._config['data']['train_stop']].iloc[:, :-28]
         scaled_df = self.scale_pattern_feat(train_df.groupby([train_df.index.hour, train_df.index.minute]).sum())
 
         weekday_df = train_df.loc[(train_df.index.dayofweek >= 0) & (train_df.index.dayofweek <= 4)]
