@@ -228,8 +228,8 @@ class Seq2Seq(nn.Module):
             features_q25 = self.embedding_q25(features_q25)
             features_q75 = self.embedding_q75(features_q75)
 
-            concat = torch.cat((hidden, features_pattern, features_q25, features_q75), 2)  # (num_layers, batch, hidden_size + feat_size)
-            #hidden = concat
+            concat = torch.cat((features_pattern, features_q25, features_q75), 2)  # (num_layers, batch, hidden_size + feat_size)
+
             hidden = self.embedding(concat)
 
             #features = features.unsqueeze(1)
