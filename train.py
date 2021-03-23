@@ -91,6 +91,7 @@ def train(config, X_train, Y_train, Train_cs_features, Train_spatial_features, T
     if len(X_train.shape) == 2: # if 2d make it 3d
         X_train = X_train.unsqueeze(2)  # add 3rd dimesion when not one hot enocded or no additional features
 
+    print(X_train.shape)
     input_size = X_train.shape[2] # 1 or additional attributes
     output_size = 1
 
@@ -119,7 +120,7 @@ def train(config, X_train, Y_train, Train_cs_features, Train_spatial_features, T
         embedding_median = Embedding(feat_size=Train_median_features.shape[1], embed_size=embed_size)
         embedding_q25 = Embedding(feat_size=Train_q25_features.shape[1], embed_size=embed_size)
         embedding_q75 = Embedding(feat_size=Train_q75_features.shape[1], embed_size=embed_size)
-        embedding = Embedding(feat_size=hidden_size + (2 * embed_size), embed_size=embed_size)
+        embedding = Embedding(feat_size=hidden_size + (3 * embed_size), embed_size=embed_size)
 
         if decode == 'attention':
             decoder = AttnDecoder(input_size=1, hidden_size=hidden_size, output_size=output_size, input_len=X_train.shape[1],
@@ -251,7 +252,7 @@ def evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, Te
         X_test = X_test.unsqueeze(2)  # add 3rd dimension when not one hot encoded and no additional features
 
     n_test = X_test.shape[0]
-
+    print(X_test.shape)
     input_size = X_test.shape[2]
     output_size = 1
     #output_size = X_test.shape[2]
@@ -276,7 +277,7 @@ def evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, Te
         embedding_median = Embedding(feat_size=Test_median_features.shape[1], embed_size=embed_size)
         embedding_q25 = Embedding(feat_size=Test_q25_features.shape[1], embed_size=embed_size)
         embedding_q75 = Embedding(feat_size=Test_q75_features.shape[1], embed_size=embed_size)
-        embedding = Embedding(feat_size=hidden_size + (2 * embed_size), embed_size=embed_size)
+        embedding = Embedding(feat_size=hidden_size + (3 * embed_size), embed_size=embed_size)
         #embedding = Embedding(feat_size=Test_cs_features.shape[1] + hidden_size, embed_size=embed_size)
 
         if decode == 'attention':

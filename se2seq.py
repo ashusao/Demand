@@ -166,7 +166,7 @@ class Seq2Seq(nn.Module):
     def __init__(self, encoder, decoder, embedding_cs, embedding_spatial, embedding_pattern, embedding_median,
                  embedding_q25, embedding_q75, embedding, config):
         super(Seq2Seq, self).__init__()
-        #self.encoder = encoder
+        self.encoder = encoder
         self.decoder = decoder
         self.config = config
         feat = self.config.getboolean('data', 'features')
@@ -197,8 +197,8 @@ class Seq2Seq(nn.Module):
         decode = self.config['model']['decoder']
         num_layers = int(self.config['train']['num_layers'])
 
-        #hidden = self.encoder.init_hidden(batch_size).to(device)
-        #encoder_out, hidden = self.encoder(source, hidden)
+        hidden = self.encoder.init_hidden(batch_size).to(device)
+        encoder_out, hidden = self.encoder(source, hidden)
 
         if feat and decode == 'features':
             #intial hidden as features
@@ -228,7 +228,7 @@ class Seq2Seq(nn.Module):
             features_q25 = self.embedding_q25(features_q25)
             features_q75 = self.embedding_q75(features_q75)
 
-            concat = torch.cat((features_pattern, features_q25, features_q75), 2)  # (num_layers, batch, hidden_size + feat_size)
+            concat = torch.cat((hidden, features_pattern, features_q25, features_q75), 2)  # (num_layers, batch, hidden_size + feat_size)
 
             hidden = self.embedding(concat)
 

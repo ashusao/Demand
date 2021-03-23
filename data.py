@@ -54,9 +54,6 @@ class Data:
         new_df['weekday'] = new_df.index.dayofweek
         new_df['hour'] = new_df.index.hour
         new_df['minute'] = new_df.index.minute
-        #new_df = self.encode_time(new_df, 'weekday')
-        #new_df = self.encode_time(new_df, 'hour')
-        #new_df = self.encode_time(new_df, 'minute')
         new_df = pd.get_dummies(new_df,
                                 prefix=['weekday', 'hour', 'minute'],
                                 columns=['weekday', 'hour', 'minute'])
@@ -191,7 +188,8 @@ class Data:
         #pattern_feat = self.gen_weekday_weekend_slices(series, weekday_feature, weekend_feature, start_y, stop_y)
 
         time_feat = df.iloc[:, -35:].to_numpy()[start:stop]
-        data = np.concatenate([d, time_feat], axis=1)
+        #data = np.concatenate([d, time_feat], axis=1)
+        data = time_feat
         return data, cs_feat, spatial_feat, pattern_feat, median_feat, quant_25_feat, quant_75_feat
 
     # @refrence: https://machinelearningmastery.com/how-to-develop-machine-learning-models-for-multivariate-multi-step-air-pollution-time-series-forecasting/
