@@ -1,7 +1,7 @@
 import numpy as np
 from configparser import ConfigParser
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, BaggingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from sklearn.multiclass import OneVsRestClassifier
@@ -79,6 +79,7 @@ class Baseline:
         model_path = self._config['model']['svm_path']
         n_core = int(self._config['data']['n_core'])
         output_horizon = self._output_horizon
+        n_estimators = 25
 
         loaded = False
 
@@ -92,7 +93,7 @@ class Baseline:
             loaded = True
 
         if not loaded:
-            clf = OneVsRestClassifier(SVC(), n_jobs=n_core)
+            clf = OneVsRestClassifier(BaggingClassifier(SVC(kernel='linear'), max_samples=1.0 / n_estimators, n_estimators=n_estimators), n_jobs=n_core)
             clf.fit(X_train, Y_train)
 
         if not loaded:
