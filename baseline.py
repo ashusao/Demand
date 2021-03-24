@@ -3,6 +3,7 @@ from configparser import ConfigParser
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.metrics import precision_recall_fscore_support
 
@@ -66,6 +67,32 @@ class Baseline:
 
         if not loaded:
             clf = OneVsRestClassifier(LogisticRegression(solver='sag', n_jobs=n_core))
+            clf.fit(X_train, Y_train)
+
+        if not loaded:
+            pickle.dump(clf, open(model_file, 'wb'))
+
+        print('Training Finished for lag :', input_horizon)
+
+    def svm_classifier(self, X_train, Y_train, input_horizon):
+
+        model_path = self._config['model']['svm_path']
+        n_core = int(self._config['data']['n_core'])
+        output_horizon = self._output_horizon
+
+        loaded = False
+
+        model_file = os.path.join(model_path, 'svm_complte_lag_' + str(input_horizon) +
+                                             '_lead_' + str(output_horizon) +
+                                             '_train_step_' + str(self._config['data']['train_window_size']) +
+                                             '_est_step_' + str(self._config['data']['test_window_size']) +
+                                             '.pkl')
+        if os.path.isfile(model_file):
+            clf = pickle.load(open(model_file, 'rb'))
+            loaded = True
+
+        if not loaded:
+            clf = OneVsRestClassifier(SVC(), n_jobs=n_core)
             clf.fit(X_train, Y_train)
 
         if not loaded:
@@ -155,6 +182,14 @@ class Baseline:
         elif algo == 'lr':
             model_path = self._config['model']['lr_path']
             model_file = os.path.join(model_path, 'lr_complte_lag_' + str(input_horizon) +
+                                      '_lead_' + str(self._output_horizon) +
+                                      '_train_step_' + str(self._config['data']['train_window_size']) +
+                                      '_est_step_' + str(self._config['data']['test_window_size']) +
+                                      '.pkl')
+            clf = pickle.load(open(model_file, 'rb'))
+        elif algo == 'svm':
+            model_path = self._config['model']['svm_path']
+            model_file = os.path.join(model_path, 'svm_complte_lag_' + str(input_horizon) +
                                       '_lead_' + str(self._output_horizon) +
                                       '_train_step_' + str(self._config['data']['train_window_size']) +
                                       '_est_step_' + str(self._config['data']['test_window_size']) +

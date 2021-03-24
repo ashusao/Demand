@@ -39,7 +39,7 @@ if __name__ == '__main__':
     n_sample = int(config['data']['n_sample'])
     algo = config['train']['algo']
 
-    if algo == 'knn' or algo == 'rf' or algo == 'ha' or algo == 'lr':
+    if algo == 'knn' or algo == 'rf' or algo == 'ha' or algo == 'lr' or algo == 'svm':
         baseline_approach = Baseline()
 
     horizons = config.get("data", "input_horizons")
@@ -85,6 +85,8 @@ if __name__ == '__main__':
                 baseline_approach.random_forest(X_train, Y_train, ip_horizon)
             elif algo == 'lr':
                 baseline_approach.logistic_regression_classifier(X_train, Y_train, ip_horizon)
+            elif algo == 'svm':
+                baseline_approach.svm_classifier(X_train, Y_train, ip_horizon)
             elif algo == 'ha':
                 pass
             else:
@@ -115,7 +117,7 @@ if __name__ == '__main__':
                 Feat_q25 = [np.random.rand(len(X[0]), 2)] * 5
                 Feat_q75 = [np.random.rand(len(X[0]), 2)] * 5
 
-            if algo == 'knn' or algo == 'rf' or algo == 'ha' or algo == 'lr':
+            if algo == 'knn' or algo == 'rf' or algo == 'ha' or algo == 'lr' or algo == 'svm':
                 baseline_approach.eval_test_set(len(X_train), X, Y, ip_horizon, df)
             else:
                 evaluate_test_set(config, X, Y, Feat_cs, Feat_spatial, Feat_pattern, Feat_median, Feat_q25,

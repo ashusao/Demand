@@ -188,8 +188,7 @@ class Data:
         #pattern_feat = self.gen_weekday_weekend_slices(series, weekday_feature, weekend_feature, start_y, stop_y)
 
         time_feat = df.iloc[:, -35:].to_numpy()[start:stop]
-        #data = np.concatenate([d, time_feat], axis=1)
-        data = time_feat
+        data = np.concatenate([d, time_feat], axis=1)
         return data, cs_feat, spatial_feat, pattern_feat, median_feat, quant_25_feat, quant_75_feat
 
     # @refrence: https://machinelearningmastery.com/how-to-develop-machine-learning-models-for-multivariate-multi-step-air-pollution-time-series-forecasting/
