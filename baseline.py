@@ -93,7 +93,8 @@ class Baseline:
             loaded = True
 
         if not loaded:
-            clf = OneVsRestClassifier(BaggingClassifier(SVC(kernel='linear'), max_samples=1.0 / n_estimators, n_estimators=n_estimators), n_jobs=n_core)
+            clf = OneVsRestClassifier(BaggingClassifier(SVC(kernel='linear'), max_samples=1.0 / n_estimators,
+                                                        n_estimators=n_estimators, n_jobs=n_core), n_jobs=n_core)
             clf.fit(X_train, Y_train)
 
         if not loaded:
