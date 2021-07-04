@@ -79,7 +79,7 @@ def train(config, X_train, Y_train, Train_cs_features, Train_spatial_features, T
     Y_train = torch.Tensor(Y_train)
     X_train = torch.Tensor(X_train)
 
-    #X_train = X_train[:,:,1:]
+    #X_train = X_train[:,:,1:] # remove occupancy
 
     Train_cs_features = torch.Tensor(Train_cs_features)
     Train_spatial_features = torch.Tensor(Train_spatial_features)
@@ -239,7 +239,7 @@ def evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, Te
     Y_test = torch.Tensor(Y_test)
     X_test = torch.Tensor(X_test)
 
-    #X_test = X_test[:, :, 1:]
+    #X_test = X_test[:, :, 1:]  # remove occupancy
 
     Test_cs_features = torch.Tensor(Test_cs_features)
     Test_spatial_features = torch.Tensor(Test_spatial_features)

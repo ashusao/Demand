@@ -50,7 +50,6 @@ class Data:
         new_df = new_df.loc[start:stop]
 
         # adding time features
-
         new_df['weekday'] = new_df.index.dayofweek
         new_df['hour'] = new_df.index.hour
         new_df['minute'] = new_df.index.minute
@@ -126,8 +125,9 @@ class Data:
         return scaled_df
 
     def gen_pattern_features(self, df):
-        train_df = df.loc[self._config['data']['train_start'] : self._config['data']['train_stop']].iloc[:, :-35]
+        train_df = df.loc[self._config['data']['train_start'] : self._config['data']['train_stop']]
         scaled_df = self.scale_pattern_feat(train_df.groupby([train_df.index.hour, train_df.index.minute]).sum())
+        print(train_df.shape)
 
         weekday_df = train_df.loc[(train_df.index.dayofweek >= 0) & (train_df.index.dayofweek <= 4)]
         weekend_df = train_df.loc[(train_df.index.dayofweek >= 5) & (train_df.index.dayofweek <= 6)]
@@ -138,7 +138,8 @@ class Data:
         quant_25_df = train_df.groupby([train_df.index.hour, train_df.index.minute]).quantile(0.25)
         quant_75_df = train_df.groupby([train_df.index.hour, train_df.index.minute]).quantile(0.75)
 
-        return scaled_df, scaled_weekday, scaled_weekend, median_df, quant_25_df, quant_75_df
+        return scaled_df.iloc[:, :-35], scaled_weekday.iloc[:, :-35], scaled_weekend.iloc[:, :-35], \
+               median_df.iloc[:, :-35], quant_25_df.iloc[:, :-35], quant_75_df.iloc[:, :-35]
 
     def generate_features(self, series, cs_feature, spatial_feature):
         idx = series.name

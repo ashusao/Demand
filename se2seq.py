@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import random
 from data import Data
+import sys
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 torch.manual_seed(0)
@@ -184,12 +185,9 @@ class Seq2Seq(nn.Module):
                 features_q25, features_q75, teacher_force_ratio=0.5):
         batch_size = source.shape[0]
         target_len = target.shape[1]
-        #output_size = target.shape[2]
-
-        #print(source.shape, target.shape)
-        #print(features.shape)
 
         #output_size = target.shape[2]
+
         #outputs = torch.zeros(batch_size, target_len, output_size).to(device)
         outputs = torch.zeros(batch_size, target_len).to(device)
 
@@ -201,12 +199,6 @@ class Seq2Seq(nn.Module):
         encoder_out, hidden = self.encoder(source, hidden)
 
         if feat and decode == 'features':
-            #intial hidden as features
-            #features = self.embedding(features)  # features  =====>>> hidden
-            #features = features.unsqueeze(0)  # add extra dimensino for num_layers
-            #features = features.repeat(num_layers, 1, 1)
-            #hidden[:, :, :features.shape[2]] = features  # fill intial hidden with avail features
-
             #features_cs = features_cs.unsqueeze(0)  # add extra dimensino for num_layers
             #features_spatial = features_spatial.unsqueeze(0)
             #features_median = features_median.unsqueeze(0)
@@ -232,23 +224,9 @@ class Seq2Seq(nn.Module):
 
             hidden = self.embedding(concat)
 
-            #features = features.unsqueeze(1)
-            #features = features.repeat(1, source.shape[1], 1)
-            #source = torch.cat((source, features), 2)
-        #else:
-        #    hidden = self.encoder.init_hidden(batch_size).to(device)
-
-        #encoder_out, hidden = self.encoder(source, hidden)
-        #hidden = self.encoder.init_hidden(batch_size).to(device)
-        #print(hidden.shape)
-
-        # First input to decoder will be last input of encoder
-        #decoder_input = source[:, -1, :] # shape(batch_size, input_size)
         # input the state of charger without features
         decoder_input = source[:, -1, 0]  # [0] : Occupancy             #here
         decoder_input = decoder_input.unsqueeze(1)
-        #decoder_input = source[:, -1, :]  # [0] : Occupancy             #here
-
 
         use_teacher_force = True if random.random() < teacher_force_ratio else False
 
