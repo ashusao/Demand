@@ -2,35 +2,29 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from se2seq import Encoder
-from se2seq import Decoder
-from se2seq import Seq2Seq
-from se2seq import Embedding
-from se2seq import AttnDecoder
+from model import Encoder
+from model import Decoder
+from model import Seq2Seq
+from model import Embedding
 from deepl_baseline import DeepBaseline
 
 from utils import load_checkpoint
 from utils import save_checkpoint
-from data import Data
 
 from sklearn.metrics import f1_score
 from sklearn.metrics import balanced_accuracy_score
 from sklearn.metrics import average_precision_score
 from sklearn.metrics import precision_recall_curve
-from loss import FocalLoss
 
 import numpy as np
 import os
 import csv
-import sys
 
 from utils import save_loss
 from utils import show_plot
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 torch.manual_seed(0)
-#torch.set_deterministic(True) # type: ignore
-
 
 def compute_weights(targets):
 
@@ -66,15 +60,6 @@ def compute_weight_matrix(targets, positive_weight, negative_weight):
 def train(config, X_train, Y_train, Train_cs_features, Train_spatial_features, Train_pattern_features,
           Train_median_features, Train_q25_features, Train_q75_features, input_horizon):
 
-    '''Y_train = torch.from_numpy(Y_train).float()
-    X_train = torch.from_numpy(X_train).float()
-
-    Train_cs_features = torch.from_numpy(Train_cs_features).float()
-    Train_spatial_features = torch.from_numpy(Train_spatial_features).float()
-    Train_pattern_features = torch.from_numpy(Train_pattern_features).float()
-    Train_median_features = torch.from_numpy(Train_median_features).float()
-    Train_q25_features = torch.from_numpy(Train_q25_features).float()
-    Train_q75_features = torch.from_numpy(Train_q75_features).float()'''
 
     Y_train = torch.Tensor(Y_train)
     X_train = torch.Tensor(X_train)
@@ -122,27 +107,15 @@ def train(config, X_train, Y_train, Train_cs_features, Train_spatial_features, T
         embedding_q75 = Embedding(feat_size=Train_q75_features.shape[1], embed_size=embed_size)
         embedding = Embedding(feat_size=hidden_size + (3 * embed_size), embed_size=embed_size)
 
-        if decode == 'attention':
-            decoder = AttnDecoder(input_size=1, hidden_size=hidden_size, output_size=output_size, input_len=X_train.shape[1],
-                                  feat_size_cs=Train_cs_features.shape[1], feat_size_spatial=Train_spatial_features.shape[1],
-                                  dropout=dropout, num_layers=num_layers).to(device)
-
         if decode == 'decoder':
             decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size,
                               #feat_size_cs=Train_cs_features.shape[1], feat_size_spatial=Train_spatial_features.shape[1],
                               dropout=dropout, num_layers=num_layers).to(device)
-            '''decoder = Decoder(input_size=X_train.shape[2], hidden_size=hidden_size, output_size=output_size,
-                              feat_size_cs=Train_cs_features.shape[1],
-                              feat_size_spatial=Train_spatial_features.shape[1],
-                              dropout=dropout, num_layers=num_layers).to(device)'''
 
         if decode == 'features':
             decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size,
                               #feat_size_cs=Train_cs_features.shape[1], feat_size_spatial=Train_spatial_features.shape[1],
                               dropout=dropout, num_layers=num_layers).to(device)
-            '''decoder = Decoder(input_size=1, hidden_size=hidden_size + Train_pattern_features.shape[1], output_size=output_size, feat_size_cs=Train_cs_features.shape[1],
-                              feat_size_spatial=Train_spatial_features.shape[1],
-                              dropout=dropout, num_layers=num_layers).to(device)'''
 
         model = Seq2Seq(encoder, decoder, embedding_cs, embedding_spatial, embedding_pattern, embedding_median,
                         embedding_q25, embedding_q75, embedding, config).to(device)
@@ -227,14 +200,6 @@ def evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, Te
     :return:
     '''
 
-    '''Y_test = torch.from_numpy(Y_test).float()
-    X_test = torch.from_numpy(X_test).float()
-    Test_cs_features = torch.from_numpy(Test_cs_features).float()
-    Test_spatial_features = torch.from_numpy(Test_spatial_features).float()
-    Test_pattern_features = torch.from_numpy(Test_pattern_features).float()
-    Test_median_features = torch.from_numpy(Test_median_features).float()
-    Test_q25_features = torch.from_numpy(Test_q25_features).float()
-    Test_q75_features = torch.from_numpy(Test_q75_features).float()'''
 
     Y_test = torch.Tensor(Y_test)
     X_test = torch.Tensor(X_test)
@@ -280,26 +245,16 @@ def evaluate(config, X_test, Y_test, Test_cs_features, Test_spatial_features, Te
         embedding = Embedding(feat_size=hidden_size + (3 * embed_size), embed_size=embed_size)
         #embedding = Embedding(feat_size=Test_cs_features.shape[1] + hidden_size, embed_size=embed_size)
 
-        if decode == 'attention':
-            decoder = AttnDecoder(input_size=1, hidden_size=hidden_size, output_size=output_size, input_len=X_test.shape[1],
-                                  feat_size_cs=Test_cs_features.shape[1],  feat_size_spatial=Test_spatial_features.shape[1],
-                                  dropout=dropout, num_layers=num_layers).to(device)
 
         if decode == 'decoder':
             decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size,
                               #feat_size_cs=Test_cs_features.shape[1],  feat_size_spatial=Test_spatial_features.shape[1],
                               dropout=dropout, num_layers=num_layers).to(device)
-            '''decoder = Decoder(input_size=X_test.shape[2], hidden_size=hidden_size, output_size=output_size,
-                              feat_size_cs=Test_cs_features.shape[1], feat_size_spatial=Test_spatial_features.shape[1],
-                              dropout=dropout, num_layers=num_layers).to(device)'''
 
         if decode == 'features':
             decoder = Decoder(input_size=1, hidden_size=hidden_size, output_size=output_size,
                               #feat_size_cs=Test_cs_features.shape[1],  feat_size_spatial=Test_spatial_features.shape[1],
                               dropout=dropout, num_layers=num_layers).to(device)
-            '''decoder = Decoder(input_size=1, hidden_size=hidden_size + Test_pattern_features.shape[1], output_size=output_size, feat_size_cs=Test_cs_features.shape[1],
-                              feat_size_spatial=Test_spatial_features.shape[1],
-                              dropout=dropout, num_layers=num_layers).to(device)'''
 
         model = Seq2Seq(encoder, decoder, embedding_cs, embedding_spatial, embedding_pattern, embedding_median,
                         embedding_q25, embedding_q75, embedding, config).to(device)
